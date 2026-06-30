@@ -263,7 +263,7 @@ export default function AgentChatPage() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto bg-slate-50/50 p-5">
+          <div className="flex-1 overflow-y-auto bg-slate-50/50 p-5" style={{ scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 #f1f5f9' }}>
             <div className="mx-auto max-w-4xl space-y-6">
               {messagesLoading && (
                 <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-400">

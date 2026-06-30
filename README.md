@@ -1,11 +1,11 @@
 <p align="center">
   <picture>
-    <img src="agentbucket-logo-mark-transparent.png" alt="Buckie" width="80" height="80" />
+    <img src="agentbucket-logo-mark-transparent.png" alt="Buckie" width="140" />
   </picture>
 </p>
 <p align="center">
   <picture>
-    <img src="public/agentbucket-logo-mark.svg" alt="AgentBucket" width="420" />
+    <img src="public/agentbucket-logo-mark.svg" alt="AgentBucket" width="300" />
   </picture>
 </p>
 
