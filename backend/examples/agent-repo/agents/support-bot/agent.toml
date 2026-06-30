@@ -1,0 +1,9 @@
+id = "support-bot"
+name = "技术支持助手"
+description = "回答技术问题与排查部署故障，使用 Kimi 模型。"
+model = "kimi-k2.6"
+runtime = "claudecode"
+runtime_version = "latest"
+api_token = "kimi"
+skills = ["knowledge-base", "web-browser"]
+mcps = ["notion-mcp"]

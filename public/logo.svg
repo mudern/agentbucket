@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="120" y2="120">
+      <stop stop-color="#0EA5E9"/>
+      <stop offset="1" stop-color="#6366F1"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="28" fill="url(#bg)"/>
+  <g transform="translate(22,18)">
+    <rect x="0" y="0" width="76" height="56" rx="12" fill="rgba(255,255,255,0.95)"/>
+    <rect x="6" y="6" width="28" height="8" rx="4" fill="#0EA5E9" opacity="0.3"/>
+    <rect x="38" y="6" width="32" height="8" rx="4" fill="#6366F1" opacity="0.3"/>
+    <circle cx="10" cy="22" r="5" fill="#0EA5E9"/>
+    <rect x="20" y="19" width="50" height="6" rx="3" fill="#94A3B8" opacity="0.5"/>
+    <circle cx="10" cy="36" r="5" fill="#6366F1"/>
+    <rect x="20" y="33" width="46" height="6" rx="3" fill="#94A3B8" opacity="0.5"/>
+    <circle cx="10" cy="50" r="5" fill="#0EA5E9" opacity="0.6"/>
+    <rect x="20" y="47" width="38" height="6" rx="3" fill="#94A3B8" opacity="0.4"/>
+  </g>
+  <g transform="translate(6,74)">
+    <rect x="0" y="0" width="108" height="30" rx="10" fill="rgba(255,255,255,0.2)"/>
+    <circle cx="18" cy="15" r="5" fill="#4ADE80"/>
+    <text x="30" y="19" fill="white" font-size="10" font-family="sans-serif" font-weight="bold">AgentBus</text>
+    <circle cx="58" cy="15" r="3" fill="white" opacity="0.5"/>
+    <circle cx="68" cy="15" r="3" fill="white" opacity="0.5"/>
+    <circle cx="78" cy="15" r="3" fill="white" opacity="0.5"/>
+    <circle cx="88" cy="15" r="3" fill="white" opacity="0.5"/>
+  </g>
+</svg>

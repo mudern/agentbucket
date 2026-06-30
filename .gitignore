@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+pnpm-lock.yaml
+
+# Build output
+dist/
+
+# Go
+backend/.data/
+backend/server
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env files (secrets!)
+*.env
+!.env.example
+
+# CCS configs (tokens!)
+.ccs/
+
+# Temp files
+temp.md
+*.tmp
+/tmp/
+
+# Docker
+context.tar

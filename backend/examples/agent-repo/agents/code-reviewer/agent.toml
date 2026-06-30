@@ -1,0 +1,9 @@
+id = "code-reviewer"
+name = "代码审查助手"
+description = "审查代码质量、安全漏洞与最佳实践，使用 MiniMax 模型。"
+model = "MiniMax-M2.5"
+runtime = "claudecode"
+runtime_version = "latest"
+api_token = "minimax"
+skills = ["git-reader"]
+mcps = ["github-mcp", "filesystem-mcp"]

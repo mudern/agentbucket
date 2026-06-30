@@ -1,0 +1,10 @@
+id = "release-writer"
+name = "发布说明生成"
+description = "读取提交记录并生成发布说明，使用 GLM 模型。"
+model = "glm-5-turbo"
+runtime = "claudecode"
+runtime_version = "latest"
+api_token = "glm"
+skills = ["git-reader", "web-browser"]
+mcps = ["github-mcp"]
+

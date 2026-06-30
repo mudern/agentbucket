@@ -1,0 +1,11 @@
+id = "legal-summarizer"
+name = "法务文档总结"
+description = "法务文档总结与风险条款提取 Agent，使用 DeepSeek V4 模型。部署时安装 GitHub CLI。"
+model = "deepseek-v4-pro[1m]"
+runtime = "claudecode"
+runtime_version = "latest"
+api_token = "deepseek"
+skills = ["knowledge-base", "document-parser"]
+mcps = ["notion-mcp", "filesystem-mcp"]
+extra_install = ["apk add --no-cache github-cli"]
+
