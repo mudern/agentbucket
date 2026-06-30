@@ -1,6 +1,6 @@
 <p align="center">
   <picture>
-    <img src="agentbucket-logo-mark.png" alt="Buckie" width="80" height="80" />
+    <img src="agentbucket-logo-mark-transparent.png" alt="Buckie" width="80" height="80" />
   </picture>
 </p>
 <p align="center">

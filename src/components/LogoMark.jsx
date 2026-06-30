@@ -1,4 +1,4 @@
-const mascotPng = '/agentbucket-logo-mark.png'
+const mascotPng = '/agentbucket-logo-mark-transparent.png'
 const logoSvg = '/agentbucket-logo-mark.svg'
 
 export default function LogoMark({ compact = false }) {
