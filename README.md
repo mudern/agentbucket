@@ -1,8 +1,6 @@
 <p align="center">
-  <img src="agentbucket-logo-mark.png" alt="AgentBucket Logo" width="120" height="120" />
+  <img src="public/agentbucket-logo-mark.svg" alt="AgentBucket" width="460" />
 </p>
-
-<h1 align="center">Agent<span style="color:#0EA5E9">Bucket</span></h1>
 
 <p align="center">
   AI Agent 控制平面 —— 一站管理、部署、编排你的 AI Agent 舰队
