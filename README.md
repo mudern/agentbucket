@@ -1,5 +1,12 @@
 <p align="center">
-  <img src="public/agentbucket-logo-mark.svg" alt="AgentBucket" width="460" />
+  <picture>
+    <img src="agentbucket-logo-mark.png" alt="Buckie" width="80" height="80" />
+  </picture>
+</p>
+<p align="center">
+  <picture>
+    <img src="public/agentbucket-logo-mark.svg" alt="AgentBucket" width="420" />
+  </picture>
 </p>
 
 <p align="center">
