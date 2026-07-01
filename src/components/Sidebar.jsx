@@ -86,7 +86,15 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
                 lang === 'zh' ? 'bg-sky-50 text-sky-700 shadow-sm' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
               }`}
             >
-              {lang === 'zh' ? '中文' : 'EN'}
+              中文
+            </button>
+            <button
+              onClick={() => setLang('en')}
+              className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition ${
+                lang === 'en' ? 'bg-sky-50 text-sky-700 shadow-sm' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+              }`}
+            >
+              EN
             </button>
           </div>
         </div>
@@ -96,7 +104,7 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
         <button
           type="button"
           onClick={onLogout}
-          className="mt-2 w-full rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-950"
+          className="mt-2 w-full rounded-lg px-3 py-2.5 text-center text-sm font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-950"
         >
           {t('common.logout')}
         </button>

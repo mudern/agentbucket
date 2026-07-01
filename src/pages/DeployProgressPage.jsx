@@ -148,7 +148,6 @@ export default function DeployProgressPage() {
                   <span className="text-sm font-semibold text-slate-950 hover:text-sky-700 transition">
                     {agent?.name ?? dep.agentId}
                   </span>
-                  <span className="ml-2 text-xs text-slate-400 font-mono">{dep.imageTag}</span>
                 </button>
 
                 <div className="flex shrink-0 items-center gap-2 text-xs text-slate-400">

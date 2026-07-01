@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -273,7 +272,6 @@ func readEnvFile(path string) (map[string]string, error) {
 }
 
 func seedState(rootDir string) State {
-	now := time.Now()
 	return State{
 		CurrentUser: CurrentUser{ID: "u-1001", Name: "管理员", Role: "super_admin"},
 		Repositories: []Repository{
@@ -313,7 +311,7 @@ func seedState(rootDir string) State {
 		Approvals:    []Approval{},
 		ChatSessions: map[string][]ChatSession{},
 		ChatMessages: map[string][]ChatMessage{},
-		Deployments: seedDeployments(now),
+		Deployments:  []Deployment{},
 	}
 }
 
@@ -399,60 +397,6 @@ func (s *Store) snapshot() State {
 func hashPassword(password string) string {
 	hash := sha256.Sum256([]byte(password))
 	return fmt.Sprintf("%x", hash)
-}
-
-func seedDeployments(now time.Time) []Deployment {
-	agents := []struct {
-		id    string
-		name  string
-		port  int
-		model string
-	}{
-		{"legal-summarizer", "法务文档总结", 18043, "deepseek-v4-pro"},
-		{"release-writer", "发布说明编写", 18052, "glm-5-turbo"},
-		{"code-reviewer", "代码审查", 18061, "MiniMax-M2.5"},
-		{"support-bot", "客服助手", 18070, "kimi-k2.6"},
-	}
-
-	var deps []Deployment
-	for idx, a := range agents {
-		base := now.Add(-time.Duration(idx*7+1) * time.Hour)
-		for i := 0; i < 5; i++ {
-			t := base.Add(-time.Duration(i*3) * time.Hour)
-			status := "running"
-			msg := fmt.Sprintf("container: agentbucket-%s-abc%04d", a.id, i*100)
-			switch i {
-			case 1:
-				status = "stopped"
-			case 2:
-				status = "packaged"
-				msg = "Docker build context generated"
-			case 3:
-				status = "run_failed"
-				msg = `docker: Error response from daemon: driver failed programming
-external connectivity on endpoint (abc123): Bind for 0.0.0.0:18000 failed: port is already allocated`
-			case 4:
-				status = "crashed"
-				msg = "container exited unexpectedly at " + t.Format(time.RFC3339)
-			}
-			deps = append(deps, Deployment{
-				ID:             fmt.Sprintf("dep-%s-%d", a.id, t.Unix()),
-				RepositoryID:   "agentbucket-example",
-				AgentID:        a.id,
-				Model:          a.model,
-				Runtime:        "claudecode",
-				RuntimeVersion: "latest",
-				ImageTag:       fmt.Sprintf("agentbucket/%s:ea41cfe", a.id),
-				ContainerName:  fmt.Sprintf("agentbucket-%s", a.id),
-				Status:         status,
-				Message:        msg,
-				HostPort:       a.port,
-				SidecarURL:     fmt.Sprintf("http://127.0.0.1:%d", a.port),
-				CreatedAt:      t,
-			})
-		}
-	}
-	return deps
 }
 
 func (s *Store) update(fn func(*State) error) error {
