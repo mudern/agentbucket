@@ -121,23 +121,64 @@ export default function AgentChatPage() {
     setSendError('')
     setDraft('')
     const tempId = `temp-${Date.now()}`
-    // Optimistic: show user message immediately
+    const assistantId = `temp-${Date.now() + 1}`
     setMessages((current) => [...current, {
-      id: tempId,
-      sessionId: currentSessionId,
-      agentId,
-      role: 'user',
-      content: text,
-      createdAt: new Date().toISOString(),
+      id: tempId, sessionId: currentSessionId, agentId, role: 'user', content: text, createdAt: new Date().toISOString(),
+    }, {
+      id: assistantId, sessionId: currentSessionId, agentId, role: 'assistant', content: '', createdAt: new Date().toISOString(),
     }])
+
+    const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://127.0.0.1:8080'
     try {
-      const nextMessages = await sendAgentMessage(agentId, { sessionId: currentSessionId, content: text })
-      setMessages((current) => [...current.filter((m) => m.id !== tempId), ...nextMessages])
+      const response = await fetch(`${API_BASE}/api/agents/${agentId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: currentSessionId, content: text, stream: true }),
+      })
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        throw new Error(err.error || `HTTP ${response.status}`)
+      }
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6)
+            if (data === '[DONE]') {
+              buffer = ''
+              break
+            }
+            try {
+              const parsed = JSON.parse(data)
+              if (parsed.error) throw new Error(parsed.error)
+            } catch (e) {
+              if (e.message && !data.startsWith('{')) {
+                // It's a text delta
+                const decoded = data.replace(/\\n/g, '\n')
+                setMessages((current) => current.map((m) =>
+                  m.id === assistantId ? { ...m, content: m.content + decoded } : m
+                ))
+              } else if (e.message) {
+                throw e
+              }
+            }
+          }
+        }
+      }
+      setMessages((current) => current.map((m) =>
+        m.id === assistantId && !m.content ? { ...m, content: 'AI 返回了空响应。' } : m
+      ))
       setSessionsRefresh((n) => n + 1)
     } catch (error) {
       setSendError(error.message)
-      // Remove temp message on error
-      setMessages((current) => current.filter((m) => m.id !== tempId))
+      setMessages((current) => current.filter((m) => m.id !== tempId && m.id !== assistantId))
     } finally {
       setSending(false)
     }

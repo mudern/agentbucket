@@ -40,6 +40,7 @@ func runServer() {
 		bus:     newAgentBus(),
 	}
 
+	app.recoverRunningContainers()
 	go app.startHealthChecker(30 * time.Second)
 
 	addr := env("AGENTBUCKET_ADDR", "127.0.0.1:8080")
@@ -75,6 +76,82 @@ func (app *App) routes() http.Handler {
 	mux.HandleFunc("POST /api/bus/agents/{agentId}/message", app.busSendMessage)
 	mux.HandleFunc("GET /api/bus/messages", app.busMessages)
 	return mux
+}
+
+func (app *App) recoverRunningContainers() {
+	out, err := exec.Command("docker", "ps", "--filter", "name=agentbucket-", "--format", "{{.Names}}\t{{.Image}}\t{{.Ports}}").CombinedOutput()
+	if err != nil {
+		return
+	}
+	state := app.store.snapshot()
+	existing := map[string]bool{}
+	for _, d := range state.Deployments {
+		existing[d.ContainerName] = true
+	}
+	recovered := 0
+	for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+		if line == "" {
+			continue
+		}
+		parts := strings.Split(line, "\t")
+		if len(parts) < 3 {
+			continue
+		}
+		containerName := parts[0]
+		image := parts[1]
+		if existing[containerName] {
+			continue
+		}
+		// Extract agent ID from container name: agentbucket-{slug}
+		agentSlug := strings.TrimPrefix(containerName, "agentbucket-")
+		// Extract port from "0.0.0.0:PORT->8088/tcp" format
+		port := 0
+		portStr := parts[2]
+		if idx := strings.Index(portStr, "->"); idx > 0 {
+			start := strings.LastIndex(portStr[:idx], ":")
+			if start >= 0 {
+				fmt.Sscanf(portStr[start+1:idx], "%d", &port)
+			}
+		}
+		if port == 0 {
+			port = hostPortFor(agentSlug)
+		}
+		// Match agent from scanned repos
+		repos := app.scanRepositories(app.store.snapshot().Repositories)
+		var agentID string
+		for _, repo := range repos {
+			for _, commit := range repo.Commits {
+				for _, agent := range commit.Agents {
+					if slug(agent.ID) == agentSlug {
+						agentID = agent.ID
+						break
+					}
+				}
+			}
+		}
+		if agentID == "" {
+			continue
+		}
+		d := Deployment{
+			ID:            fmt.Sprintf("dep-%s-recovered", agentID),
+			AgentID:       agentID,
+			ImageTag:      image,
+			ContainerName: containerName,
+			Status:        "running",
+			HostPort:      port,
+			SidecarURL:    fmt.Sprintf("http://127.0.0.1:%d", port),
+			CreatedAt:     time.Now(),
+		}
+		_ = app.store.update(func(s *State) error {
+			s.Deployments = append(s.Deployments, d)
+			return nil
+		})
+		recovered++
+		log.Printf("recovered container: %s -> %s (port %d)", containerName, agentID, port)
+	}
+	if recovered > 0 {
+		log.Printf("recovered %d running containers", recovered)
+	}
 }
 
 func (app *App) startHealthChecker(interval time.Duration) {

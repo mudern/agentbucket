@@ -225,7 +225,11 @@ func (app *App) agentMessages(w http.ResponseWriter, r *http.Request, agentID st
 		}
 		writeJSON(w, http.StatusOK, messages)
 	case http.MethodPost:
-		var req SendMessageRequest
+		var req struct {
+			SessionID string `json:"sessionId"`
+			Content   string `json:"content"`
+			Stream    bool   `json:"stream"`
+		}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			writeError(w, http.StatusBadRequest, err)
 			return
@@ -237,6 +241,10 @@ func (app *App) agentMessages(w http.ResponseWriter, r *http.Request, agentID st
 		sessionID := req.SessionID
 		if sessionID == "" {
 			sessionID = newChatSession(agentID, "默认会话").ID
+		}
+		if req.Stream {
+			app.streamAgentMessage(w, agentID, req.Content, sessionID)
+			return
 		}
 		now := time.Now()
 		userMessage := ChatMessage{
