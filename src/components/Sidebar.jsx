@@ -57,6 +57,7 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
                   <NavLink
                     key={item.path}
                     to={item.path}
+                    end
                     className={({ isActive }) =>
                       `block rounded-xl px-3 py-2.5 text-sm transition ${
                         isActive

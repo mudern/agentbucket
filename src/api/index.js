@@ -15,6 +15,15 @@ async function request(path, options = {}) {
   }
   const response = await fetch(`${API_BASE}${path}`, { headers, ...options })
 
+  if (response.status === 401 || response.status === 403) {
+    localStorage.removeItem('agentbucket.auth')
+    localStorage.removeItem('agentbucket.token')
+    // Redirect to login (avoid redirect loop if already on login)
+    if (!window.location.pathname.includes('/login')) {
+      window.location.href = '/login'
+    }
+    throw new Error('Session expired, please login again')
+  }
   if (!response.ok) {
     const body = await response.json().catch(() => ({}))
     throw new Error(body.error ?? `Request failed: ${response.status}`)
