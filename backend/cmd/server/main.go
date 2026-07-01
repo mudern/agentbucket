@@ -17,7 +17,7 @@ func (app *App) login(w http.ResponseWriter, r *http.Request) {
 	}
 	state := app.store.snapshot()
 	for _, user := range state.Users {
-		if user.Name == req.Username && user.Active {
+		if user.Name == req.Username && user.Active && user.PasswordHash == hashPassword(req.Password) {
 			writeJSON(w, http.StatusOK, map[string]any{
 				"token": getMasterToken(),
 				"user":  user,

@@ -15,7 +15,6 @@ import {
   tableHeaderCellClass,
 } from '../components/ManagementTable'
 import PageHeader from '../components/PageHeader'
-import WizardModal from '../components/WizardModal'
 import { useT } from '../i18n'
 import useAsyncData from '../hooks/useAsyncData'
 
@@ -27,6 +26,9 @@ export default function AuthTokensPage() {
   const [status, setStatus] = useState('all')
   const { data, loading } = useAsyncData(getAuthTokens, [])
   const [authTokens, setAuthTokens] = useState([])
+  const [form, setForm] = useState({ name: '', accessTarget: '', script: '', functionName: 'get_token', argument: '' })
+  const [saving, setSaving] = useState(false)
+  const [formError, setFormError] = useState('')
 
   useEffect(() => {
     if (data) {
@@ -62,6 +64,26 @@ export default function AuthTokensPage() {
     } catch (e) { alert(`${t('common.save_failed')}: ${e.message}`) }
   }
 
+  const handleCreate = async () => {
+    if (!form.name || !form.script) {
+      setFormError(t('repositories.no_repos'))
+      return
+    }
+    setSaving(true)
+    setFormError('')
+    try {
+      const status = '启用'
+      const created = await createAuthToken({ ...form, status })
+      setAuthTokens((c) => [...c, created])
+      setImportOpen(false)
+      setForm({ name: '', accessTarget: '', script: '', functionName: 'get_token', argument: '' })
+    } catch (e) {
+      setFormError(e.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <div>
       <PageHeader
@@ -69,30 +91,42 @@ export default function AuthTokensPage() {
         description={t('authTokens.import_hint')}
         action={<button onClick={() => setImportOpen(true)} className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white">{t('authTokens.import_token')}</button>}
       />
-      <WizardModal
-        open={importOpen}
-        title={t('authTokens.create_form_title')}
-        onClose={() => setImportOpen(false)}
-        steps={[
-          {
-            label: t('common.name'),
-            content: (
-              <div className="grid gap-4 text-sm">
-                <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center text-slate-500">Python script with get_token(param)</div>
-                <label className="text-slate-700">{t('authTokens.function_name')}<input defaultValue="get_token" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-sky-500" /></label>
-              </div>
-            ),
-          },
-          {
-            label: t('authTokens.access_target'),
-            content: <label className="block text-sm text-slate-700">{t('authTokens.access_target')}<input placeholder={t('authTokens.access_target')} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none placeholder:text-slate-400 focus:border-sky-500" /></label>,
-          },
-          {
-            label: t('authTokens.argument', '参数'),
-            content: <label className="block text-sm text-slate-700">{t('authTokens.function_name')}<input placeholder="project_key" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none placeholder:text-slate-400 focus:border-sky-500" /></label>,
-          },
-        ]}
-      />
+      {importOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/30 px-4 py-8" onClick={() => setImportOpen(false)}>
+          <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="border-b border-slate-200 px-5 py-4">
+              <div className="text-base font-semibold text-slate-950">{t('authTokens.create_form_title')}</div>
+            </div>
+            <div className="grid gap-4 p-5">
+              <label className="block text-sm text-slate-700">
+                {t('common.name')}
+                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. GitHub Token" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-500" />
+              </label>
+              <label className="block text-sm text-slate-700">
+                {t('authTokens.access_target')}
+                <input value={form.accessTarget} onChange={(e) => setForm({ ...form, accessTarget: e.target.value })} placeholder="api.github.com" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-500" />
+              </label>
+              <label className="block text-sm text-slate-700">
+                {t('authTokens.function_name')}
+                <input value={form.functionName} onChange={(e) => setForm({ ...form, functionName: e.target.value })} placeholder="get_token" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-500" />
+              </label>
+              <label className="block text-sm text-slate-700">
+                {t('authTokens.description_label', 'Script path')}
+                <input value={form.script} onChange={(e) => setForm({ ...form, script: e.target.value })} placeholder="tokens/my_script.py" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-500" />
+              </label>
+              <label className="block text-sm text-slate-700">
+                {t('authTokens.description_label', 'Argument')}
+                <input value={form.argument} onChange={(e) => setForm({ ...form, argument: e.target.value })} placeholder="repo" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-500" />
+              </label>
+              {formError && <div className="text-sm text-rose-600">{formError}</div>}
+            </div>
+            <div className="flex justify-end gap-3 border-t border-slate-200 px-5 py-4">
+              <button onClick={() => setImportOpen(false)} className="rounded-lg px-4 py-2 text-sm text-slate-500 hover:bg-slate-100">{t('common.cancel')}</button>
+              <button onClick={handleCreate} disabled={saving} className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-50">{saving ? t('common.loading') : t('common.save')}</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ManagementTable>
           <colgroup>

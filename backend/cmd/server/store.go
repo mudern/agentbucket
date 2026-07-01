@@ -1,9 +1,11 @@
 package main
 
 import (
+	"crypto/sha256"
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -275,10 +277,10 @@ func seedState(rootDir string) State {
 			{ID: 105, Name: "Internal DB", AccessTarget: "内部数据库只读访问", Script: "tokens/db_read.py", FunctionName: "get_token", Argument: "database", Status: "启用", UpdatedAt: "刚刚"},
 		},
 		Users: []User{
-			{ID: 1, Name: "Luna", Email: "luna@agentbucket.dev", Role: "super_admin", Active: true},
-			{ID: 2, Name: "Alex", Email: "alex@agentbucket.dev", Role: "admin", Active: true},
-			{ID: 3, Name: "Ivy", Email: "ivy@agentbucket.dev", Role: "user", Active: true},
-			{ID: 4, Name: "Noah", Email: "noah@agentbucket.dev", Role: "user", Active: false},
+			{ID: 1, Name: "Luna", Email: "luna@agentbucket.dev", Role: "super_admin", Active: true, PasswordHash: hashPassword("admin123")},
+			{ID: 2, Name: "Alex", Email: "alex@agentbucket.dev", Role: "admin", Active: true, PasswordHash: hashPassword("admin123")},
+			{ID: 3, Name: "Ivy", Email: "ivy@agentbucket.dev", Role: "user", Active: true, PasswordHash: hashPassword("user123")},
+			{ID: 4, Name: "Noah", Email: "noah@agentbucket.dev", Role: "user", Active: false, PasswordHash: hashPassword("user123")},
 		},
 		Approvals:    []Approval{},
 		ChatSessions: map[string][]ChatSession{},
@@ -363,6 +365,11 @@ func (s *Store) snapshot() State {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.state
+}
+
+func hashPassword(password string) string {
+	hash := sha256.Sum256([]byte(password))
+	return fmt.Sprintf("%x", hash)
 }
 
 func (s *Store) update(fn func(*State) error) error {

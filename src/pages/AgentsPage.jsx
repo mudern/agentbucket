@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import AgentCard from '../components/AgentCard'
 import LoadingPanel from '../components/LoadingPanel'
 import PageHeader from '../components/PageHeader'
-import WizardModal from '../components/WizardModal'
 import { getAgents } from '../api'
 import { useT } from '../i18n'
 import useAsyncData from '../hooks/useAsyncData'
@@ -10,7 +10,6 @@ import useAsyncData from '../hooks/useAsyncData'
 export default function AgentsPage() {
   const [query, setQuery] = useState('')
   const [selectedTags, setSelectedTags] = useState([])
-  const [createOpen, setCreateOpen] = useState(false)
   const { data: agents = [], loading } = useAsyncData(getAgents, [])
   const t = useT()
 
@@ -39,29 +38,10 @@ export default function AgentsPage() {
         title={t('agents.title')}
         description=""
         action={
-          <button onClick={() => setCreateOpen(true)} className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-700">
+          <Link to="/deploy" className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-700">
             {t('agents.new_agent')}
-          </button>
+          </Link>
         }
-      />
-      <WizardModal
-        open={createOpen}
-        title={t('agents.new_agent')}
-        onClose={() => setCreateOpen(false)}
-        steps={[
-          {
-            label: t('common.name'),
-            content: <div className="text-sm leading-6 text-slate-600">{t('agents.new_agent_hint')}</div>,
-          },
-          {
-            label: t('progress.title', '能力'),
-            content: <div className="text-sm leading-6 text-slate-600">{t('deploy.capabilities_desc')}</div>,
-          },
-          {
-            label: t('common.confirm'),
-            content: <div className="text-sm leading-6 text-slate-600">{t('deploy.review_and_deploy')}</div>,
-          },
-        ]}
       />
 
       <div className="mb-6 grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:grid-cols-[1.2fr_1fr]">

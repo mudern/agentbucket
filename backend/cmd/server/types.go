@@ -119,11 +119,12 @@ type AuthToken struct {
 }
 
 type User struct {
-	ID     int    `json:"id"`
-	Name   string `json:"name"`
-	Email  string `json:"email"`
-	Role   string `json:"role"`
-	Active bool   `json:"active"`
+	ID           int    `json:"id"`
+	Name         string `json:"name"`
+	Email        string `json:"email"`
+	Role         string `json:"role"`
+	Active       bool   `json:"active"`
+	PasswordHash string `json:"-"` // never exposed via API
 }
 
 type Approval struct {
