@@ -42,6 +42,7 @@ func NewStore(path string, rootDir string) (*Store, error) {
 	if err := store.loadChat(); err != nil {
 		return nil, err
 	}
+	store.importCCSAITokens()
 	return store, nil
 }
 
