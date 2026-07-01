@@ -119,13 +119,9 @@ pnpm dev
 
 ## AI Provider 配置
 
-AI Token 从 `~/.config/ccs/providers/*.env` 自动导入。每个 `.env` 文件包含：
+首次启动时，AI Token 从 `~/.config/ccs/providers/*.env` 自动导入到 SQLite 数据库。后续重启从数据库加载，不再读取 CCS 目录。
 
-```bash
-ANTHROPIC_AUTH_TOKEN="sk-xxx"
-ANTHROPIC_BASE_URL="https://api.deepseek.com/anthropic"
-ANTHROPIC_MODEL="deepseek-v4-pro[1m]"
-```
+每个 `.env` 文件包含 Provider 的 API Key、Base URL 和模型配置。Secrets 存储在服务端，API 返回时自动脱敏。
 
 支持通过 Anthropic 兼容协议接入的 Provider：
 
