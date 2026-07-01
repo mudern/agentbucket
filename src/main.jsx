@@ -2,13 +2,19 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
+import { LanguageProvider, loadTranslations } from './i18n'
 import './styles.css'
 import 'highlight.js/styles/github-dark.css'
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </React.StrictMode>,
-)
+// Preload translations before rendering
+loadTranslations().then(() => {
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    <React.StrictMode>
+      <BrowserRouter>
+        <LanguageProvider>
+          <App />
+        </LanguageProvider>
+      </BrowserRouter>
+    </React.StrictMode>,
+  )
+})

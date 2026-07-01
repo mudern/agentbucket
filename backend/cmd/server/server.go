@@ -84,6 +84,8 @@ func (app *App) routes() http.Handler {
 	mux.HandleFunc("POST /api/bus/agents/{agentId}/register", app.busRegister)
 	mux.HandleFunc("POST /api/bus/agents/{agentId}/message", app.busSendMessage)
 	mux.HandleFunc("GET /api/bus/messages", app.busMessages)
+	mux.HandleFunc("PATCH /api/users/{id}", app.patchUser)
+	mux.HandleFunc("POST /api/approvals/{id}/{action}", app.approvalAction)
 	if hasDist {
 		fs := http.FileServer(http.Dir(distDir))
 		mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {

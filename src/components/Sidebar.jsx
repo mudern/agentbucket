@@ -3,9 +3,27 @@ import LogoMark from './LogoMark'
 import { navGroups } from '../data'
 import { getCurrentUser } from '../api'
 import useAsyncData from '../hooks/useAsyncData'
+import { useLanguage, useT } from '../i18n'
+
+const navKeyMap = {
+  '部署 Agent': 'nav.deploy_agent',
+  '所有 Agent': 'nav.all_agents',
+  '用户权限': 'nav.users',
+  '审批中心': 'nav.approvals',
+  '仓库管理': 'nav.repositories',
+  'AI Token': 'nav.ai_tokens',
+  '鉴权 Token': 'nav.auth_tokens',
+}
+
+const groupKeyMap = {
+  'Agent': 'nav.agent',
+  '管理': 'nav.admin',
+}
 
 export default function Sidebar({ collapsed, onToggle, onLogout }) {
   const { data: currentUser } = useAsyncData(getCurrentUser, [])
+  const { lang, setLang } = useLanguage()
+  const t = useT()
   const allowed = (item) => item.roles.includes(currentUser?.role)
 
   return (
@@ -31,7 +49,7 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
           {navGroups.map((group) => (
             <div key={group.title}>
               <div className="mb-2 px-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
-                {group.title}
+                {t(groupKeyMap[group.title], group.title)}
               </div>
               <div className="space-y-1">
                 {group.items.filter(allowed).map((item) => (
@@ -46,7 +64,7 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
                       }`
                     }
                   >
-                    {item.label}
+                    {t(navKeyMap[item.label], item.label)}
                   </NavLink>
                 ))}
               </div>
@@ -55,14 +73,38 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
         </nav>
       ) : null}
 
+      {/* Language Switcher */}
+      {!collapsed && (
+        <div className="mb-2 border-t border-slate-100 pt-3">
+          <div className="flex gap-1 px-1">
+            <button
+              onClick={() => setLang('zh')}
+              className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition ${
+                lang === 'zh' ? 'bg-sky-50 text-sky-700' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+              }`}
+            >
+              中文
+            </button>
+            <button
+              onClick={() => setLang('en')}
+              className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition ${
+                lang === 'en' ? 'bg-sky-50 text-sky-700' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+              }`}
+            >
+              EN
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Logout */}
       {!collapsed && currentUser && (
         <button
           type="button"
           onClick={onLogout}
-          className="mt-6 w-full rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-950"
+          className="mt-2 w-full rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-950"
         >
-          退出登录
+          {t('common.logout')}
         </button>
       )}
     </aside>

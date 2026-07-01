@@ -1,33 +1,56 @@
 import { useMemo, useState } from 'react'
-import { getApprovals } from '../api'
+import { getApprovals, approveApproval, rejectApproval } from '../api'
 import LoadingPanel from '../components/LoadingPanel'
 import PageHeader from '../components/PageHeader'
+import { useT } from '../i18n'
 import useAsyncData from '../hooks/useAsyncData'
 
 export default function ApprovalsPage() {
   const [tab, setTab] = useState('pending')
   const { data: approvals = [], loading } = useAsyncData(getApprovals, [])
+  const [local, setLocal] = useState([])
+  const [acting, setActing] = useState(null)
+  const t = useT()
+
+  const displayed = local.length > 0 ? local : approvals
+
   const filteredApprovals = useMemo(
-    () =>
-      approvals.filter((item) =>
-        tab === 'pending' ? item.status === '待审批' || item.status === '处理中' : item.status !== '待审批' && item.status !== '处理中',
-      ),
-    [approvals, tab],
+    () => displayed.filter((item) =>
+      tab === 'pending' ? item.status === '待审批' || item.status === '处理中' : item.status !== '待审批' && item.status !== '处理中',
+    ),
+    [displayed, tab],
   )
 
   if (loading) {
-    return <LoadingPanel label="正在加载审批列表..." />
+    return <LoadingPanel label={t('common.loading')} />
+  }
+
+  const handleAction = async (id, action) => {
+    setActing(id)
+    try {
+      if (action === 'approve') {
+        await approveApproval(id)
+      } else {
+        await rejectApproval(id)
+      }
+      if (local.length === 0) setLocal([...approvals])
+      setLocal((c) => c.map((a) => (a.id === id ? { ...a, status: action === 'approve' ? '已通过' : '已拒绝', reviewer: 'admin' } : a)))
+    } catch (e) {
+      alert(`${t('common.save_failed')}: ${e.message}`)
+    } finally {
+      setActing(null)
+    }
   }
 
   return (
     <div>
-      <PageHeader title="审批中心" description="管理员可审批新 Agent 部署请求、AI Token 使用请求与鉴权 Token 访问请求。" />
+      <PageHeader title={t('approvals.title')} description={t('common.admin')} />
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 px-5 pt-4">
           <div className="flex gap-2">
             {[
-              ['pending', '待审批'],
-              ['done', '已审批'],
+              ['pending', t('approvals.status_pending')],
+              ['done', t('approvals.status_approved')],
             ].map(([value, label]) => (
               <button
                 key={value}
@@ -45,12 +68,11 @@ export default function ApprovalsPage() {
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50 text-left text-slate-500">
             <tr>
-              <th className="px-6 py-4">类型</th>
-              <th className="px-6 py-4">申请人</th>
-              <th className="px-6 py-4">说明</th>
-              <th className="px-6 py-4">优先级</th>
-              <th className="px-6 py-4">状态</th>
-              <th className="px-6 py-4">操作</th>
+              <th className="px-6 py-4">{t('common.type')}</th>
+              <th className="px-6 py-4">{t('approvals.requester')}</th>
+              <th className="px-6 py-4">{t('common.description')}</th>
+              <th className="px-6 py-4">{t('common.status')}</th>
+              <th className="px-6 py-4">{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 text-slate-700">
@@ -60,21 +82,41 @@ export default function ApprovalsPage() {
                 <td className="px-6 py-4">{item.applicant}</td>
                 <td className="max-w-xl px-6 py-4 leading-6">{item.summary}</td>
                 <td className="px-6 py-4">
-                  <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs text-amber-700">{item.priority}</span>
+                  <span className={`rounded-full px-2.5 py-1 text-xs ${
+                    item.status === '已通过' ? 'bg-emerald-50 text-emerald-700' :
+                    item.status === '已拒绝' ? 'bg-red-50 text-red-700' :
+                    'bg-amber-50 text-amber-700'
+                  }`}>{item.status}</span>
                 </td>
-                <td className="px-6 py-4">{item.status}</td>
                 <td className="px-6 py-4">
                   {tab === 'pending' ? (
                     <div className="flex gap-2">
-                      <button className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-medium text-white">批准</button>
-                      <button className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-medium text-slate-700">驳回</button>
+                      <button
+                        onClick={() => handleAction(item.id, 'approve')}
+                        disabled={acting === item.id}
+                        className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                      >
+                        {t('approvals.approve')}
+                      </button>
+                      <button
+                        onClick={() => handleAction(item.id, 'reject')}
+                        disabled={acting === item.id}
+                        className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-200 disabled:opacity-50"
+                      >
+                        {t('approvals.reject')}
+                      </button>
                     </div>
                   ) : (
-                    <span className="text-slate-500">审批人：{item.reviewer}</span>
+                    <span className="text-slate-500">{item.reviewer || '-'}</span>
                   )}
                 </td>
               </tr>
             ))}
+            {filteredApprovals.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-6 py-12 text-center text-slate-400">{t('approvals.no_approvals')}</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

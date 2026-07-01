@@ -23,7 +23,97 @@ func (app *App) users(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) approvals(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, app.store.snapshot().Approvals)
+	switch r.Method {
+	case http.MethodGet:
+		writeJSON(w, http.StatusOK, app.store.snapshot().Approvals)
+	case http.MethodPost:
+		var a Approval
+		if err := json.NewDecoder(r.Body).Decode(&a); err != nil {
+			writeError(w, http.StatusBadRequest, err)
+			return
+		}
+		_ = app.store.update(func(s *State) error {
+			maxID := 0
+			for _, existing := range s.Approvals {
+				if existing.ID > maxID {
+					maxID = existing.ID
+				}
+			}
+			a.ID = maxID + 1
+			a.Status = "待审批"
+			s.Approvals = append(s.Approvals, a)
+			return nil
+		})
+		writeJSON(w, http.StatusCreated, a)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func (app *App) approvalAction(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	action := r.PathValue("action")
+	id := 0
+	fmt.Sscanf(idStr, "%d", &id)
+	var result struct {
+		Action string `json:"action"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&result); err != nil {
+		result.Action = action
+	}
+	found := false
+	_ = app.store.update(func(s *State) error {
+		for i := range s.Approvals {
+			if s.Approvals[i].ID == id {
+				switch result.Action {
+				case "approve":
+					s.Approvals[i].Status = "已通过"
+					s.Approvals[i].Reviewer = "admin"
+				case "reject":
+					s.Approvals[i].Status = "已拒绝"
+					s.Approvals[i].Reviewer = "admin"
+				}
+				found = true
+				return nil
+			}
+		}
+		return nil
+	})
+	if !found {
+		writeError(w, http.StatusNotFound, fmt.Errorf("approval %q not found", idStr))
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "action": result.Action})
+}
+
+func (app *App) patchUser(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	var updates map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
+		writeError(w, http.StatusBadRequest, err)
+		return
+	}
+	found := false
+	_ = app.store.update(func(s *State) error {
+		for i := range s.Users {
+			if fmt.Sprintf("%d", s.Users[i].ID) == id {
+				if v, ok := updates["role"].(string); ok {
+					s.Users[i].Role = v
+				}
+				if v, ok := updates["active"].(bool); ok {
+					s.Users[i].Active = v
+				}
+				found = true
+				return nil
+			}
+		}
+		return nil
+	})
+	if !found {
+		writeError(w, http.StatusNotFound, fmt.Errorf("user %q not found", id))
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 }
 
 func (app *App) aiTokens(w http.ResponseWriter, r *http.Request) {

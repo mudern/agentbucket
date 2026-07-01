@@ -127,3 +127,27 @@ export async function startDeployment(id) {
 export async function deleteDeployment(id) {
   return request(`/api/deployments/${id}`, { method: 'DELETE' })
 }
+
+export async function createAiToken(data) {
+  return request('/api/ai-tokens', { method: 'POST', body: JSON.stringify(data) })
+}
+
+export async function createAuthToken(data) {
+  return request('/api/auth-tokens', { method: 'POST', body: JSON.stringify(data) })
+}
+
+export async function patchUser(id, updates) {
+  return request(`/api/users/${id}`, { method: 'PATCH', body: JSON.stringify(updates) })
+}
+
+export async function approveApproval(id) {
+  return request(`/api/approvals/${id}/approve`, { method: 'POST', body: JSON.stringify({ action: 'approve' }) })
+}
+
+export async function rejectApproval(id) {
+  return request(`/api/approvals/${id}/reject`, { method: 'POST', body: JSON.stringify({ action: 'reject' }) })
+}
+
+export async function createApproval(data) {
+  return request('/api/approvals', { method: 'POST', body: JSON.stringify(data) })
+}

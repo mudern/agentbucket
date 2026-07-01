@@ -3,7 +3,8 @@ import { Link, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
-import { getAgentById, getAgentSessionMessages, getAgentSessions, createAgentSession } from '../api'
+import { getAgentById, getAgentSessionMessages, getAgentSessions, createAgentSession, deleteSession } from '../api'
+import { useT } from '../i18n'
 import LoadingPanel from '../components/LoadingPanel'
 import useAsyncData from '../hooks/useAsyncData'
 
@@ -203,6 +204,22 @@ export default function AgentChatPage() {
     }
   }
 
+  const t = useT()
+
+  const handleDeleteSession = async (e, sessionId, sessionTitle) => {
+    e.stopPropagation()
+    if (!window.confirm(t('session.deleteConfirm', `确定要删除会话「${sessionTitle}」吗？`))) return
+    try {
+      await deleteSession(agentId, sessionId)
+      if (currentSessionId === sessionId) {
+        setActiveSession(null)
+      }
+      setSessionsRefresh((n) => n + 1)
+    } catch (error) {
+      console.error('delete session failed:', error)
+    }
+  }
+
   if (agentLoading || !agent) {
     return <LoadingPanel label="正在加载 Agent 对话..." />
   }
@@ -295,7 +312,7 @@ export default function AgentChatPage() {
                 <button
                   key={session.id}
                   onClick={() => setActiveSession(session.id)}
-                  className={`w-full rounded-xl px-3 py-2.5 text-left transition ${
+                  className={`group relative w-full rounded-xl px-3 py-2.5 pr-8 text-left transition ${
                     currentSessionId === session.id
                       ? 'bg-white shadow-sm ring-1 ring-sky-200'
                       : 'hover:bg-white'
@@ -310,6 +327,16 @@ export default function AgentChatPage() {
                     {session.preview && <span className="truncate">{session.preview}</span>}
                     {session.updatedAt && <span className="ml-auto shrink-0">{formatTime(session.updatedAt)}</span>}
                   </div>
+                  <button
+                    onClick={(e) => handleDeleteSession(e, session.id, session.title)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-300 opacity-0 transition hover:text-red-500 group-hover:opacity-100"
+                    title="删除会话"
+                    aria-label="删除会话"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
                 </button>
               ))}
               {sessionsLoading && <div className="px-3 py-2 text-sm text-slate-400">加载中...</div>}
