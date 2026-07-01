@@ -1,270 +1,216 @@
 <p align="center">
   <picture>
-    <img src="agentbucket-logo-mark-transparent.png" alt="Buckie" width="140" />
-  </picture>
-</p>
-<p align="center">
-  <picture>
     <img src="public/agentbucket-logo-mark.svg" alt="AgentBucket" width="300" />
   </picture>
 </p>
 
 <p align="center">
-  AI Agent 控制平面 —— 一站管理、部署、编排你的 AI Agent 舰队
+  <strong>AI Agent Control Plane</strong><br/>
+  Define, deploy, and orchestrate your AI agent fleet — with a single binary.
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Go-1.22+-00ADD8?style=flat-square&logo=go&logoColor=white" alt="Go" />
-  <img src="https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=white" alt="React" />
-  <img src="https://img.shields.io/badge/Tailwind-3-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind" />
-  <img src="https://img.shields.io/badge/Docker-✓-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker" />
-  <img src="https://img.shields.io/badge/SQLite-✓-003B57?style=flat-square&logo=sqlite&logoColor=white" alt="SQLite" />
-  <img src="https://img.shields.io/badge/Vite-5-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite" />
-  <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License" />
+  <img src="https://img.shields.io/badge/Go-1.22+-00ADD8?style=flat&logo=go&logoColor=white" alt="Go" />
+  <img src="https://img.shields.io/badge/React-18-61DAFB?style=flat&logo=react&logoColor=white" alt="React" />
+  <img src="https://img.shields.io/badge/Tailwind-3-06B6D4?style=flat&logo=tailwindcss&logoColor=white" alt="Tailwind" />
+  <img src="https://img.shields.io/badge/Vite-5-646CFF?style=flat&logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/SQLite-3-003B57?style=flat&logo=sqlite&logoColor=white" alt="SQLite" />
+  <img src="https://img.shields.io/badge/Docker-✓-2496ED?style=flat&logo=docker&logoColor=white" alt="Docker" />
+  <img src="https://img.shields.io/badge/i18n-EN%2FZH-blue?style=flat" alt="i18n" />
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Runtime-Claude%20Code-8B5CF6?style=flat-square" alt="Claude Code" />
-  <img src="https://img.shields.io/badge/Runtime-Codex-10A37F?style=flat-square" alt="Codex" />
-  <img src="https://img.shields.io/badge/Provider-DeepSeek-4F46E5?style=flat-square" alt="DeepSeek" />
-  <img src="https://img.shields.io/badge/Provider-GLM-0284C7?style=flat-square" alt="GLM" />
-  <img src="https://img.shields.io/badge/Provider-Kimi-7C3AED?style=flat-square" alt="Kimi" />
-  <img src="https://img.shields.io/badge/Provider-MiniMax-F97316?style=flat-square" alt="MiniMax" />
+  <a href="https://github.com/mudern/agentbucket/blob/main/README.zh.md">中文文档</a>
 </p>
 
 ---
 
-AgentBucket 是一个轻量级的 AI Agent 控制平面。你可以用它来：
+AgentBucket is a lightweight AI Agent control plane. Define agents via TOML manifests, deploy them as Docker containers with automatic sidecar orchestration, and manage everything through a polished web UI or REST API.
 
-- **管理 Agent** — 通过 TOML 文件定义 Agent 的模型、Runtime、Skill、MCP
-- **部署 Agent** — 一键 Docker 化部署，支持 extra install 自定义依赖
-- **多模型切换** — DeepSeek / GLM / Kimi / MiniMax，Anthropic 兼容协议
-- **多 Runtime** — Claude Code + Codex，本地和容器双模式
-- **Agent 总线** — Agent 之间互相发现、发消息、协作
-- **前端聊天** — Markdown 渲染 + 代码高亮 + 交互式选项
+## Features
 
-## 架构
+- **Agent Definition** — Declare agents in `agent.toml` with model, runtime, skills, and MCP configs
+- **One-Click Deploy** — Automatic Docker build + container run with sidecar injection, port allocation, and health monitoring
+- **Multi-Provider** — DeepSeek, GLM, Kimi, MiniMax via Anthropic-compatible API
+- **Multi-Runtime** — Claude Code and Codex, both local and container modes
+- **Real-Time SSE Chat** — Streaming responses with Markdown rendering, syntax highlighting, and interactive option buttons
+- **Agent Bus** — Peer-to-peer agent discovery, messaging, and collaboration (200-message ring buffer + SQLite audit log)
+- **Session Management** — Per-agent chat sessions with history, auto-persistence, and delete support
+- **Token Resolution** — Auth tokens resolved through sidecars with agent-level authorization
+- **Frontend UI** — Polished dashboard with searchable tables, capability pickers, deployment progress monitoring
+- **i18n Ready** — English and Chinese UI, bilingual documentation
+- **Docker-Native** — DooD (Docker-out-of-Docker) deployment with `docker-compose`, no DinD required
+- **API-First** — Every feature accessible via curl; suitable for CI/CD and agent-to-agent communication
+
+## Architecture
 
 ```
 ┌──────────────────────────────────────────────────┐
-│                AgentBucket UI                     │
-│              React + Tailwind                     │
-│              http://127.0.0.1:5177                │
+│  AgentBucket UI  (React + Vite + Tailwind)        │
 ├──────────────────────────────────────────────────┤
-│                AgentBucket Backend                │
-│              Go + SQLite                          │
-│              http://127.0.0.1:8080                │
-│  ┌────────────────────────────────────────────┐  │
-│  │            Agent Bus (总 线)                │  │
-│  │     Agent ↔ Agent 互通，最近 200 条消息     │  │
-│  └────────────────────────────────────────────┘  │
+│  AgentBucket Backend  (Go 1.22 + SQLite)          │
+│  ┌────────────────────────────────────────────┐   │
+│  │  Agent Bus  (peer-to-peer agent messaging)  │   │
+│  └────────────────────────────────────────────┘   │
 ├──────────────────────────────────────────────────┤
-│              Docker Sidecar 集群                   │
-│  ┌───────────┐ ┌───────────┐ ┌───────────┐      │
-│  │  Agent 1  │ │  Agent 2  │ │  Agent N  │      │
-│  │ :18043    │ │ :18239    │ │ :18020    │      │
-│  │ ClaudeCode│ │ ClaudeCode│ │  Codex    │      │
-│  └───────────┘ └───────────┘ └───────────┘      │
+│  Docker Sidecar Cluster  (auto-orchestrated)      │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐         │
+│  │ Agent 1  │ │ Agent 2  │ │ Agent N  │         │
+│  │ :18043   │ │ :18239   │ │ :18020   │         │
+│  │ClaudeCode│ │ClaudeCode│ │  Codex   │         │
+│  └──────────┘ └──────────┘ └──────────┘         │
 └──────────────────────────────────────────────────┘
 ```
 
-## 快速开始
+## Quick Start
 
-### 前置条件
+### Prerequisites
 
 - Go 1.22+
-- Node.js 20+
-- pnpm
-- Docker（部署 Agent 容器时需要）
-- AI Provider Token（通过 CCS 管理）
+- Node.js 20+ / pnpm (for frontend development)
+- Docker (for deploying agent containers)
+- AI provider tokens (auto-imported from `~/.config/ccs/providers/*.env`)
 
-### 安装
+### Development
 
 ```bash
 git clone git@github.com:mudern/agentbucket.git
 cd agentbucket
 
-# 安装前端依赖
+# Install frontend dependencies
 pnpm install
 
-# 构建前端
-pnpm build
-```
-
-### 启动后端
-
-```bash
+# Start backend
 cd backend
 go run ./cmd/server/
+# => AgentBucket backend listening on http://127.0.0.1:8080
 
-# 输出: AgentBucket backend listening on http://127.0.0.1:8080
+# Start frontend (in another terminal)
+pnpm dev
+# => http://127.0.0.1:5177
 ```
 
-默认绑定 `127.0.0.1:8080`（Docker sidecar 需要 `host.docker.internal:8080` 回调）。
-
-环境变量：
-
-| 变量 | 默认值 | 说明 |
-|------|--------|------|
-| `AGENTBUCKET_ADDR` | `127.0.0.1:8080` | 监听地址 |
-| `AGENTBUCKET_BUILD_TIMEOUT` | `180s` | Docker build 超时 |
-| `AGENTBUCKET_DATA_DIR` | `backend/.data` | 数据目录 |
-
-### 启动前端开发服务器
+### Docker Deployment
 
 ```bash
-pnpm dev
-# 输出: http://127.0.0.1:5177
+docker-compose up -d
+# => http://localhost:8080
 ```
 
-## AI Provider 配置
+The backend mounts `/var/run/docker.sock` to manage sidecar containers on the host Docker daemon — **not Docker-in-Docker**.
 
-首次启动时，AI Token 从 `~/.config/ccs/providers/*.env` 自动导入到 SQLite 数据库。后续重启从数据库加载，不再读取 CCS 目录。
+### Environment Variables
 
-每个 `.env` 文件包含 Provider 的 API Key、Base URL 和模型配置。Secrets 存储在服务端，API 返回时自动脱敏。
+| Variable | Default | Description |
+|---|---|---|
+| `AGENTBUCKET_ADDR` | `127.0.0.1:8080` | Listen address |
+| `AGENTBUCKET_DATA_DIR` | `backend/.data` | SQLite and artifact storage |
+| `AGENTBUCKET_BUILD_TIMEOUT` | `300s` | Docker build timeout |
+| `AGENTBUCKET_SIDECAR_HOST` | `127.0.0.1` | Sidecar reachable host (`host.docker.internal` in Docker) |
+| `AGENTBUCKET_PROVIDERS_DIR` | `~/.config/ccs/providers` | CCS provider env files |
+| `AGENTBUCKET_ADMIN_TOKEN` | auto-generated | Master API token for auth |
 
-支持通过 Anthropic 兼容协议接入的 Provider：
-
-| Provider | Base URL |
-|----------|----------|
-| DeepSeek | `api.deepseek.com/anthropic` |
-| GLM | `open.bigmodel.cn/api/anthropic` |
-| Kimi | `api.moonshot.cn/anthropic` |
-| MiniMax | `api.minimaxi.com/anthropic` |
-
-## Agent 定义
+## Agent Definition
 
 ```toml
 # agents/my-agent/agent.toml
-id          = "my-agent"
-name        = "我的 Agent"
-description = "Agent 功能描述"
-model       = "deepseek-v4-pro[1m]"
-runtime     = "claudecode"
+id              = "my-agent"
+name            = "My Agent"
+description     = "Agent description"
+model           = "deepseek-v4-pro[1m]"
+runtime         = "claudecode"
 runtime_version = "latest"
-api_token   = "deepseek"
-skills      = ["knowledge-base", "web-browser"]
-mcps        = ["github-mcp", "filesystem-mcp"]
-extra_install = ["apk add --no-cache github-cli"]
+api_token       = "deepseek"
+skills          = ["knowledge-base", "web-browser"]
+mcps            = ["github-mcp", "filesystem-mcp"]
+extra_install   = ["apk add --no-cache github-cli"]
 ```
 
-字段说明：
+| Field | Description |
+|---|---|
+| `id` | Unique agent identifier |
+| `name` | Display name |
+| `model` | AI model name |
+| `runtime` | `claudecode` or `codex` |
+| `api_token` | Linked AI token name |
+| `skills` | Enabled skill directories |
+| `mcps` | MCP server configs |
+| `extra_install` | Additional Dockerfile RUN commands |
 
-| 字段 | 说明 |
-|------|------|
-| `id` | Agent 唯一标识 |
-| `name` | 显示名称 |
-| `model` | AI 模型名 |
-| `runtime` | 运行时：`claudecode` / `codex` |
-| `api_token` | 关联的 AI Token 名称 |
-| `skills` | 启用的 Skill 列表 |
-| `mcps` | MCP 配置列表 |
-| `extra_install` | 部署时额外安装命令（Dockerfile RUN） |
+## API Overview
 
-## Skills
+Full API documentation available in `.skills/agentbucket-admin/SKILL.md`.
 
-标准 Skill 目录结构：
-
-```
-skills/
-  knowledge-base/
-    SKILL.md
-  web-browser/
-    SKILL.md
-```
-
-内置 Skills：
-
-| Skill | 说明 |
-|-------|------|
-| `knowledge-base` | 知识库查询 |
-| `document-parser` | 文档解析 |
-| `git-reader` | Git 仓库读取 |
-| `web-browser` | 网页浏览 |
-| `agentbucket-comms` | Agent 间总线通信与 Token 解析 |
-
-## API
-
-完整 API 文档见 `agentbucket-api-skill/SKILL.md`。
-
-### Agent 管理
-
+### Agents
 ```bash
-# 列出 Agent
-GET  /api/agents
-
-# 扫描 Agent 定义
-POST /api/agent-definitions/scan
+GET    /api/agents
+POST   /api/agent-definitions/scan
 ```
 
-### 部署
-
+### Deployments
 ```bash
-# 查看部署选项
-GET  /api/deploy-options
-
-# 部署 Agent
-POST /api/deployments
-Body: { repositoryId, agentId, apiTokenId, runtime, skills, mcps, ... }
-
-# 查看部署
-GET  /api/deployments/{id}
-GET  /api/deployments/{id}/status
-
-# 启停容器
-POST /api/deployments/{id}/start
-POST /api/deployments/{id}/stop
+GET    /api/deploy-options
+POST   /api/deployments
+GET    /api/deployments/{id}
+POST   /api/deployments/{id}/start
+POST   /api/deployments/{id}/stop
 ```
 
-### 对话
-
+### Chat & Sessions
 ```bash
-# 会话管理
-GET  /api/agents/{id}/sessions
-POST /api/agents/{id}/sessions
-
-# 消息
-GET  /api/agents/{id}/messages?sessionId=xxx
-POST /api/agents/{id}/messages
+GET    /api/agents/{id}/sessions
+POST   /api/agents/{id}/sessions
+DELETE /api/agents/{id}/sessions/{sessionId}
+GET    /api/agents/{id}/messages?sessionId=xxx
+POST   /api/agents/{id}/messages       # stream: true for SSE
 ```
 
-### Agent 总线
-
+### Agent Bus
 ```bash
-# 查看总线 Agent
-GET  /api/bus/agents
-
-# 注册到总线
-POST /api/bus/agents/{id}/register
-
-# 发送消息
-POST /api/bus/agents/{id}/message
-
-# 查看消息
-GET  /api/bus/messages?toAgent=xxx
+GET    /api/bus/agents
+POST   /api/bus/agents/{id}/register
+POST   /api/bus/agents/{id}/message
+GET    /api/bus/messages?toAgent=xxx
 ```
 
-## 项目结构
+### Tokens & Repos
+```bash
+GET    /api/ai-tokens          POST   /api/ai-tokens
+GET    /api/auth-tokens        POST   /api/auth-tokens
+GET    /api/repositories       POST   /api/repositories
+PATCH  /api/repositories/{id}  DELETE /api/repositories/{id}
+```
+
+## Project Structure
 
 ```
 AgentBucket/
 ├── backend/
-│   ├── cmd/server/main.go       # Go 后端（单文件）
-│   ├── examples/agent-repo/     # 示例 Agent 仓库
-│   │   ├── agents/              # Agent 定义 (TOML)
-│   │   ├── skills/              # Skill 定义
-│   │   └── mcp/                 # MCP 配置
-│   ├── AGENT_STANDARD.md        # Agent 标准文档
-│   └── go.mod
-├── src/                         # React 前端
-│   ├── pages/                   # 页面组件
-│   ├── components/              # 通用组件
-│   └── api/                     # API 调用层
-├── agentbucket-api-skill/       # API Skill 文档
-├── public/                      # 静态资源
+│   ├── cmd/server/          # Go backend (HTTP + SQLite + Docker orchestration)
+│   │   ├── main.go          # Entrypoint
+│   │   ├── server.go        # Routes, recovery, health checker
+│   │   ├── types.go         # DTO/domain structs
+│   │   ├── store.go         # SQLite persistence
+│   │   ├── handlers.go      # HTTP handlers
+│   │   ├── deploy.go        # Docker build/run pipeline
+│   │   ├── agent_scan.go    # Repository scanning + agent.toml parser
+│   │   ├── chat.go          # Chat sessions, AI API calls, SSE streaming
+│   │   ├── bus.go           # Agent Bus registry/messaging
+│   │   └── ...
+│   ├── cmd/sidecar/         # Sidecar (compiled into each deploy image)
+│   ├── examples/agent-repo/ # Example agent definitions
+│   ├── tokens/              # Token resolution scripts
+│   └── Dockerfile           # Production Docker image
+├── src/                     # React frontend
+│   ├── pages/               # Page components (Agents, Chat, Deploy, etc.)
+│   ├── components/          # Shared UI components (Layout, Sidebar, etc.)
+│   ├── api/                 # API client layer
+│   └── i18n/                # Internationalization (EN/ZH)
+├── .skills/                 # Claude Code skills for development
+├── docker-compose.yml       # Orchestration config
 └── README.md
 ```
 
-## 许可
+## License
 
 MIT License

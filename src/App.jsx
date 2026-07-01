@@ -22,6 +22,7 @@ export default function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('agentbucket.auth')
+    localStorage.removeItem('agentbucket.token')
     setAuthenticated(false)
   }
 

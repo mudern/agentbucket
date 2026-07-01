@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"strings"
 	"time"
@@ -45,8 +47,40 @@ func runServer() {
 	go app.startGitSyncer(5 * time.Minute)
 
 	addr := env("AGENTBUCKET_ADDR", "127.0.0.1:8080")
+
+	// Prune bus_messages periodically
+	go func() {
+		for {
+			time.Sleep(1 * time.Hour)
+			if app.store.db != nil {
+				_, _ = app.store.db.Exec(`DELETE FROM bus_messages WHERE id NOT IN (SELECT id FROM bus_messages ORDER BY created_at DESC LIMIT 1000)`)
+			}
+		}
+	}()
+
+	// Graceful shutdown
+	server := &http.Server{Addr: addr, Handler: withCORS(withAuth(app.store, app.routes()))}
+	go func() {
+		sigCh := make(chan os.Signal, 1)
+		signal.Notify(sigCh, os.Interrupt)
+		<-sigCh
+		log.Println("shutting down...")
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+		server.Shutdown(shutdownCtx)
+		// Stop running containers
+		state := app.store.snapshot()
+		for _, d := range state.Deployments {
+			if d.Status == "running" {
+				exec.Command("docker", "stop", d.ContainerName).Run()
+				log.Printf("stopped container: %s", d.ContainerName)
+			}
+		}
+		os.Exit(0)
+	}()
+
 	log.Printf("AgentBucket backend listening on http://%s", addr)
-	log.Fatal(http.ListenAndServe(addr, withCORS(app.routes())))
+	log.Fatal(server.ListenAndServe())
 }
 
 func (app *App) routes() http.Handler {
@@ -56,6 +90,7 @@ func (app *App) routes() http.Handler {
 	distDir := filepath.Join(app.rootDir, "dist")
 	hasDist := dirExists(distDir)
 	mux.HandleFunc("/health", app.health)
+	mux.HandleFunc("POST /api/login", app.login)
 	mux.HandleFunc("/api/current-user", app.currentUser)
 	mux.HandleFunc("/api/agents", app.agents)
 	mux.HandleFunc("/api/agents/", app.agentSubresource)

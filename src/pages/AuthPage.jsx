@@ -1,20 +1,49 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import LogoMark from '../components/LogoMark'
+import { useT } from '../i18n'
+
+const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://127.0.0.1:8080'
 
 export default function AuthPage({ mode = 'login', onAuthenticated }) {
   const navigate = useNavigate()
   const isRegister = mode === 'register'
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const t = useT()
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
+    setError('')
 
     if (isRegister) {
       navigate('/login', { replace: true, state: { registered: true } })
       return
     }
 
-    onAuthenticated?.()
-    navigate('/', { replace: true })
+    setLoading(true)
+    try {
+      const resp = await fetch(`${API_BASE}/api/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      })
+      if (!resp.ok) {
+        const body = await resp.json().catch(() => ({}))
+        throw new Error(body.error || 'Login failed')
+      }
+      const data = await resp.json()
+      localStorage.setItem('agentbucket.token', data.token)
+      localStorage.setItem('agentbucket.auth', 'true')
+      onAuthenticated?.()
+      navigate('/', { replace: true })
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -32,7 +61,7 @@ export default function AuthPage({ mode = 'login', onAuthenticated }) {
                 !isRegister ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
-              登录
+              {t('auth.login_button')}
             </Link>
             <Link
               to="/register"
@@ -40,63 +69,53 @@ export default function AuthPage({ mode = 'login', onAuthenticated }) {
                 isRegister ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
-              注册
+              {t('auth.register_button')}
             </Link>
           </div>
 
           <div className="mb-6">
-            <h1 className="text-xl font-semibold text-slate-950">{isRegister ? '申请账号' : '登录 AgentBucket'}</h1>
+            <h1 className="text-xl font-semibold text-slate-950">{isRegister ? t('auth.register_title') : t('auth.login_title')}</h1>
             <p className="mt-2 text-sm leading-6 text-slate-500">
               {isRegister ? '注册后进入用户权限审批，通过后可登录控制台。' : '使用组织账号进入 Agent 管理工作台。'}
             </p>
           </div>
 
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            {isRegister && (
-              <label className="block text-sm font-medium text-slate-700">
-                姓名
-                <input
-                  required
-                  placeholder="你的姓名"
-                  className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
-                />
-              </label>
-            )}
+          {error && (
+            <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {error}
+            </div>
+          )}
 
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <label className="block text-sm font-medium text-slate-700">
-              邮箱
+              {t('auth.username_placeholder')}
               <input
                 required
-                type="email"
-                placeholder="name@company.com"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder={t('auth.username_placeholder')}
                 className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
               />
             </label>
 
             <label className="block text-sm font-medium text-slate-700">
-              <span>密码</span>
+              {t('auth.password_placeholder')}
               <input
                 required
                 type="password"
-                placeholder={isRegister ? '设置密码' : '输入密码'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={t('auth.password_placeholder')}
                 className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
               />
             </label>
 
-            {!isRegister && (
-              <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center gap-2 text-slate-600">
-                  <input type="checkbox" className="rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
-                  保持登录
-                </label>
-                <button type="button" className="font-medium text-sky-700 hover:text-sky-800">
-                  忘记密码
-                </button>
-              </div>
-            )}
-
-            <button className="h-11 w-full rounded-xl bg-sky-600 px-4 text-sm font-semibold text-white transition hover:bg-sky-700">
-              {isRegister ? '提交注册申请' : '登录'}
+            <button
+              type="submit"
+              disabled={loading}
+              className="h-11 w-full rounded-xl bg-sky-600 px-4 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:opacity-50"
+            >
+              {loading ? t('common.loading') : isRegister ? t('auth.register_button') : t('auth.login_button')}
             </button>
           </form>
         </section>

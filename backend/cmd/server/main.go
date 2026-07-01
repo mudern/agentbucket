@@ -6,6 +6,28 @@ import (
 	"net/http"
 )
 
+func (app *App) login(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, err)
+		return
+	}
+	state := app.store.snapshot()
+	for _, user := range state.Users {
+		if user.Name == req.Username && user.Active {
+			writeJSON(w, http.StatusOK, map[string]any{
+				"token": getMasterToken(),
+				"user":  user,
+			})
+			return
+		}
+	}
+	writeError(w, http.StatusUnauthorized, fmt.Errorf("invalid credentials"))
+}
+
 func (app *App) resolveToken(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)

@@ -1,13 +1,19 @@
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://127.0.0.1:8080'
 
+function getToken() {
+  return localStorage.getItem('agentbucket.token') || ''
+}
+
 async function request(path, options = {}) {
-  const response = await fetch(`${API_BASE}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers ?? {}),
-    },
-    ...options,
-  })
+  const token = getToken()
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers ?? {}),
+  }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  const response = await fetch(`${API_BASE}${path}`, { headers, ...options })
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({}))
