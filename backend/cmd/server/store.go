@@ -167,11 +167,14 @@ func (s *Store) loadChat() error {
 }
 
 func (s *Store) importCCSAITokens() {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return
+	providersDir := os.Getenv("AGENTBUCKET_PROVIDERS_DIR")
+	if providersDir == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return
+		}
+		providersDir = filepath.Join(home, ".config", "ccs", "providers")
 	}
-	providersDir := filepath.Join(home, ".config", "ccs", "providers")
 	entries, err := os.ReadDir(providersDir)
 	if err != nil {
 		return

@@ -69,7 +69,7 @@ func (app *App) createDeployment(req DeployRequest) (Deployment, error) {
 		HostPort:       hostPortFor(agent.ID),
 		CreatedAt:      time.Now(),
 	}
-	deployment.SidecarURL = fmt.Sprintf("http://127.0.0.1:%d", deployment.HostPort)
+	deployment.SidecarURL = fmt.Sprintf("http://%s:%d", sidecarHost(), deployment.HostPort)
 
 	if _, err := exec.LookPath("docker"); err != nil {
 		deployment.Message = "Docker CLI not found; generated build context only"
@@ -202,6 +202,13 @@ COPY mcp /app/mcp
 EXPOSE 8088
 ENTRYPOINT ["/usr/local/bin/agentbucket-sidecar"]
 `
+}
+
+func sidecarHost() string {
+	if h := os.Getenv("AGENTBUCKET_SIDECAR_HOST"); h != "" {
+		return h
+	}
+	return "127.0.0.1"
 }
 
 func runtimeInstallLine(runtime string, version string) string {

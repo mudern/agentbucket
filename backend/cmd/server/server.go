@@ -51,6 +51,10 @@ func runServer() {
 
 func (app *App) routes() http.Handler {
 	mux := http.NewServeMux()
+
+	// Serve frontend static files when dist/ directory exists (Docker / single-binary mode)
+	distDir := filepath.Join(app.rootDir, "dist")
+	hasDist := dirExists(distDir)
 	mux.HandleFunc("/health", app.health)
 	mux.HandleFunc("/api/current-user", app.currentUser)
 	mux.HandleFunc("/api/agents", app.agents)
@@ -80,6 +84,17 @@ func (app *App) routes() http.Handler {
 	mux.HandleFunc("POST /api/bus/agents/{agentId}/register", app.busRegister)
 	mux.HandleFunc("POST /api/bus/agents/{agentId}/message", app.busSendMessage)
 	mux.HandleFunc("GET /api/bus/messages", app.busMessages)
+	if hasDist {
+		fs := http.FileServer(http.Dir(distDir))
+		mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+			path := r.URL.Path
+			if filepath.Ext(path) != "" {
+				fs.ServeHTTP(w, r)
+			} else {
+				http.ServeFile(w, r, filepath.Join(distDir, "index.html"))
+			}
+		})
+	}
 	return mux
 }
 
@@ -144,7 +159,7 @@ func (app *App) recoverRunningContainers() {
 			ContainerName: containerName,
 			Status:        "running",
 			HostPort:      port,
-			SidecarURL:    fmt.Sprintf("http://127.0.0.1:%d", port),
+			SidecarURL:    fmt.Sprintf("http://%s:%d", sidecarHost(), port),
 			CreatedAt:     time.Now(),
 		}
 		_ = app.store.update(func(s *State) error {
@@ -234,6 +249,11 @@ func (app *App) syncGitRepo(repo *Repository) {
 		return nil
 	})
 	log.Printf("git sync: %s updated", repo.ID)
+}
+
+func dirExists(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && info.IsDir()
 }
 
 func (app *App) syncRepository(w http.ResponseWriter, r *http.Request) {

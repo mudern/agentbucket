@@ -1,0 +1,7 @@
+node_modules
+backend/.data
+dist
+.git
+*.md
+temp.md
+!backend/AGENT_STANDARD.md
