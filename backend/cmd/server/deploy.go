@@ -78,13 +78,14 @@ func (app *App) createDeployment(req DeployRequest) (Deployment, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), buildTimeout())
 	defer cancel()
 	build := exec.CommandContext(ctx, "docker", "build", "-t", deployment.ImageTag, contextDir)
-	out, err := build.CombinedOutput()
+	buildOut, err := build.CombinedOutput()
+	buildLog := string(buildOut)
 	if err != nil {
 		deployment.Status = "build_failed"
 		if ctx.Err() == context.DeadlineExceeded {
-			deployment.Message = "docker build timed out: " + string(out)
+			deployment.Message = "docker build timed out: " + buildLog
 		} else {
-			deployment.Message = string(out)
+			deployment.Message = buildLog
 		}
 		return deployment, nil
 	}
@@ -97,14 +98,15 @@ func (app *App) createDeployment(req DeployRequest) (Deployment, error) {
 		"-e", "AGENTBUCKET_URL=http://host.docker.internal:8080",
 		deployment.ImageTag,
 	)
-	out, err = run.CombinedOutput()
+	runOut, err := run.CombinedOutput()
 	if err != nil {
 		deployment.Status = "run_failed"
-		deployment.Message = string(out)
+		deployment.Message = buildLog + "\n---\n" + string(runOut)
 		return deployment, nil
 	}
 	deployment.Status = "running"
-	deployment.Message = strings.TrimSpace(string(out))
+	// Combine build log with container ID for complete traceability
+	deployment.Message = buildLog + "\n---\ncontainer: " + strings.TrimSpace(string(runOut))
 	return deployment, nil
 }
 

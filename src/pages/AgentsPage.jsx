@@ -4,6 +4,7 @@ import LoadingPanel from '../components/LoadingPanel'
 import PageHeader from '../components/PageHeader'
 import WizardModal from '../components/WizardModal'
 import { getAgents } from '../api'
+import { useT } from '../i18n'
 import useAsyncData from '../hooks/useAsyncData'
 
 export default function AgentsPage() {
@@ -11,6 +12,7 @@ export default function AgentsPage() {
   const [selectedTags, setSelectedTags] = useState([])
   const [createOpen, setCreateOpen] = useState(false)
   const { data: agents = [], loading } = useAsyncData(getAgents, [])
+  const t = useT()
 
   const tags = useMemo(() => [...new Set(agents.flatMap((agent) => agent.tags))], [agents])
 
@@ -34,46 +36,46 @@ export default function AgentsPage() {
   return (
     <div>
       <PageHeader
-        title="所有 Agent"
-        description="浏览、搜索并按标签过滤所有已部署 Agent，点击卡片可进入对话界面。"
+        title={t('agents.title')}
+        description=""
         action={
           <button onClick={() => setCreateOpen(true)} className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-700">
-            新建 Agent
+            {t('agents.new_agent')}
           </button>
         }
       />
       <WizardModal
         open={createOpen}
-        title="新建 Agent"
+        title={t('agents.new_agent')}
         onClose={() => setCreateOpen(false)}
         steps={[
           {
-            label: '来源',
-            content: <div className="text-sm leading-6 text-slate-600">Agent 需要从仓库管理中已绑定的仓库部署。请选择部署页面中的仓库和 commit。</div>,
+            label: t('common.name'),
+            content: <div className="text-sm leading-6 text-slate-600">{t('agents.new_agent_hint')}</div>,
           },
           {
-            label: '能力',
-            content: <div className="text-sm leading-6 text-slate-600">部署时会配置 API Token、模型、runtime、Skill、MCP 和鉴权 Token。</div>,
+            label: t('progress.title', '能力'),
+            content: <div className="text-sm leading-6 text-slate-600">{t('deploy.capabilities_desc')}</div>,
           },
           {
-            label: '确认',
-            content: <div className="text-sm leading-6 text-slate-600">完成后会进入审批或直接部署，取决于当前权限设置。</div>,
+            label: t('common.confirm'),
+            content: <div className="text-sm leading-6 text-slate-600">{t('deploy.review_and_deploy')}</div>,
           },
         ]}
       />
 
       <div className="mb-6 grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:grid-cols-[1.2fr_1fr]">
         <label className="block">
-          <div className="mb-2 text-sm text-slate-600">搜索 Agent</div>
+          <div className="mb-2 text-sm text-slate-600">{t('agents.search_placeholder')}</div>
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="按名称、模型、标签搜索"
+            placeholder={t('agents.search_placeholder')}
             className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-sky-500"
           />
         </label>
         <label className="block">
-          <div className="mb-2 text-sm text-slate-600">按 Tag 过滤</div>
+          <div className="mb-2 text-sm text-slate-600">{t('agents.no_agents', '按 Tag 过滤')}</div>
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setSelectedTags([])}
@@ -81,7 +83,7 @@ export default function AgentsPage() {
                 selectedTags.length === 0 ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              全部
+              {t('common.all')}
             </button>
             {tags.map((tag) => (
               <button
@@ -100,9 +102,9 @@ export default function AgentsPage() {
         </label>
       </div>
 
-      <div className="mb-4 text-sm text-slate-500">共找到 {filteredAgents.length} 个 Agent</div>
+      <div className="mb-4 text-sm text-slate-500">{filteredAgents.length} {t('agents.title')}</div>
       {loading ? (
-        <LoadingPanel label="正在加载 Agent 列表..." />
+        <LoadingPanel label={t('common.loading')} />
       ) : (
         <div className="grid gap-5 xl:grid-cols-2 2xl:grid-cols-3">
           {filteredAgents.map((agent) => (

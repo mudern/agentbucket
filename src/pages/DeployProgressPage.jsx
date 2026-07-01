@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { getDeployments, getDeployOptions } from '../api'
+import { useEffect, useMemo, useState } from 'react'
+import { getDeployments, getAgents } from '../api'
 import { Link } from 'react-router-dom'
 import LoadingPanel from '../components/LoadingPanel'
 import PageHeader from '../components/PageHeader'
@@ -29,7 +29,8 @@ const statusDot = {
 export default function DeployProgressPage() {
   const [deployments, setDeployments] = useState([])
   const [loading, setLoading] = useState(true)
-  const { data: options } = useAsyncData(getDeployOptions, [])
+  const [filterAgent, setFilterAgent] = useState('all')
+  const { data: agents = [] } = useAsyncData(getAgents, [])
   const t = useT()
 
   const fetchDeployments = async () => {
@@ -49,12 +50,38 @@ export default function DeployProgressPage() {
     return () => clearInterval(interval)
   }, [])
 
+  const agentMap = useMemo(() => {
+    const map = {}
+    for (const a of agents) {
+      map[a.id] = a
+    }
+    return map
+  }, [agents])
+
+  const filtered = useMemo(() => {
+    if (filterAgent === 'all') return deployments
+    return deployments.filter((d) => d.agentID === filterAgent).slice(0, 20)
+  }, [deployments, filterAgent])
+
+  const sorted = [...filtered].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+
   if (loading) {
     return <LoadingPanel label={t('common.loading')} />
   }
 
   const hasActive = deployments.some((d) => d.status === 'building' || d.status === 'packaged')
-  const sorted = [...deployments].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+
+  // Unique agent IDs from deployments
+  const agentOptions = useMemo(() => {
+    const seen = new Set()
+    return deployments
+      .map((d) => d.agentID)
+      .filter((id) => {
+        if (seen.has(id)) return false
+        seen.add(id)
+        return true
+      })
+  }, [deployments])
 
   return (
     <div>
@@ -63,46 +90,72 @@ export default function DeployProgressPage() {
         description={hasActive ? t('progress.step_building') : t('progress.no_active')}
       />
 
+      {/* Agent filter bar */}
+      {agentOptions.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setFilterAgent('all')}
+            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+              filterAgent === 'all' ? 'bg-sky-100 text-sky-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            {t('common.all')} ({deployments.length})
+          </button>
+          {agentOptions.map((agentId) => {
+            const agent = agentMap[agentId]
+            const count = deployments.filter((d) => d.agentID === agentId).length
+            return (
+              <button
+                key={agentId}
+                onClick={() => setFilterAgent(agentId)}
+                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                  filterAgent === agentId ? 'bg-sky-100 text-sky-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {agent?.name ?? agentId} ({count})
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       <div className="space-y-4">
         {sorted.map((dep) => {
-          const agent = options?.repositories
-            ?.flatMap((r) => r.commits?.flatMap((c) => c.agents) || [])
-            ?.find((a) => a?.id === dep.agentId)
+          const agent = agentMap[dep.agentID]
+          const status = dep.status
 
           return (
             <div
               key={dep.id}
               className={`overflow-hidden rounded-2xl border shadow-sm transition ${
-                dep.status === 'running' ? 'border-emerald-200 bg-white' :
-                dep.status === 'build_failed' || dep.status === 'run_failed' ? 'border-red-200 bg-white' :
+                status === 'running' ? 'border-emerald-200 bg-white' :
+                status === 'build_failed' || status === 'run_failed' ? 'border-red-200 bg-white' :
                 'border-slate-200 bg-white'
               }`}
             >
               <div className="flex items-center gap-4 px-6 py-4">
-                {/* Status dot */}
                 <div className="flex items-center gap-3">
-                  <span className={`h-3 w-3 rounded-full ${statusDot[dep.status] || 'bg-slate-300'}`} />
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${statusColors[dep.status] || 'bg-slate-50 text-slate-600 ring-slate-200'}`}>
-                    {dep.status === 'running' ? t('common.running') :
-                     dep.status === 'stopped' ? t('common.stopped') :
-                     dep.status === 'crashed' ? t('common.crashed') :
-                     dep.status === 'build_failed' ? t('common.build_failed') :
-                     dep.status === 'run_failed' ? t('common.run_failed') :
-                     dep.status === 'packaged' ? t('common.packaged') :
-                     dep.status === 'building' ? '构建中' :
-                     dep.status}
+                  <span className={`h-3 w-3 rounded-full ${statusDot[status] || 'bg-slate-300'}`} />
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${statusColors[status] || 'bg-slate-50 text-slate-600 ring-slate-200'}`}>
+                    {status === 'running' ? t('common.running') :
+                     status === 'stopped' ? t('common.stopped') :
+                     status === 'crashed' ? t('common.crashed') :
+                     status === 'build_failed' ? t('common.build_failed') :
+                     status === 'run_failed' ? t('common.run_failed') :
+                     status === 'packaged' ? t('common.packaged') :
+                     t('progress.step_building')}
                   </span>
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-semibold text-slate-950">
-                      {agent?.name ?? dep.agentID}
-                    </span>
-                    <span className="text-xs text-slate-400">{dep.imageTag}</span>
-                  </div>
+                  <button
+                    onClick={() => setFilterAgent(filterAgent === dep.agentID ? 'all' : dep.agentID)}
+                    className="text-sm font-semibold text-slate-950 hover:text-sky-700 transition"
+                  >
+                    {agent?.name ?? dep.agentID}
+                  </button>
                   <div className="mt-1 flex items-center gap-3 text-xs text-slate-400">
-                    <span>{dep.id}</span>
+                    <span className="font-mono">{dep.imageTag}</span>
                     {dep.sidecarUrl && (
                       <span className="text-sky-600">{dep.sidecarUrl}</span>
                     )}
@@ -125,7 +178,6 @@ export default function DeployProgressPage() {
                 </div>
               </div>
 
-              {/* Build log */}
               {dep.message && (
                 <div className="border-t border-slate-100 bg-slate-50 px-6 py-4">
                   <div className="mb-2 text-xs font-medium text-slate-500">{t('progress.build_log')}</div>
@@ -135,7 +187,6 @@ export default function DeployProgressPage() {
                 </div>
               )}
 
-              {/* Timestamp */}
               <div className="border-t border-slate-100 bg-slate-50/50 px-6 py-2">
                 <span className="text-xs text-slate-400">
                   {new Date(dep.createdAt).toLocaleString()}

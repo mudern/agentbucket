@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 import { getAgentById, getAgentSessionMessages, getAgentSessions, createAgentSession, deleteSession } from '../api'
-import { useT } from '../i18n'
+import { useT, useLanguage } from '../i18n'
 import LoadingPanel from '../components/LoadingPanel'
 import useAsyncData from '../hooks/useAsyncData'
 
@@ -16,13 +16,8 @@ function parseQuestion(text) {
   return { prompt: match[1], options: [match[2], match[3]], full: match[0] }
 }
 
-function formatTime(dateStr) {
-  const d = new Date(dateStr)
-  if (isNaN(d.getTime())) return ''
-  return d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-}
 
-function MessageBubble({ message, onSelectOption }) {
+function MessageBubble({ message, onSelectOption, formatTime, t }) {
   const question = parseQuestion(message.content)
   const displayContent = question ? message.content.replace(question.full, '').trim() : message.content
 
@@ -33,7 +28,7 @@ function MessageBubble({ message, onSelectOption }) {
           ? 'bg-sky-600 text-white'
           : 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white'
       }`}>
-        {message.role === 'user' ? '你' : 'AI'}
+        {message.role === 'user' ? t('chat.you', '你') : 'AI'}
       </div>
 
       <div className={`min-w-0 max-w-[75%] ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
@@ -96,6 +91,13 @@ export default function AgentChatPage() {
   const [sessionsRefresh, setSessionsRefresh] = useState(0)
   const [sessionsOpen, setSessionsOpen] = useState(true)
   const messagesEnd = useRef(null)
+  const { lang } = useLanguage()
+  const locale = { zh: 'zh-CN', en: 'en-US' }[lang] || 'zh-CN'
+  const fmtTime = (dateStr) => {
+    const d = new Date(dateStr)
+    if (isNaN(d.getTime())) return ''
+    return d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
+  }
 
   const { data: agent, loading: agentLoading } = useAsyncData(() => getAgentById(agentId), [agentId])
   const { data: sessions = [], loading: sessionsLoading } = useAsyncData(
@@ -176,7 +178,7 @@ export default function AgentChatPage() {
         }
       }
       setMessages((current) => current.map((m) =>
-        m.id === assistantId && !m.content ? { ...m, content: 'AI 返回了空响应。' } : m
+        m.id === assistantId && !m.content ? { ...m, content: t('agents.title', 'AI 返回了空响应。') } : m
       ))
       setSessionsRefresh((n) => n + 1)
     } catch (error) {
@@ -221,7 +223,7 @@ export default function AgentChatPage() {
   }
 
   if (agentLoading || !agent) {
-    return <LoadingPanel label="正在加载 Agent 对话..." />
+    return <LoadingPanel label={t('common.loading')} />
   }
 
   return (
@@ -230,8 +232,8 @@ export default function AgentChatPage() {
         <Link
           to="/"
           className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700"
-          aria-label="返回 Agent 列表"
-          title="返回 Agent 列表"
+          aria-label={t('chat.back_to_agents')}
+          title={t('chat.back_to_agents')}
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M15 6l-6 6 6 6" />
@@ -242,17 +244,17 @@ export default function AgentChatPage() {
             <h1 className="truncate text-sm font-semibold text-slate-950 sm:text-base">{agent.name}</h1>
             <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
               agent.status === '已部署' ? 'bg-emerald-50 text-emerald-700'
-              : agent.status === '离线' ? 'bg-slate-100 text-slate-500'
+              : agent.status === t('chat.status_offline') ? 'bg-slate-100 text-slate-500'
               : 'bg-emerald-50 text-emerald-700'
             }`}>
               {agent.status}
             </span>
           </div>
           <div className="mt-0.5 truncate text-xs text-slate-400 sm:hidden">
-            {currentSession?.title ?? '未选择会话'} · {agent.model}
+            {currentSession?.title ?? t('chat.no_session', '未选择会话')} · {agent.model}
           </div>
           <div className="mt-0.5 hidden truncate text-xs text-slate-400 sm:block">
-            {currentSession?.title ?? '未选择会话'}
+            {currentSession?.title ?? t('chat.no_session', '未选择会话')}
           </div>
         </div>
         <div className="hidden shrink-0 items-center gap-2 md:flex">
@@ -272,8 +274,8 @@ export default function AgentChatPage() {
           className={`absolute z-20 hidden h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700 xl:flex ${
             sessionsOpen ? 'left-[17.25rem] top-16' : 'left-4 top-4'
           }`}
-          aria-label={sessionsOpen ? '收起会话栏' : '展开会话栏'}
-          title={sessionsOpen ? '收起会话栏' : '展开会话栏'}
+          aria-label={sessionsOpen ? t('chat.collapse_sessions', '收起会话栏') : t('chat.expand_sessions', '展开会话栏')}
+          title={sessionsOpen ? t('chat.collapse_sessions', '收起会话栏') : t('chat.expand_sessions', '展开会话栏')}
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             {sessionsOpen ? <path d="M15 6l-6 6 6 6" /> : <path d="M9 6l6 6-6 6" />}
@@ -283,7 +285,7 @@ export default function AgentChatPage() {
           <aside className="hidden w-72 shrink-0 flex-col border-r border-slate-200 bg-slate-50/80 xl:flex">
             <div className="shrink-0 border-b border-slate-200 px-3 pb-3 pt-3">
               <div className="mb-2 flex items-center justify-between px-1">
-                <div className="text-xs font-semibold text-slate-500">会话</div>
+                <div className="text-xs font-semibold text-slate-500">{t('chat.sessions', '会话')}</div>
                 <div className="text-[10px] text-slate-400">{sessions.length} 个</div>
               </div>
               <div className="flex gap-1.5">
@@ -292,15 +294,15 @@ export default function AgentChatPage() {
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') handleCreateSession() }}
-                  placeholder="新建会话..."
+                  placeholder={t('chat.new_session')}
                   className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-sky-400"
                 />
                 <button
                   onClick={handleCreateSession}
                   disabled={creating || !newTitle.trim()}
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-600 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
-                  aria-label="创建会话"
-                  title="创建会话"
+                  aria-label={t('chat.new_session')}
+                  title={t('chat.new_session')}
                 >
                   {creating ? '...' : '+'}
                 </button>
@@ -325,13 +327,13 @@ export default function AgentChatPage() {
                   </div>
                   <div className="mt-1 flex min-w-0 items-center gap-2 text-xs text-slate-400">
                     {session.preview && <span className="truncate">{session.preview}</span>}
-                    {session.updatedAt && <span className="ml-auto shrink-0">{formatTime(session.updatedAt)}</span>}
+                    {session.updatedAt && <span className="ml-auto shrink-0">{fmtTime(session.updatedAt)}</span>}
                   </div>
                   <button
                     onClick={(e) => handleDeleteSession(e, session.id, session.title)}
                     className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-300 opacity-0 transition hover:text-red-500 group-hover:opacity-100"
-                    title="删除会话"
-                    aria-label="删除会话"
+                    title={t('chat.delete_session')}
+                    aria-label={t('chat.delete_session')}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M18 6L6 18M6 6l12 12" />
@@ -339,9 +341,9 @@ export default function AgentChatPage() {
                   </button>
                 </button>
               ))}
-              {sessionsLoading && <div className="px-3 py-2 text-sm text-slate-400">加载中...</div>}
+              {sessionsLoading && <div className="px-3 py-2 text-sm text-slate-400">{t('common.loading')}</div>}
               {!sessionsLoading && sessions.length === 0 && (
-                <div className="px-3 py-4 text-center text-xs text-slate-400">暂无会话，输入标题创建</div>
+                <div className="px-3 py-4 text-center text-xs text-slate-400">{t('chat.no_session', '暂无会话，输入标题创建')}</div>
               )}
             </div>
             {(agent.skills?.length > 0 || agent.mcps?.length > 0) && (
@@ -364,13 +366,13 @@ export default function AgentChatPage() {
             <div className="mx-auto max-w-4xl space-y-6">
               {messagesLoading && (
                 <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-400">
-                  正在加载消息...
+                  {t('common.loading')}
                 </div>
               )}
               {!messagesLoading && messages.length === 0 && (
                 <div className="rounded-xl border border-dashed border-slate-200 bg-white p-10 text-center">
-                  <div className="text-sm font-medium text-slate-600">开始与 {agent.name} 对话</div>
-                  <div className="mt-1 text-xs text-slate-400">输入消息并按 Ctrl+Enter 发送</div>
+                  <div className="text-sm font-medium text-slate-600">{t('chat.start_chat_with', '开始与 {name} 对话').replace('{name}', agent.name)}</div>
+                  <div className="mt-1 text-xs text-slate-400">{t('chat.empty_state', '输入消息并按 Ctrl+Enter 发送')}</div>
                 </div>
               )}
               {messages.map((msg) => (
@@ -378,6 +380,8 @@ export default function AgentChatPage() {
                   key={msg.id}
                   message={msg}
                   onSelectOption={(opt) => handleSend(opt)}
+                  formatTime={fmtTime}
+                  t={t}
                 />
               ))}
               {sending && (
@@ -415,12 +419,12 @@ export default function AgentChatPage() {
                     }
                   }}
                   disabled={sending || !currentSessionId}
-                  placeholder={currentSessionId ? '输入消息...' : '请先创建或选择一个会话'}
+                  placeholder={currentSessionId ? t('chat.input_placeholder') : t('chat.empty_state')}
                   className="w-full resize-none rounded-t-2xl bg-transparent px-4 pt-3 text-sm text-slate-900 outline-none placeholder:text-slate-400"
                 />
                 <div className="flex items-center justify-between rounded-b-2xl bg-slate-50 px-4 py-2">
                   <div className="text-xs text-slate-400">
-                    {currentSessionId ? 'Ctrl+Enter 发送 · 支持 Markdown' : '先在左侧创建会话'}
+                    {currentSessionId ? t('chat.send_hint', 'Ctrl+Enter 发送 · 支持 Markdown') : t('chat.create_session_hint', '先在左侧创建会话')}
                   </div>
                   <button
                     onClick={() => handleSend()}
@@ -430,9 +434,9 @@ export default function AgentChatPage() {
                     {sending ? (
                       <span className="flex items-center gap-1.5">
                         <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                        思考中
+                        {t('chat.typing')}
                       </span>
-                    ) : '发送'}
+                    ) : t('chat.send')}
                   </button>
                 </div>
               </div>

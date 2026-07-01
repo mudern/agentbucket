@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getAuthTokens, deleteAuthToken, patchAuthToken } from '../api'
+import { getAuthTokens, deleteAuthToken, patchAuthToken, createAuthToken } from '../api'
 import LoadingPanel from '../components/LoadingPanel'
 import {
   FilterInput,
@@ -16,9 +16,11 @@ import {
 } from '../components/ManagementTable'
 import PageHeader from '../components/PageHeader'
 import WizardModal from '../components/WizardModal'
+import { useT } from '../i18n'
 import useAsyncData from '../hooks/useAsyncData'
 
 export default function AuthTokensPage() {
+  const t = useT()
   const [importOpen, setImportOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [functionFilter, setFunctionFilter] = useState('all')
@@ -45,7 +47,7 @@ export default function AuthTokensPage() {
   }, [authTokens, functionFilter, query, status])
 
   if (loading) {
-    return <LoadingPanel label="正在加载鉴权 Token..." />
+    return <LoadingPanel label={t('common.loading')} />
   }
 
   const updateTokenStatus = async (tokenId, nextStatus) => {
@@ -57,37 +59,37 @@ export default function AuthTokensPage() {
     try {
       await deleteAuthToken(id)
       setAuthTokens((c) => c.filter((t) => t.id !== id))
-    } catch (e) { alert(`删除失败: ${e.message}`) }
+    } catch (e) { alert(`${t('common.save_failed')}: ${e.message}`) }
   }
 
   return (
     <div>
       <PageHeader
-        title="鉴权 Token"
-        description="通过 Python 脚本向已授权 Agent 暴露 get_token(param)，让 skill 按需获取外部系统访问 Token。"
-        action={<button onClick={() => setImportOpen(true)} className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white">导入 Python 脚本</button>}
+        title={t('authTokens.title')}
+        description={t('authTokens.import_hint')}
+        action={<button onClick={() => setImportOpen(true)} className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white">{t('authTokens.import_token')}</button>}
       />
       <WizardModal
         open={importOpen}
-        title="导入 Python 脚本"
+        title={t('authTokens.create_form_title')}
         onClose={() => setImportOpen(false)}
         steps={[
           {
-            label: '上传脚本',
+            label: t('common.name'),
             content: (
               <div className="grid gap-4 text-sm">
-                <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center text-slate-500">选择包含 get_token(param) 的 Python 脚本</div>
-                <label className="text-slate-700">函数名<input defaultValue="get_token" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-sky-500" /></label>
+                <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center text-slate-500">Python script with get_token(param)</div>
+                <label className="text-slate-700">{t('authTokens.function_name')}<input defaultValue="get_token" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-sky-500" /></label>
               </div>
             ),
           },
           {
-            label: '访问资源',
-            content: <label className="block text-sm text-slate-700">这个 Token 可以访问什么<input placeholder="例如：Salesforce CRM 客户数据" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none placeholder:text-slate-400 focus:border-sky-500" /></label>,
+            label: t('authTokens.access_target'),
+            content: <label className="block text-sm text-slate-700">{t('authTokens.access_target')}<input placeholder={t('authTokens.access_target')} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none placeholder:text-slate-400 focus:border-sky-500" /></label>,
           },
           {
-            label: '参数',
-            content: <label className="block text-sm text-slate-700">函数参数<input placeholder="例如：project_key" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none placeholder:text-slate-400 focus:border-sky-500" /></label>,
+            label: t('authTokens.argument', '参数'),
+            content: <label className="block text-sm text-slate-700">{t('authTokens.function_name')}<input placeholder="project_key" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none placeholder:text-slate-400 focus:border-sky-500" /></label>,
           },
         ]}
       />
@@ -102,21 +104,21 @@ export default function AuthTokensPage() {
           <thead className={tableHeadClass}>
             <tr>
               <th className={tableHeaderCellClass}>
-                <HeaderFilter label="Token" active={query.trim() !== ''}>
-                  <FilterInput value={query} onChange={setQuery} placeholder="搜索 Token" />
+                <HeaderFilter label={t('common.name')} active={query.trim() !== ''}>
+                  <FilterInput value={query} onChange={setQuery} placeholder={t('authTokens.search_placeholder')} />
                 </HeaderFilter>
               </th>
               <th className={tableHeaderCellClass}>
-                <HeaderFilter label="访问与脚本" active={functionFilter !== 'all'}>
+                <HeaderFilter label={t('authTokens.access_target')} active={functionFilter !== 'all'}>
                   <FilterSelect value={functionFilter} onChange={setFunctionFilter} options={functions} />
                 </HeaderFilter>
               </th>
               <th className={tableHeaderCellClass}>
-                <HeaderFilter label="状态" active={status !== 'all'}>
+                <HeaderFilter label={t('common.status')} active={status !== 'all'}>
                   <FilterSelect value={status} onChange={setStatus} options={statuses} />
                 </HeaderFilter>
               </th>
-              <th className={`${tableHeaderCellClass} text-right`}>操作</th>
+              <th className={`${tableHeaderCellClass} text-right`}>{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody className={tableBodyClass}>

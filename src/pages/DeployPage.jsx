@@ -4,16 +4,16 @@ import { createDeployment, getDeployOptions, getDeployments, stopDeployment, sta
 import LoadingPanel from '../components/LoadingPanel'
 import PageHeader from '../components/PageHeader'
 import useAsyncData from '../hooks/useAsyncData'
+import { useT } from '../i18n'
 
-const steps = ['选择仓库', '选择 Commit', '选择 Agent', '配置能力', '确认']
-
-function summarizeItems(items, emptyText = '未选择') {
-  if (!items.length) return emptyText
+function summarizeItems(items, t) {
+  if (!items.length) return t('common.not_selected')
   if (items.length <= 2) return items.join('、')
   return `${items.slice(0, 2).join('、')} 等 ${items.length} 项`
 }
 
 function CapabilityCard({ title, description, value, count, onOpen }) {
+  const t = useT()
   return (
     <button
       type="button"
@@ -30,13 +30,14 @@ function CapabilityCard({ title, description, value, count, onOpen }) {
         </span>
       </div>
       <div className="mt-4 truncate text-sm text-slate-700">{value}</div>
-      <div className="mt-3 text-xs font-medium text-sky-700">打开选择器</div>
+      <div className="mt-3 text-xs font-medium text-sky-700">{t('common.open_picker')}</div>
     </button>
   )
 }
 
 function CapabilityPickerModal({ open, title, mode, items, selected, onClose, onSelectOne, onToggle, onSelectAll, onClear }) {
   const [query, setQuery] = useState('')
+  const t = useT()
 
   if (!open) return null
 
@@ -53,10 +54,12 @@ function CapabilityPickerModal({ open, title, mode, items, selected, onClose, on
         <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-5 py-4">
           <div>
             <div className="text-base font-semibold text-slate-950">{title}</div>
-            <div className="mt-1 text-xs text-slate-400">{multi ? `已选择 ${selectedCount} 项` : '单选配置'}</div>
+            <div className="mt-1 text-xs text-slate-400">
+              {multi ? t('common.selected_count').replace(/\{count\}/g, selectedCount) : t('deploy.single_mode')}
+            </div>
           </div>
           <button onClick={onClose} className="rounded-lg px-2 py-1 text-sm text-slate-400 hover:bg-slate-100 hover:text-slate-700">
-            关闭
+            {t('common.close')}
           </button>
         </div>
 
@@ -65,16 +68,16 @@ function CapabilityPickerModal({ open, title, mode, items, selected, onClose, on
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="搜索名称、说明或标签"
+              placeholder={t('deploy.search_placeholder')}
               className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-sky-400"
             />
             {multi && (
               <div className="flex shrink-0 gap-2">
                 <button type="button" onClick={onSelectAll} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50">
-                  全选全部
+                  {t('common.select_all')}
                 </button>
                 <button type="button" onClick={onClear} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50">
-                  清空
+                  {t('common.clear')}
                 </button>
               </div>
             )}
@@ -97,7 +100,7 @@ function CapabilityPickerModal({ open, title, mode, items, selected, onClose, on
                   <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold ${
                     checked ? 'border-sky-600 bg-sky-600 text-white' : 'border-slate-300 bg-white text-transparent'
                   }`}>
-                    ✓
+                    &#10003;
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium text-slate-900">{item.label}</span>
@@ -110,7 +113,7 @@ function CapabilityPickerModal({ open, title, mode, items, selected, onClose, on
           </div>
           {filteredItems.length === 0 && (
             <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-400">
-              没有匹配的选项
+              {t('common.no_match')}
             </div>
           )}
         </div>
@@ -120,6 +123,9 @@ function CapabilityPickerModal({ open, title, mode, items, selected, onClose, on
 }
 
 export default function DeployPage() {
+  const t = useT()
+  const stepLabels = [t('deploy.step_repo'), t('deploy.step_commit'), t('deploy.step_agent'), t('deploy.step_config'), t('deploy.step_confirm')]
+
   const [step, setStep] = useState(0)
   const [form, setForm] = useState({
     repositoryId: '',
@@ -175,20 +181,20 @@ export default function DeployPage() {
         id: token.id,
         label: token.name,
         description: token.scope || token.provider,
-        meta: [token.provider, token.model, token.status].filter(Boolean).join(' · '),
+        meta: [token.provider, token.model, token.status].filter(Boolean).join(' \u00b7 '),
       })),
       skills: (selectedAgent?.skills ?? []).map((skill) => ({
         id: skill,
         label: skill,
-        description: 'Agent 声明的标准 Skill',
-        meta: selectedSkills.includes(skill) ? '已启用' : '可选',
+        description: 'Agent \u58f0\u660e\u7684\u6807\u51c6 Skill',
+        meta: selectedSkills.includes(skill) ? '\u5df2\u542f\u7528' : '\u53ef\u9009',
       })),
       mcps: (selectedAgent?.mcps ?? []).map((mcp) => {
         const server = data.mcpServers.find((item) => item.id === mcp)
         return {
           id: mcp,
           label: server?.name ?? mcp,
-          description: server?.scope ?? 'Agent 声明的 MCP Server',
+          description: server?.scope ?? 'Agent \u58f0\u660e\u7684 MCP Server',
           meta: mcp,
         }
       }),
@@ -196,7 +202,7 @@ export default function DeployPage() {
         id: token.id,
         label: token.name,
         description: token.accessTarget,
-        meta: [token.functionName, token.status].filter(Boolean).join(' · '),
+        meta: [token.functionName, token.status].filter(Boolean).join(' \u00b7 '),
       })),
     }
   }, [data, selectedAgent, selectedMcps, selectedSkills])
@@ -272,17 +278,17 @@ export default function DeployPage() {
   }
 
   if (loading || !data) {
-    return <LoadingPanel label="正在加载部署配置..." />
+    return <LoadingPanel label={t('deploy.title', '\u6b63\u5728\u52a0\u8f7d\u90e8\u7f72\u914d\u7f6e...')} />
   }
 
   return (
     <div>
-      <PageHeader title="部署 Agent" description="选择已绑定仓库、指定 commit hash，再部署这个 commit 下声明的 Agent。" />
+      <PageHeader title={t('deploy.title')} description={t('deploy.select_repo')} />
 
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 px-6 py-5">
           <div className="flex items-center gap-3">
-            {steps.map((label, index) => (
+            {stepLabels.map((label, index) => (
               <div key={label} className="flex flex-1 items-center gap-3">
                 <button
                   onClick={() => setStep(index)}
@@ -293,7 +299,7 @@ export default function DeployPage() {
                   {index + 1}
                 </button>
                 <div className="hidden text-sm font-medium text-slate-700 md:block">{label}</div>
-                {index < steps.length - 1 && <div className="h-px flex-1 bg-slate-200" />}
+                {index < stepLabels.length - 1 && <div className="h-px flex-1 bg-slate-200" />}
               </div>
             ))}
           </div>
@@ -302,7 +308,7 @@ export default function DeployPage() {
         <div className="min-h-[460px] p-6">
           {step === 0 && (
             <div>
-              <div className="mb-4 text-sm font-medium text-slate-950">从仓库管理中选择已绑定仓库</div>
+              <div className="mb-4 text-sm font-medium text-slate-950">{t('deploy.no_repos', '\u4ece\u4ed3\u5e93\u7ba1\u7406\u4e2d\u9009\u62e9\u5df2\u7ed1\u5b9a\u4ed3\u5e93')}</div>
               <div className="grid gap-4 xl:grid-cols-2">
                 {repositories.map((repo) => (
                   <button
@@ -317,16 +323,16 @@ export default function DeployPage() {
                       <span className="rounded-full bg-white px-2.5 py-1 text-xs text-slate-500">{repo.provider}</span>
                     </div>
                     <div className="mt-3 grid gap-2 text-xs text-slate-500 sm:grid-cols-3">
-                      <div>默认分支：{repo.branch}</div>
-                      <div>Agent 目录：{repo.agentsPath}</div>
-                      <div>Commits：{repo.commits.length}</div>
+                      <div>{'\u9ed8\u8ba4\u5206\u652f\uff1a'}{repo.branch}</div>
+                      <div>{'Agent \u76ee\u5f55\uff1a'}{repo.agentsPath}</div>
+                      <div>{'Commits\uff1a'}{repo.commits.length}</div>
                     </div>
                   </button>
                 ))}
               </div>
               {repositories.length === 0 && (
                 <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
-                  还没有绑定仓库，请先到仓库管理中绑定 GitHub/GitLab 仓库。
+                  {t('deploy.no_repos')}
                 </div>
               )}
             </div>
@@ -334,7 +340,7 @@ export default function DeployPage() {
 
           {step === 1 && (
             <div>
-              <div className="mb-4 text-sm font-medium text-slate-950">选择 commit hash</div>
+              <div className="mb-4 text-sm font-medium text-slate-950">{t('deploy.select_commit')}</div>
               <div className="space-y-3">
                 {commits.map((commit) => (
                   <button
@@ -359,7 +365,7 @@ export default function DeployPage() {
                       <div className="text-xs text-slate-400">{commit.committedAt}</div>
                     </div>
                     <div className="mt-2 text-sm text-slate-600">{commit.message}</div>
-                    <div className="mt-2 text-xs text-slate-400">发现 {commit.agents.length} 个 Agent</div>
+                    <div className="mt-2 text-xs text-slate-400">{'\u53d1\u73b0 '}{commit.agents.length}{' \u4e2a Agent'}</div>
                   </button>
                 ))}
               </div>
@@ -368,7 +374,7 @@ export default function DeployPage() {
 
           {step === 2 && (
             <div>
-              <div className="mb-4 text-sm font-medium text-slate-950">仓库内发现的 Agent</div>
+              <div className="mb-4 text-sm font-medium text-slate-950">{t('deploy.select_agent', '\u4ed3\u5e93\u5185\u53d1\u73b0\u7684 Agent')}</div>
               <div className="grid gap-4 xl:grid-cols-2">
                 {agents.map((agent) => (
                   <button
@@ -391,12 +397,12 @@ export default function DeployPage() {
             <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
               <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
                 <div className="mb-4">
-                  <div className="text-sm font-semibold text-slate-950">运行配置</div>
-                  <div className="mt-1 text-xs leading-5 text-slate-500">这些是部署时必须明确的基础运行参数。</div>
+                  <div className="text-sm font-semibold text-slate-950">{t('deploy.runtime_config')}</div>
+                  <div className="mt-1 text-xs leading-5 text-slate-500">{t('deploy.runtime_config_desc')}</div>
                 </div>
                 <div className="grid gap-4">
                   <label className="block text-sm text-slate-700">
-                    模型
+                    {t('deploy.model')}
                     <select
                       value={selectedModel}
                       onChange={(event) => updateForm('model', event.target.value)}
@@ -408,7 +414,7 @@ export default function DeployPage() {
                     </select>
                   </label>
                   <label className="block text-sm text-slate-700">
-                    Runtime
+                    {t('deploy.runtime')}
                     <select
                       value={selectedRuntime}
                       onChange={(event) => updateForm('runtime', event.target.value)}
@@ -420,7 +426,7 @@ export default function DeployPage() {
                     </select>
                   </label>
                   <label className="block text-sm text-slate-700">
-                    Runtime 版本
+                    {t('deploy.runtime_version')}
                     <select
                       value={selectedRuntimeVersion}
                       onChange={(event) => updateForm('runtimeVersion', event.target.value)}
@@ -436,36 +442,36 @@ export default function DeployPage() {
 
               <div>
                 <div className="mb-4">
-                  <div className="text-sm font-semibold text-slate-950">能力配置</div>
-                  <div className="mt-1 text-xs leading-5 text-slate-500">大量 Skill、MCP 和 Token 不在页面上平铺；进入选择器后可搜索、批量处理。</div>
+                  <div className="text-sm font-semibold text-slate-950">{t('deploy.capabilities')}</div>
+                  <div className="mt-1 text-xs leading-5 text-slate-500">{t('deploy.capabilities_desc')}</div>
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <CapabilityCard
-                    title="API Token"
-                    description="选择这个 Agent 调模型时使用的凭据。"
-                    count="单选"
-                    value={selectedApiToken?.name ?? '未选择'}
+                    title={t('deploy.api_token')}
+                    description={t('deploy.api_token_desc')}
+                    count={t('common.all', '\u5355\u9009')}
+                    value={selectedApiToken?.name ?? t('common.not_selected')}
                     onOpen={() => setPicker('api')}
                   />
                   <CapabilityCard
-                    title="Skill"
-                    description="从 Agent 声明的标准 Skill 中启用。"
+                    title={t('deploy.skill')}
+                    description={t('deploy.skill_desc')}
                     count={`${selectedSkills.length}/${selectedAgent.skills.length}`}
-                    value={summarizeItems(selectedSkills)}
+                    value={summarizeItems(selectedSkills, t)}
                     onOpen={() => setPicker('skills')}
                   />
                   <CapabilityCard
-                    title="MCP"
-                    description="选择要挂载到 Agent 的 MCP Server。"
+                    title={t('deploy.mcp')}
+                    description={t('deploy.mcp_desc')}
                     count={`${selectedMcps.length}/${selectedAgent.mcps.length}`}
-                    value={summarizeItems(selectedMcpNames)}
+                    value={summarizeItems(selectedMcpNames, t)}
                     onOpen={() => setPicker('mcps')}
                   />
                   <CapabilityCard
-                    title="鉴权 Token"
-                    description="允许 Agent 通过 skill 获取的外部访问凭据。"
+                    title={t('deploy.auth_token')}
+                    description={t('deploy.auth_token_desc')}
                     count={`${form.authTokens.length}/${data.authTokens.length}`}
-                    value={summarizeItems(selectedTokenNames)}
+                    value={summarizeItems(selectedTokenNames, t)}
                     onOpen={() => setPicker('auth')}
                   />
                 </div>
@@ -475,56 +481,56 @@ export default function DeployPage() {
 
           {step === 4 && (
             <div className="max-w-4xl rounded-2xl border border-slate-200 bg-slate-50 p-5">
-              <div className="mb-4 text-sm font-semibold text-slate-950">部署确认</div>
+              <div className="mb-4 text-sm font-semibold text-slate-950">{t('deploy.review_and_deploy')}</div>
               <dl className="grid gap-4 text-sm md:grid-cols-2">
                 <div>
-                  <dt className="text-slate-400">仓库</dt>
+                  <dt className="text-slate-400">{t('deploy.repo_label', '\u4ed3\u5e93')}</dt>
                   <dd className="mt-1 text-slate-900">{selectedRepository?.url}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-400">分支</dt>
+                  <dt className="text-slate-400">{'\u5206\u652f'}</dt>
                   <dd className="mt-1 text-slate-900">{selectedRepository?.branch}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-400">Commit</dt>
+                  <dt className="text-slate-400">{t('deploy.commit_label', 'Commit')}</dt>
                   <dd className="mt-1 font-mono text-slate-900">{selectedCommit?.hash}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-400">Agent</dt>
+                  <dt className="text-slate-400">{t('deploy.agent', 'Agent')}</dt>
                   <dd className="mt-1 text-slate-900">{selectedAgent?.name}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-400">API Token</dt>
+                  <dt className="text-slate-400">{t('deploy.api_token')}</dt>
                   <dd className="mt-1 text-slate-900">{selectedApiToken?.name}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-400">模型</dt>
+                  <dt className="text-slate-400">{t('deploy.model')}</dt>
                   <dd className="mt-1 text-slate-900">{selectedModel}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-400">Runtime</dt>
+                  <dt className="text-slate-400">{t('deploy.runtime')}</dt>
                   <dd className="mt-1 text-slate-900">{selectedRuntime}:{selectedRuntimeVersion}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-400">声明文件</dt>
+                  <dt className="text-slate-400">{'\u58f0\u660e\u6587\u4ef6'}</dt>
                   <dd className="mt-1 text-slate-900">{selectedAgent?.path}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-400">Skill</dt>
-                  <dd className="mt-1 text-slate-900">{selectedSkills.join('、') || '未选择'}</dd>
+                  <dt className="text-slate-400">{t('deploy.skill')}</dt>
+                  <dd className="mt-1 text-slate-900">{selectedSkills.join('、') || t('common.not_selected')}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-400">MCP</dt>
-                  <dd className="mt-1 text-slate-900">{selectedMcps.join('、') || '未选择'}</dd>
+                  <dt className="text-slate-400">{t('deploy.mcp')}</dt>
+                  <dd className="mt-1 text-slate-900">{selectedMcps.join('、') || t('common.not_selected')}</dd>
                 </div>
                 <div className="md:col-span-2">
-                  <dt className="text-slate-400">鉴权 Token</dt>
-                  <dd className="mt-1 text-slate-900">{selectedTokenNames.join('、') || '未选择'}</dd>
+                  <dt className="text-slate-400">{t('deploy.auth_token')}</dt>
+                  <dd className="mt-1 text-slate-900">{selectedTokenNames.join('、') || t('common.not_selected')}</dd>
                 </div>
               </dl>
               {deployResult && (
                 <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
-                  部署已提交：{deployResult.status}，镜像 {deployResult.imageTag}
+                  {'\u90e8\u7f72\u5df2\u63d0\u4ea4\uff1a'}{deployResult.status}{'\uff0c\u955c\u50cf '}{deployResult.imageTag}
                 </div>
               )}
               {deployError && (
@@ -542,14 +548,14 @@ export default function DeployPage() {
             disabled={step === 0}
             className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            上一步
+            {t('deploy.step_confirm', '\u4e0a\u4e00\u6b65')}
           </button>
-          {step < steps.length - 1 ? (
+          {step < stepLabels.length - 1 ? (
             <button
-              onClick={() => setStep((current) => Math.min(current + 1, steps.length - 1))}
+              onClick={() => setStep((current) => Math.min(current + 1, stepLabels.length - 1))}
               className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-700"
             >
-              下一步
+              {t('deploy.step_config', '\u4e0b\u4e00\u6b65')}
             </button>
           ) : (
             <button
@@ -557,7 +563,7 @@ export default function DeployPage() {
               disabled={deploying}
               className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {deploying ? '部署中...' : '提交部署'}
+              {deploying ? t('deploy.deploying') : t('deploy.deploy_button')}
             </button>
           )}
         </div>
@@ -565,7 +571,7 @@ export default function DeployPage() {
 
       <CapabilityPickerModal
         open={picker === 'api'}
-        title="选择 API Token"
+        title={t('deploy.picker_api_title')}
         mode="single"
         items={pickerItems.api}
         selected={selectedApiTokenId ? [selectedApiTokenId] : []}
@@ -577,7 +583,7 @@ export default function DeployPage() {
       />
       <CapabilityPickerModal
         open={picker === 'skills'}
-        title="选择 Skill"
+        title={t('deploy.picker_skill_title')}
         mode="multi"
         items={pickerItems.skills}
         selected={selectedSkills}
@@ -588,7 +594,7 @@ export default function DeployPage() {
       />
       <CapabilityPickerModal
         open={picker === 'mcps'}
-        title="选择 MCP"
+        title={t('deploy.picker_mcp_title')}
         mode="multi"
         items={pickerItems.mcps}
         selected={selectedMcps}
@@ -599,7 +605,7 @@ export default function DeployPage() {
       />
       <CapabilityPickerModal
         open={picker === 'auth'}
-        title="选择鉴权 Token"
+        title={t('deploy.picker_auth_title')}
         mode="multi"
         items={pickerItems.auth}
         selected={form.authTokens}
@@ -612,24 +618,24 @@ export default function DeployPage() {
       {deployments.length > 0 && (
         <div className="mt-8 rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 px-6 py-4">
-            <h2 className="text-lg font-semibold text-slate-900">运行中的部署</h2>
+            <h2 className="text-lg font-semibold text-slate-900">{t('deploy.running_deployments')}</h2>
           </div>
           <div className="divide-y divide-slate-100">
             {deployments.map((d) => (
               <div key={d.id} className="flex items-center justify-between px-6 py-4">
                 <div>
                   <div className="text-sm font-medium text-slate-900">{d.agentId}</div>
-                  <div className="mt-0.5 text-xs text-slate-400">{d.runtime} · {d.sidecarUrl}</div>
+                  <div className="mt-0.5 text-xs text-slate-400">{d.runtime} \u00b7 {d.sidecarUrl}</div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${d.status === 'running' ? 'bg-emerald-50 text-emerald-700' : d.status === 'stopped' ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-500'}`}>{d.status}</span>
                   {d.status === 'running' && (
-                    <button onClick={async () => { await stopDeployment(d.id); setDeployments((c) => c.map((x) => x.id === d.id ? { ...x, status: 'stopped' } : x)) }} className="rounded-lg border border-slate-200 px-3 py-1 text-xs text-slate-600 hover:bg-slate-50">停止</button>
+                    <button onClick={async () => { await stopDeployment(d.id); setDeployments((c) => c.map((x) => x.id === d.id ? { ...x, status: 'stopped' } : x)) }} className="rounded-lg border border-slate-200 px-3 py-1 text-xs text-slate-600 hover:bg-slate-50">{t('deploy.stop')}</button>
                   )}
                   {d.status === 'stopped' && (
-                    <button onClick={async () => { await startDeployment(d.id); setDeployments((c) => c.map((x) => x.id === d.id ? { ...x, status: 'running' } : x)) }} className="rounded-lg bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700">启动</button>
+                    <button onClick={async () => { await startDeployment(d.id); setDeployments((c) => c.map((x) => x.id === d.id ? { ...x, status: 'running' } : x)) }} className="rounded-lg bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700">{t('deploy.start')}</button>
                   )}
-                  <button onClick={async () => { await deleteDeployment(d.id); setDeployments((c) => c.filter((x) => x.id !== d.id)) }} className="rounded-lg px-3 py-1 text-xs text-rose-600 hover:bg-rose-50">删除</button>
+                  <button onClick={async () => { await deleteDeployment(d.id); setDeployments((c) => c.filter((x) => x.id !== d.id)) }} className="rounded-lg px-3 py-1 text-xs text-rose-600 hover:bg-rose-50">{t('deploy.delete_deployment')}</button>
                 </div>
               </div>
             ))}

@@ -32,7 +32,7 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
       <button
         onClick={onToggle}
         className="absolute -right-3 top-16 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700"
-        title={collapsed ? '展开侧栏' : '收起侧栏'}
+        title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
       >
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
           {collapsed ? <path d="M9 6l6 6-6 6" /> : <path d="M15 6l-6 6 6 6" />}

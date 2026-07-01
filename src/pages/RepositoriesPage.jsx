@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { deleteRepository, patchRepository } from '../api'
 import LoadingPanel from '../components/LoadingPanel'
+import { useT } from '../i18n'
 import {
   FilterInput,
   FilterSelect,
@@ -37,6 +38,7 @@ export default function RepositoriesPage() {
   const [bindPath, setBindPath] = useState('agents')
   const [bindLocalPath, setBindLocalPath] = useState('')
   const [bindProvider, setBindProvider] = useState('GitHub')
+  const t = useT()
 
   const fetchRepos = async () => {
     try {
@@ -66,13 +68,13 @@ export default function RepositoriesPage() {
       await deleteRepository(id)
       setRepositories((c) => c.filter((r) => r.id !== id))
     } catch (e) {
-      alert(`删除失败: ${e.message}`)
+      alert(`${t('common.save_failed')}: ${e.message}`)
     }
   }
 
   const handleBind = async () => {
     if (!bindUrl || !bindLocalPath) {
-      setFormError('仓库地址和本地路径为必填')
+      setFormError(t('repositories.no_repos'))
       return
     }
     setSaving(true)
@@ -96,45 +98,45 @@ export default function RepositoriesPage() {
     }
   }
 
-  if (loading) { return <LoadingPanel label="正在加载仓库列表..." /> }
+  if (loading) { return <LoadingPanel label={t('common.loading')} /> }
 
   return (
     <div>
-      <PageHeader title="仓库管理" description="绑定 GitHub/GitLab 仓库，作为 Agent 部署源。" action={<button onClick={() => setBindOpen(true)} className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white">绑定仓库</button>} />
+      <PageHeader title={t('repositories.title')} description={t('repositories.no_repos')} action={<button onClick={() => setBindOpen(true)} className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white">{t('repositories.bind_repo')}</button>} />
 
       {bindOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setBindOpen(false)}>
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <h2 className="mb-4 text-lg font-semibold text-slate-900">绑定仓库</h2>
+            <h2 className="mb-4 text-lg font-semibold text-slate-900">{t('repositories.bind_form_title')}</h2>
             <div className="space-y-4">
               <label className="block text-sm text-slate-700">
-                平台
+                {t('repositories.provider')}
                 <select value={bindProvider} onChange={(e) => setBindProvider(e.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-sky-500">
                   <option>GitHub</option><option>GitLab</option><option>Local</option>
                 </select>
               </label>
               <label className="block text-sm text-slate-700">
-                仓库地址
+                {t('repositories.url')}
                 <input value={bindUrl} onChange={(e) => setBindUrl(e.target.value)} placeholder="https://github.com/org/repo" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-sky-500" />
               </label>
               <label className="block text-sm text-slate-700">
-                本地路径
+                {t('repositories.local_path')}
                 <input value={bindLocalPath} onChange={(e) => setBindLocalPath(e.target.value)} placeholder="/path/to/cloned/repo" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-sky-500" />
               </label>
               <div className="grid grid-cols-2 gap-4">
                 <label className="block text-sm text-slate-700">
-                  分支
+                  {t('repositories.branch')}
                   <input value={bindBranch} onChange={(e) => setBindBranch(e.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-sky-500" />
                 </label>
                 <label className="block text-sm text-slate-700">
-                  Agent 目录
+                  {t('repositories.agents_path')}
                   <input value={bindPath} onChange={(e) => setBindPath(e.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-sky-500" />
                 </label>
               </div>
               {formError && <div className="text-sm text-rose-600">{formError}</div>}
               <div className="flex justify-end gap-3 pt-2">
-                <button onClick={() => setBindOpen(false)} className="rounded-xl px-4 py-2 text-sm text-slate-600 hover:bg-slate-100">取消</button>
-                <button onClick={handleBind} disabled={saving} className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-50">{saving ? '保存中...' : '绑定'}</button>
+                <button onClick={() => setBindOpen(false)} className="rounded-xl px-4 py-2 text-sm text-slate-600 hover:bg-slate-100">{t('common.cancel')}</button>
+                <button onClick={handleBind} disabled={saving} className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-50">{saving ? t('common.loading') : t('repositories.bind_repo')}</button>
               </div>
             </div>
           </div>
@@ -147,11 +149,11 @@ export default function RepositoriesPage() {
         </colgroup>
         <thead className={tableHeadClass}>
           <tr>
-            <th className={tableHeaderCellClass}><HeaderFilter label="仓库" active={!!query}><FilterInput value={query} onChange={setQuery} placeholder="搜索仓库" /></HeaderFilter></th>
-            <th className={tableHeaderCellClass}><HeaderFilter label="信息" active={platform !== 'all' || branch !== 'all' || agentsPath !== 'all'}><div className="space-y-3"><label className="block"><span className="mb-1 block text-xs font-medium text-slate-500">平台</span><FilterSelect value={platform} onChange={setPlatform} options={platforms} /></label><label className="block"><span className="mb-1 block text-xs font-medium text-slate-500">分支</span><FilterSelect value={branch} onChange={setBranch} options={branches} /></label><label className="block"><span className="mb-1 block text-xs font-medium text-slate-500">Agent 目录</span><FilterSelect value={agentsPath} onChange={setAgentsPath} options={agentPaths} /></label></div></HeaderFilter></th>
-            <th className={tableHeaderCellClass}>最近 Commit</th>
-            <th className={tableHeaderCellClass}><HeaderFilter label="状态" active={status !== 'all'}><FilterSelect value={status} onChange={setStatus} options={statuses} /></HeaderFilter></th>
-            <th className={`${tableHeaderCellClass} text-right`}>操作</th>
+            <th className={tableHeaderCellClass}><HeaderFilter label={t('repositories.title')} active={!!query}><FilterInput value={query} onChange={setQuery} placeholder={t('repositories.search_placeholder')} /></HeaderFilter></th>
+            <th className={tableHeaderCellClass}><HeaderFilter label={t('common.description')} active={platform !== 'all' || branch !== 'all' || agentsPath !== 'all'}><div className="space-y-3"><label className="block"><span className="mb-1 block text-xs font-medium text-slate-500">{t('repositories.provider')}</span><FilterSelect value={platform} onChange={setPlatform} options={platforms} /></label><label className="block"><span className="mb-1 block text-xs font-medium text-slate-500">{t('repositories.branch')}</span><FilterSelect value={branch} onChange={setBranch} options={branches} /></label><label className="block"><span className="mb-1 block text-xs font-medium text-slate-500">{t('repositories.agents_path')}</span><FilterSelect value={agentsPath} onChange={setAgentsPath} options={agentPaths} /></label></div></HeaderFilter></th>
+            <th className={tableHeaderCellClass}>{t('repositories.last_sync')}</th>
+            <th className={tableHeaderCellClass}><HeaderFilter label={t('common.status')} active={status !== 'all'}><FilterSelect value={status} onChange={setStatus} options={statuses} /></HeaderFilter></th>
+            <th className={`${tableHeaderCellClass} text-right`}>{t('common.actions')}</th>
           </tr>
         </thead>
         <tbody className={tableBodyClass}>
