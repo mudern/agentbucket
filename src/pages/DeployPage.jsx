@@ -7,6 +7,118 @@ import useAsyncData from '../hooks/useAsyncData'
 
 const steps = ['选择仓库', '选择 Commit', '选择 Agent', '配置能力', '确认']
 
+function summarizeItems(items, emptyText = '未选择') {
+  if (!items.length) return emptyText
+  if (items.length <= 2) return items.join('、')
+  return `${items.slice(0, 2).join('、')} 等 ${items.length} 项`
+}
+
+function CapabilityCard({ title, description, value, count, onOpen }) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="rounded-xl border border-slate-200 bg-white p-4 text-left transition hover:border-sky-200 hover:bg-sky-50/40"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-sm font-semibold text-slate-950">{title}</div>
+          <div className="mt-1 text-xs leading-5 text-slate-500">{description}</div>
+        </div>
+        <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500">
+          {count}
+        </span>
+      </div>
+      <div className="mt-4 truncate text-sm text-slate-700">{value}</div>
+      <div className="mt-3 text-xs font-medium text-sky-700">打开选择器</div>
+    </button>
+  )
+}
+
+function CapabilityPickerModal({ open, title, mode, items, selected, onClose, onSelectOne, onToggle, onSelectAll, onClear }) {
+  const [query, setQuery] = useState('')
+
+  if (!open) return null
+
+  const filteredItems = items
+    .filter((item) => [item.label, item.description, item.meta].join(' ').toLowerCase().includes(query.trim().toLowerCase()))
+    .sort((a, b) => Number(selected.includes(b.id)) - Number(selected.includes(a.id)))
+
+  const selectedCount = selected.length
+  const multi = mode === 'multi'
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/30 px-4 py-8">
+      <div className="flex max-h-[82vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-5 py-4">
+          <div>
+            <div className="text-base font-semibold text-slate-950">{title}</div>
+            <div className="mt-1 text-xs text-slate-400">{multi ? `已选择 ${selectedCount} 项` : '单选配置'}</div>
+          </div>
+          <button onClick={onClose} className="rounded-lg px-2 py-1 text-sm text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+            关闭
+          </button>
+        </div>
+
+        <div className="shrink-0 border-b border-slate-200 bg-slate-50/70 p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="搜索名称、说明或标签"
+              className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-sky-400"
+            />
+            {multi && (
+              <div className="flex shrink-0 gap-2">
+                <button type="button" onClick={onSelectAll} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50">
+                  全选全部
+                </button>
+                <button type="button" onClick={onClear} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50">
+                  清空
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto p-3">
+          <div className="space-y-2">
+            {filteredItems.map((item) => {
+              const checked = selected.includes(item.id)
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => (multi ? onToggle(item.id) : onSelectOne(item.id))}
+                  className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition ${
+                    checked ? 'border-sky-200 bg-sky-50' : 'border-slate-200 bg-white hover:bg-slate-50'
+                  }`}
+                >
+                  <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold ${
+                    checked ? 'border-sky-600 bg-sky-600 text-white' : 'border-slate-300 bg-white text-transparent'
+                  }`}>
+                    ✓
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium text-slate-900">{item.label}</span>
+                    {item.description && <span className="mt-1 block text-xs leading-5 text-slate-500">{item.description}</span>}
+                    {item.meta && <span className="mt-2 inline-flex rounded-full bg-white px-2 py-0.5 text-[10px] text-slate-400 ring-1 ring-slate-200">{item.meta}</span>}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+          {filteredItems.length === 0 && (
+            <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-400">
+              没有匹配的选项
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function DeployPage() {
   const [step, setStep] = useState(0)
   const [form, setForm] = useState({
@@ -25,6 +137,8 @@ export default function DeployPage() {
   const [deployResult, setDeployResult] = useState(null)
   const [deployError, setDeployError] = useState('')
   const [deployments, setDeployments] = useState([])
+  const [picker, setPicker] = useState(null)
+  const [capabilityTouched, setCapabilityTouched] = useState({ skills: false, mcps: false })
   const { data, loading } = useAsyncData(getDeployOptions, [])
 
   useEffect(() => {
@@ -37,18 +151,55 @@ export default function DeployPage() {
   const selectedCommit = commits.find((commit) => commit.hash === form.commitHash) ?? commits[0]
   const agents = selectedCommit?.agents ?? []
   const selectedAgent = agents.find((agent) => agent.id === form.agentId) ?? agents[0]
-  const selectedSkills = form.skills.length > 0 ? form.skills : selectedAgent?.skills ?? []
-  const selectedMcps = form.mcps.length > 0 ? form.mcps : selectedAgent?.mcps ?? []
+  const selectedSkills = capabilityTouched.skills ? form.skills : selectedAgent?.skills ?? []
+  const selectedMcps = capabilityTouched.mcps ? form.mcps : selectedAgent?.mcps ?? []
   const selectedApiTokenId = form.apiTokenId || data?.aiTokens?.[0]?.id || ''
   const selectedModel = form.model || selectedAgent?.model || data?.models?.[0] || ''
   const selectedRuntime = form.runtime || data?.runtimes?.[0] || ''
   const selectedRuntimeVersion = form.runtimeVersion || data?.runtimeTags?.[0] || 'latest'
   const selectedApiToken = data?.aiTokens?.find((token) => token.id === selectedApiTokenId)
+  const selectedMcpNames = useMemo(() => {
+    if (!data) return []
+    return selectedMcps.map((mcp) => data.mcpServers.find((server) => server.id === mcp)?.name ?? mcp)
+  }, [data, selectedMcps])
 
   const selectedTokenNames = useMemo(() => {
     if (!data) return []
     return data.authTokens.filter((token) => form.authTokens.includes(token.id)).map((token) => token.name)
   }, [data, form.authTokens])
+
+  const pickerItems = useMemo(() => {
+    if (!data) return { api: [], skills: [], mcps: [], auth: [] }
+    return {
+      api: data.aiTokens.map((token) => ({
+        id: token.id,
+        label: token.name,
+        description: token.scope || token.provider,
+        meta: [token.provider, token.model, token.status].filter(Boolean).join(' · '),
+      })),
+      skills: (selectedAgent?.skills ?? []).map((skill) => ({
+        id: skill,
+        label: skill,
+        description: 'Agent 声明的标准 Skill',
+        meta: selectedSkills.includes(skill) ? '已启用' : '可选',
+      })),
+      mcps: (selectedAgent?.mcps ?? []).map((mcp) => {
+        const server = data.mcpServers.find((item) => item.id === mcp)
+        return {
+          id: mcp,
+          label: server?.name ?? mcp,
+          description: server?.scope ?? 'Agent 声明的 MCP Server',
+          meta: mcp,
+        }
+      }),
+      auth: data.authTokens.map((token) => ({
+        id: token.id,
+        label: token.name,
+        description: token.accessTarget,
+        meta: [token.functionName, token.status].filter(Boolean).join(' · '),
+      })),
+    }
+  }, [data, selectedAgent, selectedMcps, selectedSkills])
 
   const updateForm = (key, value) => {
     setForm((current) => ({ ...current, [key]: value }))
@@ -65,10 +216,12 @@ export default function DeployPage() {
       skills: [],
       mcps: [],
     }))
+    setCapabilityTouched({ skills: false, mcps: false })
   }
 
   const selectAgent = (agentId) => {
     setForm((current) => ({ ...current, agentId, model: '', skills: [], mcps: [] }))
+    setCapabilityTouched({ skills: false, mcps: false })
   }
 
   const toggleValue = (key, value) => {
@@ -81,10 +234,16 @@ export default function DeployPage() {
   }
 
   const toggleFromValues = (key, value, values) => {
+    setCapabilityTouched((current) => ({ ...current, [key]: true }))
     setForm((current) => ({
       ...current,
       [key]: values.includes(value) ? values.filter((item) => item !== value) : [...values, value],
     }))
+  }
+
+  const setCapabilityValues = (key, values) => {
+    setCapabilityTouched((current) => ({ ...current, [key]: true }))
+    setForm((current) => ({ ...current, [key]: values }))
   }
 
   const submitDeployment = async () => {
@@ -180,7 +339,7 @@ export default function DeployPage() {
                 {commits.map((commit) => (
                   <button
                     key={commit.hash}
-                    onClick={() =>
+                    onClick={() => {
                       setForm((current) => ({
                         ...current,
                         commitHash: commit.hash,
@@ -189,7 +348,8 @@ export default function DeployPage() {
                         skills: [],
                         mcps: [],
                       }))
-                    }
+                      setCapabilityTouched({ skills: false, mcps: false })
+                    }}
                     className={`w-full rounded-xl border p-4 text-left transition ${
                       selectedCommit?.hash === commit.hash ? 'border-sky-200 bg-sky-50' : 'border-slate-200 hover:bg-slate-50'
                     }`}
@@ -228,92 +388,86 @@ export default function DeployPage() {
           )}
 
           {step === 3 && selectedAgent && (
-            <div className="grid gap-6 xl:grid-cols-2">
-              <div>
-                <div className="mb-3 text-sm font-medium text-slate-950">API Token</div>
-                <div className="space-y-3">
-                  {data.aiTokens.map((token) => (
-                    <label key={token.id} className="flex items-center gap-3 rounded-xl border border-slate-200 p-4 text-sm text-slate-700">
-                      <input
-                        type="radio"
-                        name="api-token"
-                        checked={selectedApiTokenId === token.id}
-                        onChange={() => updateForm('apiTokenId', token.id)}
-                      />
-                      <span>{token.name}</span>
-                    </label>
-                  ))}
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
+                <div className="mb-4">
+                  <div className="text-sm font-semibold text-slate-950">运行配置</div>
+                  <div className="mt-1 text-xs leading-5 text-slate-500">这些是部署时必须明确的基础运行参数。</div>
+                </div>
+                <div className="grid gap-4">
+                  <label className="block text-sm text-slate-700">
+                    模型
+                    <select
+                      value={selectedModel}
+                      onChange={(event) => updateForm('model', event.target.value)}
+                      className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-sky-500"
+                    >
+                      {data.models.map((model) => (
+                        <option key={model}>{model}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="block text-sm text-slate-700">
+                    Runtime
+                    <select
+                      value={selectedRuntime}
+                      onChange={(event) => updateForm('runtime', event.target.value)}
+                      className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-sky-500"
+                    >
+                      {data.runtimes.map((runtime) => (
+                        <option key={runtime}>{runtime}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="block text-sm text-slate-700">
+                    Runtime 版本
+                    <select
+                      value={selectedRuntimeVersion}
+                      onChange={(event) => updateForm('runtimeVersion', event.target.value)}
+                      className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-sky-500"
+                    >
+                      {(data.runtimeTags ?? ['latest']).map((version) => (
+                        <option key={version}>{version}</option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
               </div>
-              <div className="grid gap-5">
-                <label className="block text-sm text-slate-700">
-                  模型
-                  <select
-                    value={selectedModel}
-                    onChange={(event) => updateForm('model', event.target.value)}
-                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-sky-500"
-                  >
-                    {data.models.map((model) => (
-                      <option key={model}>{model}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className="block text-sm text-slate-700">
-                  Runtime
-                  <select
-                    value={selectedRuntime}
-                    onChange={(event) => updateForm('runtime', event.target.value)}
-                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-sky-500"
-                  >
-                    {data.runtimes.map((runtime) => (
-                      <option key={runtime}>{runtime}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className="block text-sm text-slate-700">
-                  Runtime 版本
-                  <select
-                    value={selectedRuntimeVersion}
-                    onChange={(event) => updateForm('runtimeVersion', event.target.value)}
-                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-sky-500"
-                  >
-                    {(data.runtimeTags ?? ['latest']).map((version) => (
-                      <option key={version}>{version}</option>
-                    ))}
-                  </select>
-                </label>
-              </div>
+
               <div>
-                <div className="mb-3 text-sm font-medium text-slate-950">Agent 声明的 Skill</div>
-                <div className="space-y-3">
-                  {selectedAgent.skills.map((skill) => (
-                    <label key={skill} className="flex items-center gap-3 rounded-xl border border-slate-200 p-4 text-sm text-slate-700">
-                      <input type="checkbox" checked={selectedSkills.includes(skill)} onChange={() => toggleFromValues('skills', skill, selectedSkills)} />
-                      <span>{skill}</span>
-                    </label>
-                  ))}
+                <div className="mb-4">
+                  <div className="text-sm font-semibold text-slate-950">能力配置</div>
+                  <div className="mt-1 text-xs leading-5 text-slate-500">大量 Skill、MCP 和 Token 不在页面上平铺；进入选择器后可搜索、批量处理。</div>
                 </div>
-              </div>
-              <div>
-                <div className="mb-3 text-sm font-medium text-slate-950">Agent 声明的 MCP</div>
-                <div className="space-y-3">
-                  {selectedAgent.mcps.map((mcp) => (
-                    <label key={mcp} className="flex items-center gap-3 rounded-xl border border-slate-200 p-4 text-sm text-slate-700">
-                      <input type="checkbox" checked={selectedMcps.includes(mcp)} onChange={() => toggleFromValues('mcps', mcp, selectedMcps)} />
-                      <span>{data.mcpServers.find((server) => server.id === mcp)?.name ?? mcp}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <div className="mb-3 text-sm font-medium text-slate-950">鉴权 Token</div>
-                <div className="space-y-3">
-                  {data.authTokens.map((token) => (
-                    <label key={token.id} className="flex items-center gap-3 rounded-xl border border-slate-200 p-4 text-sm text-slate-700">
-                      <input type="checkbox" checked={form.authTokens.includes(token.id)} onChange={() => toggleValue('authTokens', token.id)} />
-                      <span>{token.name}</span>
-                    </label>
-                  ))}
+                <div className="grid gap-3 md:grid-cols-2">
+                  <CapabilityCard
+                    title="API Token"
+                    description="选择这个 Agent 调模型时使用的凭据。"
+                    count="单选"
+                    value={selectedApiToken?.name ?? '未选择'}
+                    onOpen={() => setPicker('api')}
+                  />
+                  <CapabilityCard
+                    title="Skill"
+                    description="从 Agent 声明的标准 Skill 中启用。"
+                    count={`${selectedSkills.length}/${selectedAgent.skills.length}`}
+                    value={summarizeItems(selectedSkills)}
+                    onOpen={() => setPicker('skills')}
+                  />
+                  <CapabilityCard
+                    title="MCP"
+                    description="选择要挂载到 Agent 的 MCP Server。"
+                    count={`${selectedMcps.length}/${selectedAgent.mcps.length}`}
+                    value={summarizeItems(selectedMcpNames)}
+                    onOpen={() => setPicker('mcps')}
+                  />
+                  <CapabilityCard
+                    title="鉴权 Token"
+                    description="允许 Agent 通过 skill 获取的外部访问凭据。"
+                    count={`${form.authTokens.length}/${data.authTokens.length}`}
+                    value={summarizeItems(selectedTokenNames)}
+                    onOpen={() => setPicker('auth')}
+                  />
                 </div>
               </div>
             </div>
@@ -408,6 +562,52 @@ export default function DeployPage() {
           )}
         </div>
       </div>
+
+      <CapabilityPickerModal
+        open={picker === 'api'}
+        title="选择 API Token"
+        mode="single"
+        items={pickerItems.api}
+        selected={selectedApiTokenId ? [selectedApiTokenId] : []}
+        onClose={() => setPicker(null)}
+        onSelectOne={(id) => {
+          updateForm('apiTokenId', id)
+          setPicker(null)
+        }}
+      />
+      <CapabilityPickerModal
+        open={picker === 'skills'}
+        title="选择 Skill"
+        mode="multi"
+        items={pickerItems.skills}
+        selected={selectedSkills}
+        onClose={() => setPicker(null)}
+        onToggle={(id) => toggleFromValues('skills', id, selectedSkills)}
+        onSelectAll={() => setCapabilityValues('skills', pickerItems.skills.map((item) => item.id))}
+        onClear={() => setCapabilityValues('skills', [])}
+      />
+      <CapabilityPickerModal
+        open={picker === 'mcps'}
+        title="选择 MCP"
+        mode="multi"
+        items={pickerItems.mcps}
+        selected={selectedMcps}
+        onClose={() => setPicker(null)}
+        onToggle={(id) => toggleFromValues('mcps', id, selectedMcps)}
+        onSelectAll={() => setCapabilityValues('mcps', pickerItems.mcps.map((item) => item.id))}
+        onClear={() => setCapabilityValues('mcps', [])}
+      />
+      <CapabilityPickerModal
+        open={picker === 'auth'}
+        title="选择鉴权 Token"
+        mode="multi"
+        items={pickerItems.auth}
+        selected={form.authTokens}
+        onClose={() => setPicker(null)}
+        onToggle={(id) => toggleValue('authTokens', id)}
+        onSelectAll={() => updateForm('authTokens', pickerItems.auth.map((item) => item.id))}
+        onClear={() => updateForm('authTokens', [])}
+      />
 
       {deployments.length > 0 && (
         <div className="mt-8 rounded-2xl border border-slate-200 bg-white shadow-sm">

@@ -42,7 +42,7 @@ func (bus *AgentBus) list() []BusAgent {
 	return agents
 }
 
-func (bus *AgentBus) post(fromAgent, toAgent, content string) BusMessage {
+func (bus *AgentBus) post(fromAgent, toAgent, content string, store *Store) BusMessage {
 	bus.mu.Lock()
 	defer bus.mu.Unlock()
 	msg := BusMessage{
@@ -55,6 +55,11 @@ func (bus *AgentBus) post(fromAgent, toAgent, content string) BusMessage {
 	bus.messages = append(bus.messages, msg)
 	if len(bus.messages) > 200 {
 		bus.messages = bus.messages[len(bus.messages)-200:]
+	}
+	// Persist to SQLite
+	if store != nil && store.db != nil {
+		_, _ = store.db.Exec(`INSERT INTO bus_messages (id, from_agent, to_agent, content, created_at) VALUES (?, ?, ?, ?, ?)`,
+			msg.ID, msg.FromAgent, msg.ToAgent, msg.Content, formatStoredTime(msg.CreatedAt))
 	}
 	return msg
 }
@@ -97,7 +102,7 @@ func (app *App) busSendMessage(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, fmt.Errorf("toAgent and content are required"))
 		return
 	}
-	msg := app.bus.post(fromAgent, req.ToAgent, req.Content)
+	msg := app.bus.post(fromAgent, req.ToAgent, req.Content, app.store)
 	writeJSON(w, http.StatusOK, msg)
 }
 

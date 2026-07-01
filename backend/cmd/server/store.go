@@ -74,6 +74,14 @@ func (s *Store) initSchema() error {
 		)`,
 		`CREATE INDEX IF NOT EXISTS idx_chat_sessions_agent_updated ON chat_sessions(agent_id, updated_at DESC)`,
 		`CREATE INDEX IF NOT EXISTS idx_chat_messages_agent_session_created ON chat_messages(agent_id, session_id, created_at ASC)`,
+		`CREATE TABLE IF NOT EXISTS bus_messages (
+			id TEXT PRIMARY KEY,
+			from_agent TEXT NOT NULL,
+			to_agent TEXT NOT NULL,
+			content TEXT NOT NULL,
+			created_at TEXT NOT NULL
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_bus_messages_to_agent ON bus_messages(to_agent, created_at DESC)`,
 	}
 	for _, statement := range statements {
 		if _, err := s.db.Exec(statement); err != nil {
