@@ -7,6 +7,7 @@ import AiTokensPage from './pages/AiTokensPage'
 import ApprovalsPage from './pages/ApprovalsPage'
 import AuthTokensPage from './pages/AuthTokensPage'
 import DeployPage from './pages/DeployPage'
+import DeployProgressPage from './pages/DeployProgressPage'
 import AuthPage from './pages/AuthPage'
 import RepositoriesPage from './pages/RepositoriesPage'
 import UsersPage from './pages/UsersPage'
@@ -42,6 +43,7 @@ export default function App() {
             <Routes>
               <Route path="/" element={<AgentsPage />} />
               <Route path="/deploy" element={<DeployPage />} />
+              <Route path="/deploy/progress" element={<DeployProgressPage />} />
               <Route path="/agents/:agentId" element={<AgentChatPage />} />
               <Route path="/users" element={<UsersPage />} />
               <Route path="/approvals" element={<ApprovalsPage />} />

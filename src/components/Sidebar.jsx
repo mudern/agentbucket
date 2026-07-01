@@ -7,6 +7,7 @@ import { useLanguage, useT } from '../i18n'
 
 const navKeyMap = {
   '部署 Agent': 'nav.deploy_agent',
+  '部署进度': 'progress.title',
   '所有 Agent': 'nav.all_agents',
   '用户权限': 'nav.users',
   '审批中心': 'nav.approvals',
