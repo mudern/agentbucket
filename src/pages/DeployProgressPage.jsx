@@ -60,7 +60,7 @@ export default function DeployProgressPage() {
 
   const filtered = useMemo(() => {
     if (filterAgent === 'all') return deployments
-    return deployments.filter((d) => d.agentID === filterAgent).slice(0, 20)
+    return deployments.filter((d) => d.agentId === filterAgent).slice(0, 20)
   }, [deployments, filterAgent])
 
   const sorted = [...filtered].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
@@ -75,7 +75,7 @@ export default function DeployProgressPage() {
   const agentOptions = useMemo(() => {
     const seen = new Set()
     return deployments
-      .map((d) => d.agentID)
+      .map((d) => d.agentId)
       .filter((id) => {
         if (seen.has(id)) return false
         seen.add(id)
@@ -103,7 +103,7 @@ export default function DeployProgressPage() {
           </button>
           {agentOptions.map((agentId) => {
             const agent = agentMap[agentId]
-            const count = deployments.filter((d) => d.agentID === agentId).length
+            const count = deployments.filter((d) => d.agentId === agentId).length
             return (
               <button
                 key={agentId}
@@ -121,7 +121,7 @@ export default function DeployProgressPage() {
 
       <div className="space-y-4">
         {sorted.map((dep) => {
-          const agent = agentMap[dep.agentID]
+          const agent = agentMap[dep.agentId]
           const status = dep.status
 
           return (
@@ -149,10 +149,10 @@ export default function DeployProgressPage() {
 
                 <div className="min-w-0 flex-1">
                   <button
-                    onClick={() => setFilterAgent(filterAgent === dep.agentID ? 'all' : dep.agentID)}
+                    onClick={() => setFilterAgent(filterAgent === dep.agentId ? 'all' : dep.agentId)}
                     className="text-sm font-semibold text-slate-950 hover:text-sky-700 transition"
                   >
-                    {agent?.name ?? dep.agentID}
+                    {agent?.name ?? dep.agentId}
                   </button>
                   <div className="mt-1 flex items-center gap-3 text-xs text-slate-400">
                     <span className="font-mono">{dep.imageTag}</span>
@@ -170,7 +170,7 @@ export default function DeployProgressPage() {
                     <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">{dep.runtime}</span>
                   )}
                   <Link
-                    to={`/agents/${dep.agentID}`}
+                    to={`/agents/${dep.agentId}`}
                     className="rounded-lg bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-700 hover:bg-sky-100"
                   >
                     {t('agents.chat')}
