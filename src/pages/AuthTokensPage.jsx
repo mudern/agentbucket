@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getAuthTokens } from '../api'
+import { getAuthTokens, deleteAuthToken } from '../api'
 import LoadingPanel from '../components/LoadingPanel'
 import {
   FilterInput,
@@ -50,6 +50,13 @@ export default function AuthTokensPage() {
 
   const updateTokenStatus = (tokenId, nextStatus) => {
     setAuthTokens((current) => current.map((token) => (token.id === tokenId ? { ...token, status: nextStatus } : token)))
+  }
+
+  const handleDelete = async (id) => {
+    try {
+      await deleteAuthToken(id)
+      setAuthTokens((c) => c.filter((t) => t.id !== id))
+    } catch (e) { alert(`删除失败: ${e.message}`) }
   }
 
   return (
@@ -151,7 +158,7 @@ export default function AuthTokensPage() {
                     status={token.status}
                     onEnable={() => updateTokenStatus(token.id, '启用')}
                     onDisable={() => updateTokenStatus(token.id, '停用')}
-                    onDelete={() => setAuthTokens((current) => current.filter((item) => item.id !== token.id))}
+                    onDelete={() => handleDelete(token.id)}
                   />
                 </td>
               </tr>

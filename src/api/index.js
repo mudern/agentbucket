@@ -83,3 +83,19 @@ export async function createDeployment(payload) {
     body: JSON.stringify(payload),
   })
 }
+
+export async function deleteRepository(id) {
+  return request(`/api/repositories/${id}`, { method: 'DELETE' })
+}
+
+export async function deleteAIToken(id) {
+  return request(`/api/ai-tokens/${id}`, { method: 'DELETE' })
+}
+
+export async function deleteAuthToken(id) {
+  return request(`/api/auth-tokens/${id}`, { method: 'DELETE' })
+}
+
+export async function deleteSession(agentId, sessionId) {
+  return request(`/api/agents/${agentId}/sessions/${sessionId}`, { method: 'DELETE' })
+}

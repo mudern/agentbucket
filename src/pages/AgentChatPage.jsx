@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
-import { getAgentById, getAgentSessionMessages, getAgentSessions, sendAgentMessage, createAgentSession } from '../api'
+import { getAgentById, getAgentSessionMessages, getAgentSessions, createAgentSession } from '../api'
 import LoadingPanel from '../components/LoadingPanel'
 import useAsyncData from '../hooks/useAsyncData'
 
@@ -93,6 +93,7 @@ export default function AgentChatPage() {
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState('')
   const [sessionsRefresh, setSessionsRefresh] = useState(0)
+  const [sessionsOpen, setSessionsOpen] = useState(true)
   const messagesEnd = useRef(null)
 
   const { data: agent, loading: agentLoading } = useAsyncData(() => getAgentById(agentId), [agentId])
@@ -101,6 +102,7 @@ export default function AgentChatPage() {
     [agentId, sessionsRefresh],
   )
   const currentSessionId = activeSession ?? sessions[0]?.id
+  const currentSession = sessions.find((session) => session.id === currentSessionId)
   const { data: loadedMessages = [], loading: messagesLoading } = useAsyncData(
     () => currentSessionId ? getAgentSessionMessages(agentId, currentSessionId) : Promise.resolve([]),
     [agentId, currentSessionId],
@@ -206,105 +208,132 @@ export default function AgentChatPage() {
   }
 
   return (
-    <div className="flex h-full flex-col">
-      {/* Compact top bar */}
-      <div className="flex shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-4 py-2.5">
-        <Link to="/" className="rounded-md border border-slate-200 px-2.5 py-1 text-xs text-slate-500 transition hover:border-slate-300 hover:text-slate-700">
-          ← 所有 Agent
+    <div className="flex h-[calc(100vh-4rem)] min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="flex h-14 shrink-0 items-center gap-3 border-b border-slate-200 px-4 sm:px-5">
+        <Link
+          to="/"
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700"
+          aria-label="返回 Agent 列表"
+          title="返回 Agent 列表"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M15 6l-6 6 6 6" />
+          </svg>
         </Link>
-        <div className="h-4 w-px bg-slate-200" />
-        <div>
-          <span className="text-sm font-semibold text-slate-900">{agent.name}</span>
-          <span className="ml-2 text-xs text-slate-400">{agent.model}</span>
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center gap-2">
+            <h1 className="truncate text-sm font-semibold text-slate-950 sm:text-base">{agent.name}</h1>
+            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+              agent.status === '已部署' ? 'bg-emerald-50 text-emerald-700'
+              : agent.status === '离线' ? 'bg-slate-100 text-slate-500'
+              : 'bg-emerald-50 text-emerald-700'
+            }`}>
+              {agent.status}
+            </span>
+          </div>
+          <div className="mt-0.5 truncate text-xs text-slate-400 sm:hidden">
+            {currentSession?.title ?? '未选择会话'} · {agent.model}
+          </div>
+          <div className="mt-0.5 hidden truncate text-xs text-slate-400 sm:block">
+            {currentSession?.title ?? '未选择会话'}
+          </div>
         </div>
-        <div className="ml-auto flex items-center gap-2">
-          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500">{agent.runtime}</span>
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-            agent.status === '已部署' ? 'bg-emerald-50 text-emerald-700'
-            : agent.status === '离线' ? 'bg-slate-100 text-slate-500'
-            : 'bg-emerald-50 text-emerald-700'
-          }`}>
-            {agent.status}
+        <div className="hidden shrink-0 items-center gap-2 md:flex">
+          <span className="max-w-44 truncate rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-500">
+            {agent.model}
+          </span>
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-500">
+            {agent.runtime}
           </span>
         </div>
       </div>
 
-      <div className="grid min-h-0 flex-1 gap-5 xl:grid-cols-[260px_1fr]">
-        <aside className="flex min-h-0 flex-col rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 p-3">
-            <div className="flex gap-1.5">
-              <input
-                type="text"
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleCreateSession() }}
-                placeholder="新建会话..."
-                className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-sky-400"
-              />
-              <button
-                onClick={handleCreateSession}
-                disabled={creating || !newTitle.trim()}
-                className="shrink-0 rounded-lg bg-sky-600 px-3 py-2 text-sm font-medium text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {creating ? '...' : '+'}
-              </button>
+      <div className="relative flex min-h-0 flex-1">
+        <button
+          type="button"
+          onClick={() => setSessionsOpen((open) => !open)}
+          className={`absolute z-20 hidden h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700 xl:flex ${
+            sessionsOpen ? 'left-[17.25rem] top-16' : 'left-4 top-4'
+          }`}
+          aria-label={sessionsOpen ? '收起会话栏' : '展开会话栏'}
+          title={sessionsOpen ? '收起会话栏' : '展开会话栏'}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            {sessionsOpen ? <path d="M15 6l-6 6 6 6" /> : <path d="M9 6l6 6-6 6" />}
+          </svg>
+        </button>
+        {sessionsOpen && (
+          <aside className="hidden w-72 shrink-0 flex-col border-r border-slate-200 bg-slate-50/80 xl:flex">
+            <div className="shrink-0 border-b border-slate-200 px-3 pb-3 pt-3">
+              <div className="mb-2 flex items-center justify-between px-1">
+                <div className="text-xs font-semibold text-slate-500">会话</div>
+                <div className="text-[10px] text-slate-400">{sessions.length} 个</div>
+              </div>
+              <div className="flex gap-1.5">
+                <input
+                  type="text"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleCreateSession() }}
+                  placeholder="新建会话..."
+                  className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-sky-400"
+                />
+                <button
+                  onClick={handleCreateSession}
+                  disabled={creating || !newTitle.trim()}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-600 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  aria-label="创建会话"
+                  title="创建会话"
+                >
+                  {creating ? '...' : '+'}
+                </button>
+              </div>
+              {createError && <div className="mt-1.5 text-xs text-rose-600">{createError}</div>}
             </div>
-            {createError && <div className="mt-1.5 text-xs text-rose-600">{createError}</div>}
-          </div>
-          <div className="flex-1 space-y-0.5 overflow-y-auto p-2">
-            {sessions.map((session) => (
-              <button
-                key={session.id}
-                onClick={() => setActiveSession(session.id)}
-                className={`w-full rounded-xl px-3 py-2.5 text-left transition ${
-                  currentSessionId === session.id
-                    ? 'bg-sky-50 ring-1 ring-sky-200'
-                    : 'hover:bg-slate-50'
-                }`}
-              >
-                <div className={`truncate text-sm font-medium ${
-                  currentSessionId === session.id ? 'text-sky-900' : 'text-slate-700'
-                }`}>
-                  {session.title}
+            <div className="flex-1 space-y-1 overflow-y-auto p-2">
+              {sessions.map((session) => (
+                <button
+                  key={session.id}
+                  onClick={() => setActiveSession(session.id)}
+                  className={`w-full rounded-xl px-3 py-2.5 text-left transition ${
+                    currentSessionId === session.id
+                      ? 'bg-white shadow-sm ring-1 ring-sky-200'
+                      : 'hover:bg-white'
+                  }`}
+                >
+                  <div className={`truncate text-sm font-medium ${
+                    currentSessionId === session.id ? 'text-sky-900' : 'text-slate-700'
+                  }`}>
+                    {session.title}
+                  </div>
+                  <div className="mt-1 flex min-w-0 items-center gap-2 text-xs text-slate-400">
+                    {session.preview && <span className="truncate">{session.preview}</span>}
+                    {session.updatedAt && <span className="ml-auto shrink-0">{formatTime(session.updatedAt)}</span>}
+                  </div>
+                </button>
+              ))}
+              {sessionsLoading && <div className="px-3 py-2 text-sm text-slate-400">加载中...</div>}
+              {!sessionsLoading && sessions.length === 0 && (
+                <div className="px-3 py-4 text-center text-xs text-slate-400">暂无会话，输入标题创建</div>
+              )}
+            </div>
+            {(agent.skills?.length > 0 || agent.mcps?.length > 0) && (
+              <div className="shrink-0 border-t border-slate-200 p-3">
+                <div className="space-y-1 text-[10px] leading-relaxed text-slate-400">
+                  {agent.skills?.length > 0 && (
+                    <div><span className="font-medium text-slate-500">Skills:</span> {agent.skills.join(', ')}</div>
+                  )}
+                  {agent.mcps?.length > 0 && (
+                    <div><span className="font-medium text-slate-500">MCPs:</span> {agent.mcps.join(', ')}</div>
+                  )}
                 </div>
-                {session.preview && (
-                  <div className="mt-0.5 truncate text-xs text-slate-400">{session.preview}</div>
-                )}
-              </button>
-            ))}
-            {sessionsLoading && <div className="px-3 py-2 text-sm text-slate-400">加载中...</div>}
-            {!sessionsLoading && sessions.length === 0 && (
-              <div className="px-3 py-4 text-center text-xs text-slate-400">暂无会话，输入标题创建</div>
+              </div>
             )}
-          </div>
-          <div className="border-t border-slate-200 p-3">
-            <div className="text-[10px] leading-relaxed text-slate-400">
-              {agent.skills?.length > 0 && (
-                <div className="mb-1"><span className="font-medium text-slate-500">Skills:</span> {agent.skills.join(', ')}</div>
-              )}
-              {agent.mcps?.length > 0 && (
-                <div><span className="font-medium text-slate-500">MCPs:</span> {agent.mcps.join(', ')}</div>
-              )}
-            </div>
-          </div>
-        </aside>
+          </aside>
+        )}
 
-        <div className="flex min-h-0 flex-col rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="shrink-0 border-b border-slate-200 px-5 py-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-xs font-bold text-white">
-                AI
-              </div>
-              <div>
-                <div className="text-sm font-semibold text-slate-900">
-                  {sessions.find((s) => s.id === currentSessionId)?.title ?? agent.name}
-                </div>
-                <div className="text-xs text-slate-400">{agent.model}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto bg-slate-50/50 p-5" style={{ scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 #f1f5f9' }}>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex-1 overflow-y-auto bg-slate-50/50 p-4 sm:p-5" style={{ scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 #f1f5f9' }}>
             <div className="mx-auto max-w-4xl space-y-6">
               {messagesLoading && (
                 <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-400">
@@ -312,8 +341,7 @@ export default function AgentChatPage() {
                 </div>
               )}
               {!messagesLoading && messages.length === 0 && (
-                <div className="rounded-xl border border-dashed border-slate-200 p-10 text-center">
-                  <div className="mb-3 text-4xl">💬</div>
+                <div className="rounded-xl border border-dashed border-slate-200 bg-white p-10 text-center">
                   <div className="text-sm font-medium text-slate-600">开始与 {agent.name} 对话</div>
                   <div className="mt-1 text-xs text-slate-400">输入消息并按 Ctrl+Enter 发送</div>
                 </div>
@@ -341,7 +369,7 @@ export default function AgentChatPage() {
             </div>
           </div>
 
-          <div className="shrink-0 border-t border-slate-200 p-4">
+          <div className="shrink-0 border-t border-slate-200 bg-white p-4">
             <div className="mx-auto max-w-4xl">
               {sendError && (
                 <div className="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-600">

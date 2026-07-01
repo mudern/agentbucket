@@ -4,50 +4,26 @@ import { navGroups } from '../data'
 import { getCurrentUser } from '../api'
 import useAsyncData from '../hooks/useAsyncData'
 
-const iconMap = {
-  Agents: 'A',
-  'AI Tokens': '🔑',
-  Deploy: 'D',
-  Repositories: 'R',
-  Users: 'U',
-  Approvals: '✓',
-  'Auth Tokens': 'T',
-}
-
 export default function Sidebar({ collapsed, onToggle, onLogout }) {
   const { data: currentUser } = useAsyncData(getCurrentUser, [])
   const allowed = (item) => item.roles.includes(currentUser?.role)
 
   return (
-    <aside className={`flex min-h-screen shrink-0 flex-col border-r border-slate-200 bg-white shadow-sm transition-all duration-200 ${collapsed ? 'w-16 px-3 py-4' : 'w-64 px-5 py-5'}`}>
-      {/* Logo + toggle */}
-      <div className={`mb-5 flex items-center ${collapsed ? 'justify-center' : 'justify-between'}`}>
-        <LogoMark compact={collapsed} />
-        {!collapsed && (
-          <button
-            onClick={onToggle}
-            className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-            title="收起侧栏"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M15 6l-6 6 6 6" />
-            </svg>
-          </button>
-        )}
-      </div>
+    <aside className={`relative flex min-h-screen shrink-0 flex-col border-r border-slate-200 bg-white shadow-sm transition-all duration-200 ${collapsed ? 'w-16 px-3 py-4' : 'w-64 px-5 py-5'}`}>
+      <button
+        onClick={onToggle}
+        className="absolute -right-3 top-16 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700"
+        title={collapsed ? '展开侧栏' : '收起侧栏'}
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          {collapsed ? <path d="M9 6l6 6-6 6" /> : <path d="M15 6l-6 6 6 6" />}
+        </svg>
+      </button>
 
-      {/* Expand button when collapsed */}
-      {collapsed && (
-        <button
-          onClick={onToggle}
-          className="mb-4 flex justify-center rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-          title="展开侧栏"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 6l6 6-6 6" />
-          </svg>
-        </button>
-      )}
+      {/* Logo */}
+      <div className={`mb-7 flex items-center ${collapsed ? 'justify-center' : 'justify-start'}`}>
+        <LogoMark compact={collapsed} />
+      </div>
 
       {/* Navigation */}
       {!collapsed && currentUser ? (
@@ -76,27 +52,6 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
               </div>
             </div>
           ))}
-        </nav>
-      ) : collapsed && currentUser ? (
-        <nav className="flex-1 space-y-2">
-          {navGroups.map((group) =>
-            group.items.filter(allowed).map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) =>
-                  `flex justify-center rounded-xl py-2.5 text-sm font-medium transition ${
-                    isActive
-                      ? 'bg-sky-50 text-sky-700'
-                      : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
-                  }`
-                }
-                title={item.label}
-              >
-                {iconMap[item.label] ?? item.label[0]}
-              </NavLink>
-            ))
-          )}
         </nav>
       ) : null}
 

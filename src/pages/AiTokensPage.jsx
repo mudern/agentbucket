@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getAiTokens } from '../api'
+import { getAiTokens, deleteAIToken } from '../api'
 import LoadingPanel from '../components/LoadingPanel'
 import {
   FilterInput,
@@ -52,6 +52,13 @@ export default function AiTokensPage() {
 
   const updateTokenStatus = (tokenId, nextStatus) => {
     setAiTokens((current) => current.map((token) => (token.id === tokenId ? { ...token, status: nextStatus } : token)))
+  }
+
+  const handleDelete = async (id) => {
+    try {
+      await deleteAIToken(id)
+      setAiTokens((c) => c.filter((t) => t.id !== id))
+    } catch (e) { alert(`删除失败: ${e.message}`) }
   }
 
   return (
@@ -151,7 +158,7 @@ export default function AiTokensPage() {
                     status={token.status}
                     onEnable={() => updateTokenStatus(token.id, '启用')}
                     onDisable={() => updateTokenStatus(token.id, '停用')}
-                    onDelete={() => setAiTokens((current) => current.filter((item) => item.id !== token.id))}
+                    onDelete={() => handleDelete(token.id)}
                   />
                 </td>
               </tr>
