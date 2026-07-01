@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getAuthTokens, deleteAuthToken } from '../api'
+import { getAuthTokens, deleteAuthToken, patchAuthToken } from '../api'
 import LoadingPanel from '../components/LoadingPanel'
 import {
   FilterInput,
@@ -48,7 +48,8 @@ export default function AuthTokensPage() {
     return <LoadingPanel label="正在加载鉴权 Token..." />
   }
 
-  const updateTokenStatus = (tokenId, nextStatus) => {
+  const updateTokenStatus = async (tokenId, nextStatus) => {
+    await patchAuthToken(tokenId, { status: nextStatus })
     setAuthTokens((current) => current.map((token) => (token.id === tokenId ? { ...token, status: nextStatus } : token)))
   }
 

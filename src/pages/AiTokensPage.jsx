@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getAiTokens, deleteAIToken } from '../api'
+import { getAiTokens, deleteAIToken, patchAIToken } from '../api'
 import LoadingPanel from '../components/LoadingPanel'
 import {
   FilterInput,
@@ -50,7 +50,8 @@ export default function AiTokensPage() {
     return <LoadingPanel label="正在加载 AI Token..." />
   }
 
-  const updateTokenStatus = (tokenId, nextStatus) => {
+  const updateTokenStatus = async (tokenId, nextStatus) => {
+    await patchAIToken(tokenId, { status: nextStatus })
     setAiTokens((current) => current.map((token) => (token.id === tokenId ? { ...token, status: nextStatus } : token)))
   }
 

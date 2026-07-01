@@ -635,3 +635,75 @@ func (app *App) deleteRepository(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 }
+
+func (app *App) patchRepository(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	var updates map[string]string
+	if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
+		writeError(w, http.StatusBadRequest, err)
+		return
+	}
+	if err := app.store.update(func(state *State) error {
+		for i := range state.Repositories {
+			if state.Repositories[i].ID == id {
+				if v, ok := updates["status"]; ok {
+					state.Repositories[i].Status = v
+				}
+				return nil
+			}
+		}
+		return fmt.Errorf("repository %q not found", id)
+	}); err != nil {
+		writeError(w, http.StatusNotFound, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
+}
+
+func (app *App) patchAIToken(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	var updates map[string]string
+	if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
+		writeError(w, http.StatusBadRequest, err)
+		return
+	}
+	if err := app.store.update(func(state *State) error {
+		for i := range state.AITokens {
+			if fmt.Sprintf("%d", state.AITokens[i].ID) == id {
+				if v, ok := updates["status"]; ok {
+					state.AITokens[i].Status = v
+				}
+				return nil
+			}
+		}
+		return fmt.Errorf("token not found")
+	}); err != nil {
+		writeError(w, http.StatusNotFound, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
+}
+
+func (app *App) patchAuthToken(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	var updates map[string]string
+	if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
+		writeError(w, http.StatusBadRequest, err)
+		return
+	}
+	if err := app.store.update(func(state *State) error {
+		for i := range state.AuthTokens {
+			if fmt.Sprintf("%d", state.AuthTokens[i].ID) == id {
+				if v, ok := updates["status"]; ok {
+					state.AuthTokens[i].Status = v
+				}
+				return nil
+			}
+		}
+		return fmt.Errorf("token not found")
+	}); err != nil {
+		writeError(w, http.StatusNotFound, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
+}

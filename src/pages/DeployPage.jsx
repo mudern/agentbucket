@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { createDeployment, getDeployOptions } from '../api'
+import { useEffect } from 'react'
+import { createDeployment, getDeployOptions, getDeployments, stopDeployment, startDeployment, deleteDeployment } from '../api'
 import LoadingPanel from '../components/LoadingPanel'
 import PageHeader from '../components/PageHeader'
 import useAsyncData from '../hooks/useAsyncData'
@@ -23,7 +24,12 @@ export default function DeployPage() {
   const [deploying, setDeploying] = useState(false)
   const [deployResult, setDeployResult] = useState(null)
   const [deployError, setDeployError] = useState('')
+  const [deployments, setDeployments] = useState([])
   const { data, loading } = useAsyncData(getDeployOptions, [])
+
+  useEffect(() => {
+    getDeployments().then(setDeployments).catch(() => {})
+  }, [deployResult])
 
   const repositories = data?.repositories ?? []
   const selectedRepository = repositories.find((repo) => repo.id === form.repositoryId) ?? repositories[0]
@@ -402,6 +408,34 @@ export default function DeployPage() {
           )}
         </div>
       </div>
+
+      {deployments.length > 0 && (
+        <div className="mt-8 rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-200 px-6 py-4">
+            <h2 className="text-lg font-semibold text-slate-900">运行中的部署</h2>
+          </div>
+          <div className="divide-y divide-slate-100">
+            {deployments.map((d) => (
+              <div key={d.id} className="flex items-center justify-between px-6 py-4">
+                <div>
+                  <div className="text-sm font-medium text-slate-900">{d.agentId}</div>
+                  <div className="mt-0.5 text-xs text-slate-400">{d.runtime} · {d.sidecarUrl}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${d.status === 'running' ? 'bg-emerald-50 text-emerald-700' : d.status === 'stopped' ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-500'}`}>{d.status}</span>
+                  {d.status === 'running' && (
+                    <button onClick={async () => { await stopDeployment(d.id); setDeployments((c) => c.map((x) => x.id === d.id ? { ...x, status: 'stopped' } : x)) }} className="rounded-lg border border-slate-200 px-3 py-1 text-xs text-slate-600 hover:bg-slate-50">停止</button>
+                  )}
+                  {d.status === 'stopped' && (
+                    <button onClick={async () => { await startDeployment(d.id); setDeployments((c) => c.map((x) => x.id === d.id ? { ...x, status: 'running' } : x)) }} className="rounded-lg bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700">启动</button>
+                  )}
+                  <button onClick={async () => { await deleteDeployment(d.id); setDeployments((c) => c.filter((x) => x.id !== d.id)) }} className="rounded-lg px-3 py-1 text-xs text-rose-600 hover:bg-rose-50">删除</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

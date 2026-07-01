@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { deleteRepository } from '../api'
+import { deleteRepository, patchRepository } from '../api'
 import LoadingPanel from '../components/LoadingPanel'
 import {
   FilterInput,
@@ -167,7 +167,7 @@ export default function RepositoriesPage() {
                 <td className={tableCellClass}><div className="flex max-w-full flex-wrap gap-1.5"><SoftTag>{repo.provider}</SoftTag><SoftTag>{repo.branch}</SoftTag><SoftTag>{repo.agentsPath}</SoftTag></div></td>
                 <td className={tableCellClass}><div className="font-mono text-xs text-slate-900">{c?.hash}</div><div className="mt-1 text-xs text-slate-400">{c?.message}</div></td>
                 <td className={tableCellClass}><StatusBadge status={repo.status} /></td>
-                <td className={tableCellClass}><RowActions status={repo.status} onEnable={() => setRepositories((c) => c.map((r) => r.id === repo.id ? { ...r, status: '启用' } : r))} onDisable={() => setRepositories((c) => c.map((r) => r.id === repo.id ? { ...r, status: '停用' } : r))} onDelete={() => handleDelete(repo.id)} /></td>
+                <td className={tableCellClass}><RowActions status={repo.status} onEnable={async () => { await patchRepository(repo.id, { status: '启用' }); setRepositories((c) => c.map((r) => r.id === repo.id ? { ...r, status: '启用' } : r)) }} onDisable={async () => { await patchRepository(repo.id, { status: '停用' }); setRepositories((c) => c.map((r) => r.id === repo.id ? { ...r, status: '停用' } : r)) }} onDelete={() => handleDelete(repo.id)} /></td>
               </tr>
             )
           })}

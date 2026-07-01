@@ -99,3 +99,31 @@ export async function deleteAuthToken(id) {
 export async function deleteSession(agentId, sessionId) {
   return request(`/api/agents/${agentId}/sessions/${sessionId}`, { method: 'DELETE' })
 }
+
+export async function patchRepository(id, updates) {
+  return request(`/api/repositories/${id}`, { method: 'PATCH', body: JSON.stringify(updates) })
+}
+
+export async function patchAIToken(id, updates) {
+  return request(`/api/ai-tokens/${id}`, { method: 'PATCH', body: JSON.stringify(updates) })
+}
+
+export async function patchAuthToken(id, updates) {
+  return request(`/api/auth-tokens/${id}`, { method: 'PATCH', body: JSON.stringify(updates) })
+}
+
+export async function getDeployments() {
+  return request('/api/deployments')
+}
+
+export async function stopDeployment(id) {
+  return request(`/api/deployments/${id}/stop`, { method: 'POST' })
+}
+
+export async function startDeployment(id) {
+  return request(`/api/deployments/${id}/start`, { method: 'POST' })
+}
+
+export async function deleteDeployment(id) {
+  return request(`/api/deployments/${id}`, { method: 'DELETE' })
+}
