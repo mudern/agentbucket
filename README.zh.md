@@ -1,65 +1,59 @@
 <p align="center">
-  <picture>
-    <img src="public/agentbucket-logo-mark.svg" alt="AgentBucket" width="300" />
-  </picture>
+  <img src="public/agentbucket-logo-mark-transparent.png" alt="Buckie, AgentBucket 吉祥物" width="96" />
+  <br/>
+  <img src="public/agentbucket-logo-mark.svg" alt="AgentBucket 文字标识" width="360" />
+</p>
+
+<h1 align="center">AgentBucket</h1>
+
+<p align="center">
+  面向仓库定义 Agent、Docker 部署、Sidecar 编排和 API-first 运维的 AI Agent 控制平面。
 </p>
 
 <p align="center">
-  <strong>AI Agent 控制平面</strong><br/>
-  定义、部署、编排你的 AI Agent 舰队 —— 一个二进制文件即可运行。
+  <a href="https://go.dev/"><img src="https://img.shields.io/badge/Go-1.22+-00ADD8?style=flat&logo=go&logoColor=white" alt="Go" /></a>
+  <a href="https://react.dev/"><img src="https://img.shields.io/badge/React-18-61DAFB?style=flat&logo=react&logoColor=white" alt="React" /></a>
+  <a href="https://vite.dev/"><img src="https://img.shields.io/badge/Vite-5-646CFF?style=flat&logo=vite&logoColor=white" alt="Vite" /></a>
+  <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind-3-06B6D4?style=flat&logo=tailwindcss&logoColor=white" alt="Tailwind CSS" /></a>
+  <a href="https://www.sqlite.org/"><img src="https://img.shields.io/badge/SQLite-3-003B57?style=flat&logo=sqlite&logoColor=white" alt="SQLite" /></a>
+  <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-ready-2496ED?style=flat&logo=docker&logoColor=white" alt="Docker" /></a>
 </p>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Go-1.22+-00ADD8?style=flat&logo=go&logoColor=white" alt="Go" />
-  <img src="https://img.shields.io/badge/React-18-61DAFB?style=flat&logo=react&logoColor=white" alt="React" />
-  <img src="https://img.shields.io/badge/Tailwind-3-06B6D4?style=flat&logo=tailwindcss&logoColor=white" alt="Tailwind" />
-  <img src="https://img.shields.io/badge/Vite-5-646CFF?style=flat&logo=vite&logoColor=white" alt="Vite" />
-  <img src="https://img.shields.io/badge/SQLite-3-003B57?style=flat&logo=sqlite&logoColor=white" alt="SQLite" />
-  <img src="https://img.shields.io/badge/Docker-✓-2496ED?style=flat&logo=docker&logoColor=white" alt="Docker" />
-  <img src="https://img.shields.io/badge/i18n-ZH%2FEN-blue?style=flat" alt="i18n" />
-</p>
+AgentBucket 会从 Git/GitHub/本地仓库扫描 `agent.toml`，把选中的 Agent、标准 Skill 和 MCP 配置打包成 Docker 镜像，在容器里运行 sidecar，并通过 Web UI 和 curl-friendly API 提供部署、对话、Token 解析和 Agent 总线能力。
 
-<p align="center">
-  <a href="https://github.com/mudern/agentbucket/blob/main/README.md">English Docs</a>
-</p>
+## 能力概览
 
----
-
-AgentBucket 是一个轻量级 AI Agent 控制平面。通过 TOML 清单定义 Agent，一键部署为 Docker 容器（自动注入 sidecar），并通过精致的 Web UI 或 REST API 统一管理。
-
-## 功能特性
-
-- **Agent 定义** — 通过 `agent.toml` 声明式定义 Agent 的模型、运行时、Skill 和 MCP 配置
-- **一键部署** — 自动 Docker 构建 + 容器运行，包含 sidecar 注入、端口分配和健康监控
-- **多模型支持** — DeepSeek、GLM、Kimi、MiniMax，Anthropic 兼容协议
-- **多运行时** — Claude Code 和 Codex，同时支持本地和容器运行模式
-- **实时 SSE 聊天** — 流式响应，Markdown 渲染 + 代码高亮 + 交互式选项按钮
-- **Agent 总线** — Agent 之间相互发现、发送消息、协作通信（200 条内存缓冲 + SQLite 审计日志）
-- **会话管理** — 每个 Agent 独立的聊天会话，支持历史记录、自动持久化和删除
-- **Token 解析** — 通过 Sidecar 解析鉴权 Token，支持 Agent 级别的访问授权
-- **前端界面** — 精致的仪表盘，带搜索的表格、能力选择器、部署进度监控
-- **国际化** — 支持中文/英文 UI 切换，双语文档
-- **Docker 原生** — DooD（Docker-out-of-Docker）部署，挂载 Docker socket 操作宿主机 Docker，非 DinD
-- **API 优先** — 所有功能均可通过 curl 调用，适合 CI/CD 和 Agent 间通信
+- 使用 `agents/<agent-id>/agent.toml` 定义 Agent。
+- 校验并打包 `skills/<skill-id>/SKILL.md` 标准 Skill。
+- 打包 `mcp/*.json` MCP 配置。
+- 部署时自动生成 Docker build context 并注入 Go sidecar。
+- 支持 `claudecode`、`codex` 和 `opencode` runtime。
+- 从 CCS provider env 文件导入 AI Token。
+- 使用 SQLite 保存用户、仓库、部署、会话、消息和状态。
+- 支持 SSE 流式聊天、sidecar chat 转发和 Anthropic-compatible API fallback。
+- 支持 Agent Bus 发现和消息通信。
+- 支持通过 sidecar 做 Agent 级别鉴权的 Token 解析。
 
 ## 架构
 
-```
-┌──────────────────────────────────────────────────┐
-│  AgentBucket 前端  (React + Vite + Tailwind)      │
-├──────────────────────────────────────────────────┤
-│  AgentBucket 后端  (Go 1.22 + SQLite)              │
-│  ┌────────────────────────────────────────────┐   │
-│  │  Agent 总线  (Agent 间对等通信)              │   │
-│  └────────────────────────────────────────────┘   │
-├──────────────────────────────────────────────────┤
-│  Docker Sidecar 集群  (自动编排)                   │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐         │
-│  │ Agent 1  │ │ Agent 2  │ │ Agent N  │         │
-│  │ :18043   │ │ :18239   │ │ :18020   │         │
-│  │ClaudeCode│ │ClaudeCode│ │  Codex   │         │
-│  └──────────┘ └──────────┘ └──────────┘         │
-└──────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+  UI["React + Vite UI"] -->|VITE_API_BASE| API["Go Backend :8080"]
+
+  API --> DB[("SQLite")]
+  API --> Scan["仓库扫描<br/>agent.toml / skills / MCP"]
+  API --> Docker["Docker Build + Run"]
+  API --> Chat["Chat + Sessions API"]
+  API --> Bus["Agent Bus"]
+  API --> Tokens["Token Resolution"]
+
+  Docker --> Container["Agent Container"]
+  Container --> Agent["选中的 Agent 目录"]
+  Container --> Skills["选中的 Skills"]
+  Container --> MCP["选中的 MCP 配置"]
+  Container --> Sidecar["Go Sidecar"]
+  Sidecar --> Runtime["codex / claudecode / opencode Runtime"]
+  Sidecar --> API
 ```
 
 ## 快速开始
@@ -67,140 +61,165 @@ AgentBucket 是一个轻量级 AI Agent 控制平面。通过 TOML 清单定义 
 ### 前置条件
 
 - Go 1.22+
-- Node.js 20+ / pnpm（前端开发需要）
-- Docker（部署 Agent 容器时需要）
-- AI provider token（自动从 `~/.config/ccs/providers/*.env` 导入）
+- Node.js 20+
+- pnpm 11+
+- Docker，用于部署 Agent 容器
+- 可选：`~/.config/ccs/providers/*.env` 下的 CCS provider env 文件
 
-### 本地开发
+如果本机代理变量影响 localhost，请给服务加 `NO_PROXY=127.0.0.1,localhost`，curl 检查时使用 `curl --noproxy '*'`。
+
+### 启动后端
+
+从仓库根目录运行：
 
 ```bash
-git clone git@github.com:mudern/agentbucket.git
-cd agentbucket
-
-# 安装前端依赖
-pnpm install
-
-# 启动后端
 cd backend
-go run ./cmd/server/
-# => AgentBucket backend listening on http://127.0.0.1:8080
-
-# 启动前端（另开终端）
-pnpm dev
-# => http://127.0.0.1:5177
+NO_PROXY=127.0.0.1,localhost \
+GOCACHE=/tmp/agentbucket-go-cache \
+GOMODCACHE=/tmp/agentbucket-go-mod \
+AGENTBUCKET_ADDR=0.0.0.0:8080 \
+AGENTBUCKET_BUILD_TIMEOUT=300s \
+go run ./cmd/server
 ```
 
-### Docker 部署
+后端地址：`http://127.0.0.1:8080`。
+
+使用 `0.0.0.0:8080` 是为了让 Docker sidecar 可以通过 `host.docker.internal` 回连宿主机后端。
+
+### 启动前端
+
+另开一个终端，从仓库根目录运行：
+
+```bash
+NO_PROXY=127.0.0.1,localhost \
+VITE_API_BASE=http://127.0.0.1:8080 \
+pnpm dev --host 0.0.0.0 --port 5173
+```
+
+如果 `5173` 被占用，Vite 会自动选择其他端口。请使用 Vite 输出的地址，例如 `http://localhost:5178/`。
+
+### 快速检查
+
+```bash
+curl --noproxy '*' -sS http://127.0.0.1:8080/health
+curl --noproxy '*' -sS http://127.0.0.1:8080/api/current-user
+curl --noproxy '*' -sS http://127.0.0.1:8080/api/deploy-options
+```
+
+## Docker Compose
 
 ```bash
 docker-compose up -d
-# => http://localhost:8080
 ```
 
-后端挂载 `/var/run/docker.sock` 来管理宿主机 Docker daemon 上的 sidecar 容器——**不是 Docker-in-Docker**。
+Compose 会挂载：
 
-### 环境变量
+- `/var/run/docker.sock`，用于管理宿主机 Docker 容器。
+- `${HOME}/.config/ccs/providers` 到 `/providers`，用于导入 AI Token。
+- 命名 volume 保存 SQLite 和运行状态。
 
-| 变量 | 默认值 | 说明 |
-|---|---|---|
-| `AGENTBUCKET_ADDR` | `127.0.0.1:8080` | 监听地址 |
-| `AGENTBUCKET_DATA_DIR` | `backend/.data` | SQLite 和构建文件存储 |
-| `AGENTBUCKET_BUILD_TIMEOUT` | `300s` | Docker 构建超时 |
-| `AGENTBUCKET_SIDECAR_HOST` | `127.0.0.1` | Sidecar 可达地址（Docker 中为 `host.docker.internal`） |
-| `AGENTBUCKET_PROVIDERS_DIR` | `~/.config/ccs/providers` | CCS provider 环境变量文件目录 |
-| `AGENTBUCKET_ADMIN_TOKEN` | 自动生成 | 管理员 API token |
+这是 Docker-out-of-Docker，不是 Docker-in-Docker。
 
-## Agent 定义
+## Agent 仓库标准
+
+一个仓库可以包含多个 Agent、Skill 和 MCP 配置：
+
+```text
+agents/
+  legal-summarizer/
+    agent.toml
+skills/
+  knowledge-base/
+    SKILL.md
+mcp/
+  github-mcp.json
+```
+
+示例：
 
 ```toml
-# agents/my-agent/agent.toml
-id              = "my-agent"
-name            = "我的 Agent"
-description     = "Agent 功能描述"
-model           = "deepseek-v4-pro[1m]"
-runtime         = "claudecode"
+id = "legal-summarizer"
+name = "Legal Summarizer"
+description = "Summarize legal documents and extract risk clauses."
+model = "deepseek-v4-pro[1m]"
+runtime = "claudecode"
 runtime_version = "latest"
-api_token       = "deepseek"
-skills          = ["knowledge-base", "web-browser"]
-mcps            = ["github-mcp", "filesystem-mcp"]
-extra_install   = ["apk add --no-cache github-cli"]
+api_token = "deepseek"
+skills = ["knowledge-base", "document-parser"]
+mcps = ["notion-mcp", "filesystem-mcp"]
+extra_install = ["apk add --no-cache github-cli"]
 ```
 
-| 字段 | 说明 |
-|---|---|
-| `id` | Agent 唯一标识 |
-| `name` | 显示名称 |
-| `model` | AI 模型名称 |
-| `runtime` | `claudecode` 或 `codex` |
-| `api_token` | 关联的 AI Token 名称 |
-| `skills` | 启用的技能目录 |
-| `mcps` | MCP 服务器配置 |
-| `extra_install` | Dockerfile 额外的 RUN 命令 |
+`runtime` 当前支持：`claudecode`、`codex`、`opencode`。
+
+更完整的标准见 [backend/AGENT_STANDARD.md](backend/AGENT_STANDARD.md)。
+
+## 部署流程
+
+1. 在 UI 或 `POST /api/repositories` 绑定仓库。
+2. 后端扫描仓库并读取 `agent.toml`。
+3. 选择仓库、commit、Agent、runtime、模型、API Token、Skill、MCP 和鉴权 Token。
+4. 后端生成 build context：
+   - 选中的 Agent 目录
+   - 选中的 Skill 目录
+   - 选中的 MCP 配置
+   - `agentbucket.config.json`
+   - `backend/cmd/sidecar/main.go`
+   - 生成的 Dockerfile
+5. 构建 Docker 镜像并启动容器。
+6. sidecar 提供 health、status、chat、token、start/stop 和 bus 辅助接口。
 
 ## API 概览
 
-完整 API 文档见 `.skills/agentbucket-admin/SKILL.md`。
+完整 curl 示例见 [agentbucket-api-skill/SKILL.md](agentbucket-api-skill/SKILL.md)。
 
-### Agent 管理
-```bash
+常用接口：
+
+```text
+GET    /health
+GET    /api/current-user
+GET    /api/repositories
+POST   /api/repositories
 GET    /api/agents
 POST   /api/agent-definitions/scan
-```
-
-### 部署
-```bash
 GET    /api/deploy-options
 POST   /api/deployments
-GET    /api/deployments/{id}
+GET    /api/deployments/{id}/status
 POST   /api/deployments/{id}/start
 POST   /api/deployments/{id}/stop
-```
-
-### 聊天与会话
-```bash
-GET    /api/agents/{id}/sessions
-POST   /api/agents/{id}/sessions
-DELETE /api/agents/{id}/sessions/{sessionId}
-GET    /api/agents/{id}/messages?sessionId=xxx
-POST   /api/agents/{id}/messages       # stream: true 启用 SSE 流式
-```
-
-### Agent 总线
-```bash
+GET    /api/agents/{agentId}/sessions
+POST   /api/agents/{agentId}/messages
 GET    /api/bus/agents
-POST   /api/bus/agents/{id}/register
-POST   /api/bus/agents/{id}/message
-GET    /api/bus/messages?toAgent=xxx
+GET    /api/bus/messages?toAgent=...
+POST   /api/tokens/resolve
 ```
 
-### Token 与仓库管理
+## 开发检查
+
+后端：
+
 ```bash
-GET    /api/ai-tokens          POST   /api/ai-tokens
-GET    /api/auth-tokens        POST   /api/auth-tokens
-GET    /api/repositories       POST   /api/repositories
-PATCH  /api/repositories/{id}  DELETE /api/repositories/{id}
+cd backend
+GOCACHE=/tmp/agentbucket-go-cache \
+GOMODCACHE=/tmp/agentbucket-go-mod \
+go test ./...
 ```
 
-## 项目结构
+前端：
 
+```bash
+pnpm build
 ```
-AgentBucket/
-├── backend/
-│   ├── cmd/server/          # Go 后端（HTTP + SQLite + Docker 编排）
-│   ├── cmd/sidecar/         # Sidecar（编译到每个部署镜像中）
-│   ├── examples/agent-repo/ # 示例 Agent 定义
-│   ├── tokens/              # Token 解析脚本
-│   └── Dockerfile           # 生产环境 Docker 镜像
-├── src/                     # React 前端
-│   ├── pages/               # 页面组件
-│   ├── components/          # 共享 UI 组件
-│   ├── api/                 # API 调用层
-│   └── i18n/                # 国际化（中文/英文）
-├── .skills/                 # Claude Code 开发/管理技能
-├── docker-compose.yml       # Docker 编排配置
-└── README.md
-```
+
+当前前端构建会通过，但 Vite 仍会提示 chunk size warning。
+
+## 当前限制
+
+- `handlers.go` 仍然偏大，后续可以按资源继续拆分。
+- runtime CLI 已经真实接入，但 sidecar chat 仍是按请求 shell out 到 `codex`、`claude` 或 `opencode`，还不是长生命周期交互式 runtime session。
+- Docker build 依赖 npm 安装 runtime CLI，网络慢时构建会慢。
+- 权限、审计和多租户隔离仍处于本地控制平面阶段，后续需要继续加固。
 
 ## 许可
 
-MIT License
+MIT

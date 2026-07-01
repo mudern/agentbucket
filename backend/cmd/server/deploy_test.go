@@ -24,6 +24,19 @@ func TestDockerfileFor(t *testing.T) {
 	}
 }
 
+func TestDockerfileForOpenCode(t *testing.T) {
+	dockerfile := dockerfileFor("opencode", "latest", nil)
+	for _, want := range []string{
+		"RUN npm install -g opencode-ai@latest",
+		"ENV AGENTBUCKET_RUNTIME=opencode",
+		"ENV AGENTBUCKET_RUNTIME_VERSION=latest",
+	} {
+		if !strings.Contains(dockerfile, want) {
+			t.Fatalf("Dockerfile missing %q\n%s", want, dockerfile)
+		}
+	}
+}
+
 func TestWriteBuildContextCopiesRealSidecar(t *testing.T) {
 	root := t.TempDir()
 	repoRoot := filepath.Join(root, "repo")

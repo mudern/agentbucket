@@ -45,7 +45,7 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
       </div>
 
       {/* Navigation */}
-      {!collapsed && currentUser ? (
+      {!collapsed && currentUser && (
         <nav className="flex-1 space-y-6">
           {navGroups.map((group) => (
             <div key={group.title}>
@@ -72,33 +72,26 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
             </div>
           ))}
         </nav>
-      ) : null}
+      )}
 
-      {/* Language Switcher */}
+      {/* Bottom section: always pushed to bottom by flex-1 on nav, or spacer */}
+      {!collapsed && !currentUser && <div className="flex-1" />}
+
       {!collapsed && (
-        <div className="mb-2 border-t border-slate-100 pt-3">
+        <div className="border-t border-slate-100 pt-3">
           <div className="flex gap-1 px-1">
             <button
               onClick={() => setLang('zh')}
               className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition ${
-                lang === 'zh' ? 'bg-sky-50 text-sky-700' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+                lang === 'zh' ? 'bg-sky-50 text-sky-700 shadow-sm' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
               }`}
             >
-              中文
-            </button>
-            <button
-              onClick={() => setLang('en')}
-              className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition ${
-                lang === 'en' ? 'bg-sky-50 text-sky-700' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
-              }`}
-            >
-              EN
+              {lang === 'zh' ? '中文' : 'EN'}
             </button>
           </div>
         </div>
       )}
 
-      {/* Logout */}
       {!collapsed && currentUser && (
         <button
           type="button"

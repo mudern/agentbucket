@@ -17,6 +17,7 @@ func TestRunnerFor(t *testing.T) {
 		wantName    string
 		wantVersion string
 		wantCommand []string
+		wantChat    []string
 	}{
 		{
 			name:        "codex explicit version",
@@ -24,6 +25,7 @@ func TestRunnerFor(t *testing.T) {
 			wantName:    "codex",
 			wantVersion: "0.142.3",
 			wantCommand: []string{"codex", "exec", "--model", "gpt-test"},
+			wantChat:    []string{"codex", "exec", "--model", "gpt-test", "hello runtime"},
 		},
 		{
 			name:        "claudecode env version",
@@ -31,6 +33,15 @@ func TestRunnerFor(t *testing.T) {
 			wantName:    "claudecode",
 			wantVersion: "stable",
 			wantCommand: []string{"claude", "-p"},
+			wantChat:    []string{"claude", "-p", "hello runtime"},
+		},
+		{
+			name:        "opencode explicit version",
+			config:      Config{Runtime: "opencode", RuntimeVersion: "latest", Model: "qwen-test"},
+			wantName:    "opencode",
+			wantVersion: "latest",
+			wantCommand: []string{"opencode", "run", "--model", "qwen-test"},
+			wantChat:    []string{"opencode", "run", "--model", "qwen-test", "hello runtime"},
 		},
 		{
 			name:        "unknown runtime falls back to codex",
@@ -38,6 +49,7 @@ func TestRunnerFor(t *testing.T) {
 			wantName:    "codex",
 			wantVersion: "stable",
 			wantCommand: []string{"codex", "exec", "--model", "fallback-model"},
+			wantChat:    []string{"codex", "exec", "--model", "fallback-model", "hello runtime"},
 		},
 	}
 
@@ -59,6 +71,16 @@ func TestRunnerFor(t *testing.T) {
 			}
 			if cmd.Dir != "/app/agent" {
 				t.Fatalf("cmd dir = %q, want /app/agent", cmd.Dir)
+			}
+			chatCmd := runner.ChatCommand(tt.config, "hello runtime")
+			chatJoined := strings.Join(chatCmd.Args, " ")
+			for _, part := range tt.wantChat {
+				if !strings.Contains(chatJoined, part) {
+					t.Fatalf("chat command %q does not contain %q", chatJoined, part)
+				}
+			}
+			if chatCmd.Dir != "/app/agent" {
+				t.Fatalf("chat cmd dir = %q, want /app/agent", chatCmd.Dir)
 			}
 		})
 	}

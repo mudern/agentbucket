@@ -40,11 +40,13 @@ $AB_CURL $AB_URL/api/repositories
 $AB_CURL -X POST $AB_URL/api/repositories \
   -H 'Content-Type: application/json' \
   -d '{
-    "name": "example-agents",
+    "id": "example-agents",
     "provider": "Local",
+    "url": "file:///home/user/agent-repos/my-agents",
     "localPath": "/home/user/agent-repos/my-agents",
     "branch": "main",
-    "agentsPath": "agents"
+    "agentsPath": "agents",
+    "status": "启用"
   }'
 ```
 
@@ -54,13 +56,13 @@ $AB_CURL -X POST $AB_URL/api/repositories \
 $AB_CURL -X POST $AB_URL/api/repositories \
   -H 'Content-Type: application/json' \
   -d '{
-    "name": "my-agent-repo",
+    "id": "my-agent-repo",
     "provider": "GitHub",
     "url": "https://github.com/user/my-agent-repo",
     "localPath": "/home/user/repos/my-agent-repo",
     "branch": "main",
     "agentsPath": "agents",
-    "enabled": true
+    "status": "启用"
   }'
 ```
 
@@ -75,7 +77,7 @@ $AB_CURL -X POST $AB_URL/api/repositories/example-repo/sync
 ```bash
 $AB_CURL -X PATCH $AB_URL/api/repositories/example-repo \
   -H 'Content-Type: application/json' \
-  -d '{"enabled": true, "branch": "develop"}'
+  -d '{"status": "启用", "branch": "develop"}'
 ```
 
 ### Delete a repository
@@ -118,10 +120,11 @@ $AB_CURL -X POST $AB_URL/api/ai-tokens \
   -d '{
     "name": "my-token",
     "provider": "ANTHROPIC",
-    "apiKey": "sk-ant-...",
+    "secret": "sk-ant-...",
     "baseUrl": "https://api.anthropic.com",
     "model": "claude-sonnet-4-20250514",
-    "scope": "general"
+    "scope": "general",
+    "status": "启用"
   }'
 ```
 
@@ -191,6 +194,8 @@ Shows available repositories, commits, agents, runtimes, models, AI tokens, auth
 $AB_CURL $AB_URL/api/deploy-options
 ```
 
+Current runtimes are `codex`, `claudecode`, and `opencode`.
+
 ### Deploy an agent
 
 ```bash
@@ -198,11 +203,12 @@ $AB_CURL -X POST $AB_URL/api/deployments \
   -H 'Content-Type: application/json' \
   -d '{
     "repositoryId": "example-repo",
+    "commitHash": "ea41cfe",
     "agentId": "legal-summarizer",
     "runtime": "claudecode",
     "runtimeVersion": "latest",
     "model": "deepseek-v4-pro",
-    "apiTokenId": "1",
+    "apiTokenId": 1,
     "skills": ["knowledge-base", "document-parser"],
     "mcps": ["filesystem-mcp"],
     "authTokens": [101, 104]
@@ -382,7 +388,7 @@ $AB_CURL -X POST http://127.0.0.1:18043/tokens/get \
 # 1. Bind a repository
 $AB_CURL -X POST $AB_URL/api/repositories \
   -H 'Content-Type: application/json' \
-  -d '{"name":"my-repo","provider":"Local","localPath":"/path/to/repo","branch":"main","agentsPath":"agents"}'
+  -d '{"id":"my-repo","provider":"Local","url":"file:///path/to/repo","localPath":"/path/to/repo","branch":"main","agentsPath":"agents","status":"启用"}'
 
 # 2. Scan for agents
 $AB_CURL -X POST $AB_URL/api/agent-definitions/scan
@@ -393,7 +399,7 @@ $AB_CURL $AB_URL/api/agents
 # 4. Deploy
 $AB_CURL -X POST $AB_URL/api/deployments \
   -H 'Content-Type: application/json' \
-  -d '{"repositoryId":"my-repo","agentId":"my-agent","runtime":"claudecode"}'
+  -d '{"repositoryId":"my-repo","commitHash":"COMMIT_HASH","agentId":"my-agent","runtime":"claudecode"}'
 
 # 5. Wait ~30s, then check status
 $AB_CURL $AB_URL/api/deployments/dep-my-agent-TIMESTAMP/status
@@ -432,7 +438,7 @@ $AB_CURL -X POST $AB_URL/api/bus/agents/code-reviewer/message \
 ## Notes
 
 - Deployments may take 30-120 seconds depending on Docker build speed
-- SSE streaming only works for direct AI API calls currently (sidecar streaming planned)
+- SSE streaming works for direct AI API calls and sidecar chat forwarding.
 - Session limit is 20 per agent — use `DELETE` to remove old sessions
 - Bus messages in memory are capped at 200; SQLite audit log may grow unbounded
 - All API keys/secrets are stored server-side; the API never returns `apiKey` values in JSON responses

@@ -77,6 +77,23 @@ func TestStoreChatSessions(t *testing.T) {
 	}
 }
 
+func TestEnsureUserPasswordHashes(t *testing.T) {
+	users := ensureUserPasswordHashes([]User{
+		{Name: "Luna"},
+		{Name: "Ivy"},
+		{Name: "Custom"},
+	})
+	if users[0].PasswordHash != hashPassword("admin123") {
+		t.Fatalf("expected Luna default admin password hash")
+	}
+	if users[1].PasswordHash != hashPassword("user123") {
+		t.Fatalf("expected Ivy default user password hash")
+	}
+	if users[2].PasswordHash != hashPassword("password") {
+		t.Fatalf("expected fallback password hash")
+	}
+}
+
 func TestStoreChatSessionLimit(t *testing.T) {
 	dir := t.TempDir()
 	store, err := NewStore(dir+"/test.db", dir)
@@ -134,6 +151,8 @@ func TestStoreDeploymentCRUD(t *testing.T) {
 		CreatedAt:     time.Now(),
 	}
 
+	initialCount := len(store.snapshot().Deployments)
+
 	err = store.update(func(s *State) error {
 		s.Deployments = append(s.Deployments, dep)
 		return nil
@@ -143,16 +162,16 @@ func TestStoreDeploymentCRUD(t *testing.T) {
 	}
 
 	snap := store.snapshot()
-	if len(snap.Deployments) != 1 {
-		t.Fatalf("expected 1 deployment, got %d", len(snap.Deployments))
+	if len(snap.Deployments) != initialCount+1 {
+		t.Fatalf("expected %d deployments, got %d", initialCount+1, len(snap.Deployments))
 	}
-	if snap.Deployments[0].Status != "running" {
+	if snap.Deployments[initialCount].Status != "running" {
 		t.Fatal("deployment status should be running")
 	}
 
 	// Update status
 	err = store.update(func(s *State) error {
-		s.Deployments[0].Status = "stopped"
+		s.Deployments[initialCount].Status = "stopped"
 		return nil
 	})
 	if err != nil {
@@ -160,7 +179,7 @@ func TestStoreDeploymentCRUD(t *testing.T) {
 	}
 
 	snap = store.snapshot()
-	if snap.Deployments[0].Status != "stopped" {
+	if snap.Deployments[initialCount].Status != "stopped" {
 		t.Fatal("deployment status should be updated to stopped")
 	}
 }

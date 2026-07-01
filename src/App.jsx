@@ -13,7 +13,9 @@ import RepositoriesPage from './pages/RepositoriesPage'
 import UsersPage from './pages/UsersPage'
 
 export default function App() {
-  const [authenticated, setAuthenticated] = useState(() => localStorage.getItem('agentbucket.auth') === 'true')
+  const [authenticated, setAuthenticated] = useState(() =>
+    localStorage.getItem('agentbucket.auth') === 'true' || sessionStorage.getItem('agentbucket.auth') === 'true'
+  )
 
   const handleLogin = () => {
     localStorage.setItem('agentbucket.auth', 'true')
@@ -23,6 +25,8 @@ export default function App() {
   const handleLogout = () => {
     localStorage.removeItem('agentbucket.auth')
     localStorage.removeItem('agentbucket.token')
+    sessionStorage.removeItem('agentbucket.auth')
+    sessionStorage.removeItem('agentbucket.token')
     setAuthenticated(false)
   }
 

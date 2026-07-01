@@ -664,6 +664,143 @@ All agents use `claudecode` runtime and reference real CCS token names.
 - Added touched-state handling for Skill/MCP so users can intentionally clear all selections instead of falling back to Agent defaults.
 - Verified with `pnpm build`; build passes with the existing Vite chunk-size warning.
 
+## 2026-07-01 Backend SSE Robustness
+
+### Chat Stream Parsing
+
+- Continued from the handoff's runtime/chat TODOs.
+- Replaced chunk-based SSE parsing in `backend/cmd/server/chat.go` with `scanSSEData`, a line-based scanner shared by sidecar chat forwarding and direct AI API streaming.
+- Added `anthropicTextDelta` helper so Anthropic-compatible stream events are parsed in one place.
+- Added `backend/cmd/server/chat_test.go` covering SSE data scanning and Anthropic text delta extraction.
+- Verified with:
+  ```bash
+  cd backend
+  GOCACHE=/tmp/agentbucket-go-cache GOMODCACHE=/tmp/agentbucket-go-mod go test ./...
+  ```
+- Restarted the backend on `0.0.0.0:8080` so the fix is active for the running frontend.
+
+## 2026-07-01 README Refresh
+
+### Project Documentation
+
+- Rewrote `README.md` to match the current Go backend + Vite frontend + Docker sidecar architecture.
+- Restored the brand header using both `public/agentbucket-logo-mark-transparent.png` for Buckie and `public/agentbucket-logo-mark.svg` for the AgentBucket wordmark.
+- Restored clickable badges for Go, React, Vite, Tailwind, SQLite, and Docker.
+- Replaced the old fixed-width ASCII architecture diagram with a Mermaid flowchart to avoid alignment issues.
+- Added more accurate local dev commands, including `NO_PROXY`, Go cache env vars, `VITE_API_BASE`, and the note that Vite may choose a different port.
+- Added sections for repository layout, `agent.toml`, deployment flow, runtime/chat routing, API overview, sidecar API, development checks, and current limitations.
+- Fixed API documentation reference to point at `agentbucket-api-skill/SKILL.md`.
+
+## 2026-07-01 OpenCode Runtime
+
+### Runtime Support
+
+- Added `opencode` as a supported runtime alongside `codex` and `claudecode`.
+- Added `backend/cmd/server/runtime.go` with shared runtime enumeration/validation.
+- `GET /api/deploy-options` now returns `["codex","claudecode","opencode"]`.
+- Deployment validation accepts `opencode`.
+- Generated deployment Dockerfiles install `opencode-ai@<runtimeVersion>` and set `AGENTBUCKET_RUNTIME=opencode`.
+- Sidecar now includes `OpenCodeRunner`, using `opencode run --model <model>`.
+- Local backend runtime fallback also attempts `opencode run --model <model>`.
+- Updated `README.md` and `backend/AGENT_STANDARD.md` to document `opencode`.
+- Added tests for the opencode Dockerfile path and sidecar runner.
+- Verified with:
+  ```bash
+  cd backend
+  GOCACHE=/tmp/agentbucket-go-cache GOMODCACHE=/tmp/agentbucket-go-mod go test ./...
+  pnpm build
+  ```
+- Restarted the backend on `0.0.0.0:8080`; deploy options now include `opencode`.
+
+## 2026-07-01 Sidecar Runtime Command Cleanup
+
+### Runtime Command Abstraction
+
+- Split sidecar runtime commands into startup command and chat command.
+- `RuntimeRunner` now exposes `Command(config)` for `/agent/start` and `ChatCommand(config, message)` for `/agent/chat`.
+- Removed the fragile `/agent/chat` behavior that mutated `cmd.Args` by replacing the final placeholder argument.
+- Added sidecar tests that verify startup and chat commands for `codex`, `claudecode`, `opencode`, and unknown-runtime fallback.
+- Verified with:
+  ```bash
+  cd backend
+  GOCACHE=/tmp/agentbucket-go-cache GOMODCACHE=/tmp/agentbucket-go-mod go test ./...
+  ```
+
+## 2026-07-01 API Skill Sync
+
+### Curl Documentation
+
+- Updated `agentbucket-api-skill/SKILL.md` to mention `opencode` in deploy options and Agent standard runtime lists.
+- Updated `.skills/agentbucket-admin/SKILL.md` to match current API payload fields:
+  - repositories use `id`, `url`, `localPath`, `agentsPath`, and `status`
+  - AI token creation uses `secret`
+  - deployment examples include `commitHash`
+  - `apiTokenId` is numeric
+- Updated sidecar streaming note: SSE now works through direct AI API streaming and sidecar chat forwarding.
+
+## 2026-07-01 Deploy Options Runtime Test
+
+### Runtime Regression Coverage
+
+- Added `backend/cmd/server/handlers_test.go`.
+- Test calls `deployOptions` directly and asserts `codex`, `claudecode`, and `opencode` are returned.
+- Verified with:
+  ```bash
+  cd backend
+  GOCACHE=/tmp/agentbucket-go-cache GOMODCACHE=/tmp/agentbucket-go-mod go test ./...
+  ```
+
+## 2026-07-01 Chinese README Refresh
+
+### README.zh.md
+
+- Rewrote `README.zh.md` to match the refreshed English README structure.
+- Added Buckie transparent PNG and AgentBucket SVG wordmark at the top.
+- Restored clickable badges.
+- Replaced the old ASCII architecture diagram with Mermaid.
+- Synced local dev commands, proxy/cache notes, runtime list including `opencode`, deployment flow, API pointers, and current limitations.
+
+## 2026-07-01 Deploy Runtime Guidance
+
+### Frontend Runtime Selection
+
+- Added runtime-specific helper text under the runtime selector in `src/pages/DeployPage.jsx`.
+- Added i18n keys in `src/i18n/zh.js` and `src/i18n/en.js` for:
+  - `codex`
+  - `claudecode`
+  - `opencode`
+  - fallback runtime description
+- Verified with:
+  ```bash
+  pnpm build
+  cd backend
+  GOCACHE=/tmp/agentbucket-go-cache GOMODCACHE=/tmp/agentbucket-go-mod go test ./...
+  ```
+
+## 2026-07-01 Login Fix
+
+### Auth Persistence And Password UX
+
+- Fixed login failure caused by old SQLite `users` table missing `password_hash`.
+- Added `password_hash` migration in `backend/cmd/server/store.go`.
+- Added `ensureUserPasswordHashes` so existing seeded users regain default test passwords:
+  - `Luna` / `Alex`: `admin123`
+  - `Ivy` / `Noah`: `user123`
+- Updated user save/load to persist `password_hash`.
+- Added backend test coverage in `backend/cmd/server/store_test.go`.
+- Added login page password visibility toggle and "记住登录状态".
+- Updated auth persistence to support both `localStorage` and `sessionStorage`.
+- Verified:
+  ```bash
+  cd backend
+  GOCACHE=/tmp/agentbucket-go-cache GOMODCACHE=/tmp/agentbucket-go-mod go test ./...
+  pnpm build
+  curl --noproxy '*' -sS -X POST http://127.0.0.1:8080/api/login \
+    -H 'Content-Type: application/json' \
+    -d '{"username":"Luna","password":"admin123"}'
+  ```
+- Restarted backend on `0.0.0.0:8080`; `Luna/admin123` now logs in successfully.
+
 ## 2026-07-01 Session — P2 Completion + Docker + Core Feature Sweep
 
 ### Commit Summary (7 commits pushed)

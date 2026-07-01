@@ -403,7 +403,7 @@ func (app *App) deployOptions(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, DeployOptions{
 		Repositories: app.scanRepositories(state.Repositories),
 		Models:       models,
-		Runtimes:     []string{"codex", "claudecode"},
+		Runtimes:     supportedRuntimes(),
 		RuntimeTags:  []string{"latest", "stable", "nightly"},
 		MCPServers:   scanMCPServers(state.Repositories),
 		AITokens:     state.AITokens,

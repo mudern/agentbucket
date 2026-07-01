@@ -18,7 +18,7 @@ Required fields:
 
 - `id`: stable agent id, used for deployment and container naming.
 - `name`: display name.
-- `runtime`: currently `codex` or `claudecode`.
+- `runtime`: currently `codex`, `claudecode`, or `opencode`.
 - `skills`: list of standard skill directory ids.
 - `mcps`: list of MCP config ids.
 
@@ -40,4 +40,3 @@ skills/
 mcp/
   github-mcp.json
 ```
-

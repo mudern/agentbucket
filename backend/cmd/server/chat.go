@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -135,6 +136,8 @@ func callRuntimeCLI(agent Agent, userContent string, tokens []AIToken) (string, 
 		exe = "claude"
 	case "codex":
 		exe = "codex"
+	case "opencode":
+		exe = "opencode"
 	default:
 		return "", false
 	}
@@ -149,6 +152,8 @@ func callRuntimeCLI(agent Agent, userContent string, tokens []AIToken) (string, 
 		cmd = exec.Command("claude", "-p", userContent)
 	case "codex":
 		cmd = exec.Command("codex", "exec", "--model", model, userContent)
+	case "opencode":
+		cmd = exec.Command("opencode", "run", "--model", model, userContent)
 	}
 	cmd.Env = append(os.Environ(),
 		"ANTHROPIC_AUTH_TOKEN="+authToken,
@@ -207,29 +212,15 @@ func (app *App) streamSidecarChat(w http.ResponseWriter, flusher http.Flusher, s
 	}
 
 	var fullContent strings.Builder
-	buf := make([]byte, 4096)
-	for {
-		n, err := resp.Body.Read(buf)
-		if n > 0 {
-			chunk := string(buf[:n])
-			lines := strings.Split(chunk, "\n")
-			for _, line := range lines {
-				if !strings.HasPrefix(line, "data: ") {
-					continue
-				}
-				data := strings.TrimPrefix(line, "data: ")
-				// Skip error markers
-				if strings.HasPrefix(data, "[error]") {
-					continue
-				}
-				fullContent.WriteString(strings.ReplaceAll(data, "\\n", "\n"))
-				w.Write([]byte("data: " + data + "\n\n"))
-				flusher.Flush()
-			}
+	if err := scanSSEData(resp.Body, func(data string) {
+		if data == "[DONE]" || strings.HasPrefix(data, "[error]") {
+			return
 		}
-		if err != nil {
-			break
-		}
+		fullContent.WriteString(strings.ReplaceAll(data, "\\n", "\n"))
+		_, _ = w.Write([]byte("data: " + data + "\n\n"))
+		flusher.Flush()
+	}); err != nil {
+		return false
 	}
 
 	content := fullContent.String()
@@ -556,40 +547,18 @@ func (app *App) streamAgentMessage(w http.ResponseWriter, agentID string, userCo
 		return
 	}
 
-	// Read SSE stream from AI API and forward to client
+	// Read SSE stream from AI API and forward text deltas to client.
 	var fullContent strings.Builder
-	buf := make([]byte, 4096)
-	for {
-		n, err := resp.Body.Read(buf)
-		if n > 0 {
-			chunk := string(buf[:n])
-			lines := strings.Split(chunk, "\n")
-			for _, line := range lines {
-				if !strings.HasPrefix(line, "data: ") {
-					continue
-				}
-				data := strings.TrimPrefix(line, "data: ")
-				var event struct {
-					Type  string `json:"type"`
-					Delta struct {
-						Type string `json:"type"`
-						Text string `json:"text"`
-					} `json:"delta"`
-				}
-				if err := json.Unmarshal([]byte(data), &event); err != nil {
-					continue
-				}
-				if event.Type == "content_block_delta" && event.Delta.Type == "text_delta" && event.Delta.Text != "" {
-					fullContent.WriteString(event.Delta.Text)
-					sseChunk := fmt.Sprintf("data: %s\n\n", strings.ReplaceAll(event.Delta.Text, "\n", "\\n"))
-					w.Write([]byte(sseChunk))
-					flusher.Flush()
-				}
-			}
+	if err := scanSSEData(resp.Body, func(data string) {
+		if text := anthropicTextDelta(data); text != "" {
+			fullContent.WriteString(text)
+			sseChunk := fmt.Sprintf("data: %s\n\n", strings.ReplaceAll(text, "\n", "\\n"))
+			_, _ = w.Write([]byte(sseChunk))
+			flusher.Flush()
 		}
-		if err != nil {
-			break
-		}
+	}); err != nil {
+		sseError(w, fmt.Sprintf("AI API stream read failed: %v", err))
+		return
 	}
 
 	content := fullContent.String()
@@ -643,6 +612,43 @@ func sseError(w http.ResponseWriter, msg string) {
 	if flusher, ok := w.(http.Flusher); ok {
 		flusher.Flush()
 	}
+}
+
+func scanSSEData(r io.Reader, handle func(data string)) error {
+	scanner := bufio.NewScanner(r)
+	scanner.Buffer(make([]byte, 64*1024), 1024*1024)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if !strings.HasPrefix(line, "data:") {
+			continue
+		}
+		data := strings.TrimSpace(strings.TrimPrefix(line, "data:"))
+		if data == "" {
+			continue
+		}
+		handle(data)
+	}
+	return scanner.Err()
+}
+
+func anthropicTextDelta(data string) string {
+	if data == "[DONE]" {
+		return ""
+	}
+	var event struct {
+		Type  string `json:"type"`
+		Delta struct {
+			Type string `json:"type"`
+			Text string `json:"text"`
+		} `json:"delta"`
+	}
+	if err := json.Unmarshal([]byte(data), &event); err != nil {
+		return ""
+	}
+	if event.Type == "content_block_delta" && event.Delta.Type == "text_delta" {
+		return event.Delta.Text
+	}
+	return ""
 }
 
 func firstRunes(s string, n int) string {

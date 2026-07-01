@@ -36,7 +36,7 @@ func (app *App) createDeployment(req DeployRequest) (Deployment, error) {
 	if len(req.ExtraInstall) == 0 {
 		req.ExtraInstall = agent.ExtraInstall
 	}
-	if req.Runtime != "codex" && req.Runtime != "claudecode" {
+	if !isSupportedRuntime(req.Runtime) {
 		return Deployment{}, fmt.Errorf("unsupported runtime %q", req.Runtime)
 	}
 
@@ -219,6 +219,8 @@ func runtimeInstallLine(runtime string, version string) string {
 		return fmt.Sprintf("RUN npm install -g @openai/codex@%s", version)
 	case "claudecode":
 		return fmt.Sprintf("RUN npm install -g @anthropic-ai/claude-code@%s", version)
+	case "opencode":
+		return fmt.Sprintf("RUN npm install -g opencode-ai@%s", version)
 	default:
 		return "RUN true"
 	}

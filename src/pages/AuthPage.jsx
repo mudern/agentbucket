@@ -10,6 +10,8 @@ export default function AuthPage({ mode = 'login', onAuthenticated }) {
   const isRegister = mode === 'register'
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [remember, setRemember] = useState(true)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const t = useT()
@@ -35,8 +37,12 @@ export default function AuthPage({ mode = 'login', onAuthenticated }) {
         throw new Error(body.error || 'Login failed')
       }
       const data = await resp.json()
-      localStorage.setItem('agentbucket.token', data.token)
-      localStorage.setItem('agentbucket.auth', 'true')
+      const persistentStore = remember ? localStorage : sessionStorage
+      const otherStore = remember ? sessionStorage : localStorage
+      persistentStore.setItem('agentbucket.token', data.token)
+      persistentStore.setItem('agentbucket.auth', 'true')
+      otherStore.removeItem('agentbucket.token')
+      otherStore.removeItem('agentbucket.auth')
       onAuthenticated?.()
       navigate('/', { replace: true })
     } catch (e) {
@@ -100,14 +106,33 @@ export default function AuthPage({ mode = 'login', onAuthenticated }) {
 
             <label className="block text-sm font-medium text-slate-700">
               {t('auth.password_placeholder')}
+              <div className="mt-2 flex h-11 overflow-hidden rounded-xl border border-slate-200 bg-white focus-within:border-sky-500 focus-within:ring-4 focus-within:ring-sky-100">
+                <input
+                  required
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={t('auth.password_placeholder')}
+                  className="min-w-0 flex-1 bg-transparent px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((current) => !current)}
+                  className="shrink-0 border-l border-slate-200 px-3 text-xs font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
+                >
+                  {showPassword ? '隐藏' : '显示'}
+                </button>
+              </div>
+            </label>
+
+            <label className="flex items-center gap-2 text-sm text-slate-600">
               <input
-                required
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={t('auth.password_placeholder')}
-                className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
+                type="checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
               />
+              记住登录状态
             </label>
 
             <button

@@ -164,6 +164,11 @@ export default function DeployPage() {
   const selectedRuntime = form.runtime || data?.runtimes?.[0] || ''
   const selectedRuntimeVersion = form.runtimeVersion || data?.runtimeTags?.[0] || 'latest'
   const selectedApiToken = data?.aiTokens?.find((token) => token.id === selectedApiTokenId)
+  const runtimeDescriptions = {
+    codex: t('deploy.runtime_hint_codex'),
+    claudecode: t('deploy.runtime_hint_claudecode'),
+    opencode: t('deploy.runtime_hint_opencode'),
+  }
   const selectedMcpNames = useMemo(() => {
     if (!data) return []
     return selectedMcps.map((mcp) => data.mcpServers.find((server) => server.id === mcp)?.name ?? mcp)
@@ -424,6 +429,9 @@ export default function DeployPage() {
                         <option key={runtime}>{runtime}</option>
                       ))}
                     </select>
+                    <div className="mt-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs leading-5 text-slate-500">
+                      {runtimeDescriptions[selectedRuntime] ?? t('deploy.runtime_hint_default')}
+                    </div>
                   </label>
                   <label className="block text-sm text-slate-700">
                     {t('deploy.runtime_version')}

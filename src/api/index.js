@@ -1,7 +1,7 @@
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://127.0.0.1:8080'
 
 function getToken() {
-  return localStorage.getItem('agentbucket.token') || ''
+  return localStorage.getItem('agentbucket.token') || sessionStorage.getItem('agentbucket.token') || ''
 }
 
 async function request(path, options = {}) {

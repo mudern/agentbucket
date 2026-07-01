@@ -28,6 +28,7 @@ type Config struct {
 
 type RuntimeRunner interface {
 	Command(config Config) *exec.Cmd
+	ChatCommand(config Config, message string) *exec.Cmd
 	Name() string
 	Version() string
 }
@@ -44,6 +45,12 @@ func (r CodexRunner) Command(config Config) *exec.Cmd {
 	return cmd
 }
 
+func (r CodexRunner) ChatCommand(config Config, message string) *exec.Cmd {
+	cmd := exec.Command("codex", "exec", "--model", config.Model, message)
+	cmd.Dir = "/app/agent"
+	return cmd
+}
+
 type ClaudeCodeRunner struct{ version string }
 
 func (r ClaudeCodeRunner) Name() string { return "claudecode" }
@@ -52,6 +59,30 @@ func (r ClaudeCodeRunner) Version() string { return r.version }
 
 func (r ClaudeCodeRunner) Command(config Config) *exec.Cmd {
 	cmd := exec.Command("claude", "-p", "AgentBucket sidecar online")
+	cmd.Dir = "/app/agent"
+	return cmd
+}
+
+func (r ClaudeCodeRunner) ChatCommand(config Config, message string) *exec.Cmd {
+	cmd := exec.Command("claude", "-p", message)
+	cmd.Dir = "/app/agent"
+	return cmd
+}
+
+type OpenCodeRunner struct{ version string }
+
+func (r OpenCodeRunner) Name() string { return "opencode" }
+
+func (r OpenCodeRunner) Version() string { return r.version }
+
+func (r OpenCodeRunner) Command(config Config) *exec.Cmd {
+	cmd := exec.Command("opencode", "run", "--model", config.Model, "AgentBucket sidecar online")
+	cmd.Dir = "/app/agent"
+	return cmd
+}
+
+func (r OpenCodeRunner) ChatCommand(config Config, message string) *exec.Cmd {
+	cmd := exec.Command("opencode", "run", "--model", config.Model, message)
 	cmd.Dir = "/app/agent"
 	return cmd
 }
@@ -123,6 +154,8 @@ func runnerFor(config Config) RuntimeRunner {
 		return CodexRunner{version: version}
 	case "claudecode":
 		return ClaudeCodeRunner{version: version}
+	case "opencode":
+		return OpenCodeRunner{version: version}
 	default:
 		return CodexRunner{version: version}
 	}
@@ -239,13 +272,11 @@ func handleChat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	runner := runnerFor(config)
-	cmd := runner.Command(config)
-	cmd.Args = append(cmd.Args[:len(cmd.Args)-1], req.Message)
+	cmd := runner.ChatCommand(config, req.Message)
 	cmd.Env = append(os.Environ(),
 		"AGENTBUCKET_AGENT_ID="+config.AgentID,
 		"AGENTBUCKET_MODEL="+config.Model,
 	)
-	cmd.Dir = "/app/agent"
 
 	if req.Stream {
 		handleStreamChat(w, cmd)
