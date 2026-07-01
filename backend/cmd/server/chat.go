@@ -188,6 +188,93 @@ func callRuntimeCLI(agent Agent, userContent string, tokens []AIToken) (string, 
 	}
 }
 
+func (app *App) streamSidecarChat(w http.ResponseWriter, flusher http.Flusher, sidecarURL string, userContent string, agentID string, sessionID string, agent Agent) bool {
+	body, _ := json.Marshal(map[string]any{"message": userContent, "stream": true})
+	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, sidecarURL+"/agent/chat", bytes.NewReader(body))
+	if err != nil {
+		return false
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return false
+	}
+
+	var fullContent strings.Builder
+	buf := make([]byte, 4096)
+	for {
+		n, err := resp.Body.Read(buf)
+		if n > 0 {
+			chunk := string(buf[:n])
+			lines := strings.Split(chunk, "\n")
+			for _, line := range lines {
+				if !strings.HasPrefix(line, "data: ") {
+					continue
+				}
+				data := strings.TrimPrefix(line, "data: ")
+				// Skip error markers
+				if strings.HasPrefix(data, "[error]") {
+					continue
+				}
+				fullContent.WriteString(strings.ReplaceAll(data, "\\n", "\n"))
+				w.Write([]byte("data: " + data + "\n\n"))
+				flusher.Flush()
+			}
+		}
+		if err != nil {
+			break
+		}
+	}
+
+	content := fullContent.String()
+	if content == "" {
+		return false
+	}
+
+	// Persist to DB
+	now := time.Now()
+	userMsg := ChatMessage{
+		ID: fmt.Sprintf("msg-%d-user", now.UnixNano()), SessionID: sessionID, AgentID: agentID,
+		Role: "user", Content: userContent, CreatedAt: now,
+	}
+	assistantMsg := ChatMessage{
+		ID: fmt.Sprintf("msg-%d-assistant", now.UnixNano()+1), SessionID: sessionID, AgentID: agentID,
+		Role: "assistant", Content: content, CreatedAt: now,
+	}
+	_ = app.store.update(func(state *State) error {
+		ensureChatMaps(state)
+		sessions := state.ChatSessions[agentID]
+		found := false
+		for i := range sessions {
+			if sessions[i].ID == sessionID {
+				sessions[i].Preview = firstRunes(userContent, 50)
+				sessions[i].UpdatedAt = now
+				found = true
+				break
+			}
+		}
+		if !found {
+			s := newChatSession(agentID, firstRunes(userContent, 20))
+			s.ID = sessionID
+			state.ChatSessions[agentID] = append(state.ChatSessions[agentID], s)
+		}
+		key := chatKey(agentID, sessionID)
+		state.ChatMessages[key] = append(state.ChatMessages[key], userMsg, assistantMsg)
+		return nil
+	})
+
+	// Send complete event
+	w.Write([]byte("data: [DONE]\n\n"))
+	flusher.Flush()
+	return true
+}
+
 func callSidecarChat(sidecarURL string, userContent string) (string, bool) {
 	body, _ := json.Marshal(map[string]string{"message": userContent})
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
@@ -361,6 +448,17 @@ func (app *App) streamAgentMessage(w http.ResponseWriter, agentID string, userCo
 	if !found {
 		sseError(w, "agent not found")
 		return
+	}
+
+	// Try streaming through sidecar if agent has a running deployment
+	for _, d := range state.Deployments {
+		if d.AgentID == agentID && d.Status == "running" && d.SidecarURL != "" {
+			if app.streamSidecarChat(w, flusher, d.SidecarURL, userContent, agentID, sessionID, agent) {
+				return
+			}
+			// Sidecar failed, fall through to direct AI API
+			break
+		}
 	}
 
 	// Auto-register on bus

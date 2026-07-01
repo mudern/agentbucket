@@ -1,14 +1,17 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 	"sync"
 	"time"
 )
@@ -228,6 +231,7 @@ func handleChat(w http.ResponseWriter, r *http.Request) {
 	}
 	var req struct {
 		Message string `json:"message"`
+		Stream  bool   `json:"stream"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Message == "" {
 		http.Error(w, "bad request", http.StatusBadRequest)
@@ -243,6 +247,55 @@ func handleChat(w http.ResponseWriter, r *http.Request) {
 	)
 	cmd.Dir = "/app/agent"
 
+	if req.Stream {
+		handleStreamChat(w, cmd)
+	} else {
+		handleOneShotChat(w, cmd)
+	}
+}
+
+func handleStreamChat(w http.ResponseWriter, cmd *exec.Cmd) {
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		_ = json.NewEncoder(w).Encode(map[string]string{"content": "SSE not supported"})
+		return
+	}
+
+	stdout, _ := cmd.StdoutPipe()
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	if err := cmd.Start(); err != nil {
+		fmt.Fprintf(w, "data: [error] %s\n\n", err.Error())
+		flusher.Flush()
+		return
+	}
+
+	scanner := bufio.NewScanner(stdout)
+	scanner.Buffer(make([]byte, 64*1024), 1024*1024)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		fmt.Fprintf(w, "data: %s\n\n", strings.ReplaceAll(line, "\n", "\\n"))
+		flusher.Flush()
+	}
+
+	if err := cmd.Wait(); err != nil {
+		errOutput := stderr.String()
+		if errOutput == "" {
+			errOutput = err.Error()
+		}
+		fmt.Fprintf(w, "data: [error] %s\n\n", strings.ReplaceAll(errOutput, "\n", "\\n"))
+		flusher.Flush()
+	}
+}
+
+func handleOneShotChat(w http.ResponseWriter, cmd *exec.Cmd) {
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
