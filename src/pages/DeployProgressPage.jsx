@@ -65,13 +65,8 @@ export default function DeployProgressPage() {
 
   const sorted = [...filtered].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 
-  if (loading) {
-    return <LoadingPanel label={t('common.loading')} />
-  }
+  const hasActive = useMemo(() => deployments.some((d) => d.status === 'building' || d.status === 'packaged'), [deployments])
 
-  const hasActive = deployments.some((d) => d.status === 'building' || d.status === 'packaged')
-
-  // Unique agent IDs from deployments
   const agentOptions = useMemo(() => {
     const seen = new Set()
     return deployments
@@ -82,6 +77,10 @@ export default function DeployProgressPage() {
         return true
       })
   }, [deployments])
+
+  if (loading) {
+    return <LoadingPanel label={t('common.loading')} />
+  }
 
   return (
     <div>
