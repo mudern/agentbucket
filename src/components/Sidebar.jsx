@@ -75,11 +75,9 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
         </nav>
       )}
 
-      {/* Bottom section: always pushed to bottom by flex-1 on nav, or spacer */}
-      {!collapsed && !currentUser && <div className="flex-1" />}
-
+      {/* Bottom section: always at bottom */}
       {!collapsed && (
-        <div className="border-t border-slate-100 pt-3">
+        <div className="mt-auto border-t border-slate-100 pt-3">
           <div className="flex gap-1 px-1">
             <button
               onClick={() => setLang('zh')}
@@ -98,17 +96,16 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
               EN
             </button>
           </div>
+          {currentUser && (
+            <button
+              type="button"
+              onClick={onLogout}
+              className="mt-2 w-full rounded-lg px-3 py-2.5 text-center text-sm font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-950"
+            >
+              {t('common.logout')}
+            </button>
+          )}
         </div>
-      )}
-
-      {!collapsed && currentUser && (
-        <button
-          type="button"
-          onClick={onLogout}
-          className="mt-2 w-full rounded-lg px-3 py-2.5 text-center text-sm font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-950"
-        >
-          {t('common.logout')}
-        </button>
       )}
     </aside>
   )
