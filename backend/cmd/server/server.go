@@ -42,6 +42,7 @@ func runServer() {
 
 	app.recoverRunningContainers()
 	go app.startHealthChecker(30 * time.Second)
+	go app.startGitSyncer(5 * time.Minute)
 
 	addr := env("AGENTBUCKET_ADDR", "127.0.0.1:8080")
 	log.Printf("AgentBucket backend listening on http://%s", addr)
@@ -71,6 +72,7 @@ func (app *App) routes() http.Handler {
 	mux.HandleFunc("DELETE /api/ai-tokens/{id}", app.deleteAIToken)
 	mux.HandleFunc("DELETE /api/auth-tokens/{id}", app.deleteAuthToken)
 	mux.HandleFunc("DELETE /api/repositories/{id}", app.deleteRepository)
+	mux.HandleFunc("POST /api/repositories/{id}/sync", app.syncRepository)
 	mux.HandleFunc("GET /api/bus/agents", app.busAgents)
 	mux.HandleFunc("POST /api/bus/agents/{agentId}/register", app.busRegister)
 	mux.HandleFunc("POST /api/bus/agents/{agentId}/message", app.busSendMessage)
@@ -178,4 +180,73 @@ func (app *App) startHealthChecker(interval time.Duration) {
 			}
 		}
 	}
+}
+
+func (app *App) startGitSyncer(interval time.Duration) {
+	// Run once immediately
+	app.syncAllGitRepos()
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for range ticker.C {
+		app.syncAllGitRepos()
+	}
+}
+
+func (app *App) syncAllGitRepos() {
+	state := app.store.snapshot()
+	for _, repo := range state.Repositories {
+		if repo.Provider != "GitHub" {
+			continue
+		}
+		app.syncGitRepo(&repo)
+	}
+}
+
+func (app *App) syncGitRepo(repo *Repository) {
+	gitDir := filepath.Join(repo.LocalPath, ".git")
+	if _, err := os.Stat(gitDir); os.IsNotExist(err) {
+		return
+	}
+	cmd := exec.Command("git", "-C", repo.LocalPath, "pull", "origin", repo.Branch)
+	out, err := cmd.CombinedOutput()
+	now := time.Now().Format(time.RFC3339)
+	if err != nil {
+		log.Printf("git sync failed for %s: %v - %s", repo.ID, err, strings.TrimSpace(string(out)))
+		_ = app.store.update(func(s *State) error {
+			for i := range s.Repositories {
+				if s.Repositories[i].ID == repo.ID {
+					s.Repositories[i].LastSync = now + " (failed)"
+				}
+			}
+			return nil
+		})
+		return
+	}
+	_ = app.store.update(func(s *State) error {
+		for i := range s.Repositories {
+			if s.Repositories[i].ID == repo.ID {
+				s.Repositories[i].LastSync = now
+			}
+		}
+		return nil
+	})
+	log.Printf("git sync: %s updated", repo.ID)
+}
+
+func (app *App) syncRepository(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	state := app.store.snapshot()
+	var target *Repository
+	for i := range state.Repositories {
+		if state.Repositories[i].ID == id {
+			target = &state.Repositories[i]
+			break
+		}
+	}
+	if target == nil {
+		writeError(w, http.StatusNotFound, fmt.Errorf("repository %q not found", id))
+		return
+	}
+	app.syncGitRepo(target)
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "lastSync": time.Now().Format(time.RFC3339)})
 }
