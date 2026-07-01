@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -12,16 +13,63 @@ func (app *App) scanRepositories(repos []Repository) []Repository {
 	scanned := make([]Repository, 0, len(repos))
 	for _, repo := range repos {
 		next := repo
-		commit := Commit{
-			Hash:        shortHash(repo.URL + repo.LocalPath + repo.AgentsPath),
-			Message:     "scanned local agent manifests",
-			CommittedAt: "刚刚",
-			Agents:      scanAgents(repo),
+		next.Commits = scanCommits(repo)
+		if len(next.Commits) == 0 {
+			next.Commits = []Commit{{
+				Hash:        shortHash(repo.URL + repo.LocalPath + repo.AgentsPath),
+				Message:     "scanned local agent manifests",
+				CommittedAt: "刚刚",
+				Agents:      scanAgents(repo),
+			}}
 		}
-		next.Commits = []Commit{commit}
 		scanned = append(scanned, next)
 	}
 	return scanned
+}
+
+func scanCommits(repo Repository) []Commit {
+	root := repoPath(repo)
+	gitDir := filepath.Join(root, ".git")
+	if _, err := os.Stat(gitDir); os.IsNotExist(err) {
+		return nil
+	}
+
+	cmd := exec.Command("git", "-C", root, "log",
+		"--format=%H||%s||%aI", "-20")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil
+	}
+
+	agents := scanAgents(repo)
+	var commits []Commit
+	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+		parts := strings.SplitN(line, "||", 3)
+		if len(parts) < 2 {
+			continue
+		}
+		hash := parts[0]
+		message := ""
+		committedAt := ""
+		if len(parts) >= 2 {
+			message = parts[1]
+		}
+		if len(parts) >= 3 {
+			committedAt = parts[2]
+		}
+		// All scanned commits share the same agent definitions from HEAD
+		commits = append(commits, Commit{
+			Hash:        hash,
+			Message:     message,
+			CommittedAt: committedAt,
+			Agents:      agents,
+		})
+	}
+	return commits
 }
 
 func scanAgents(repo Repository) []Agent {

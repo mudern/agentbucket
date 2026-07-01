@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -430,6 +432,24 @@ func (app *App) repositories(w http.ResponseWriter, r *http.Request) {
 		}
 		if repo.Status == "" {
 			repo.Status = "启用"
+		}
+		// Auto-clone for GitHub repositories
+		if repo.Provider == "GitHub" && repo.URL != "" {
+			if repo.LocalPath == "" {
+				repo.LocalPath = filepath.Join(app.dataDir, "repos", slug(repo.URL))
+			}
+			if _, err := os.Stat(filepath.Join(repo.LocalPath, ".git")); os.IsNotExist(err) {
+				go func() {
+					os.MkdirAll(filepath.Dir(repo.LocalPath), 0o755)
+					cmd := exec.Command("git", "clone", "-b", repo.Branch, repo.URL, repo.LocalPath)
+					out, err := cmd.CombinedOutput()
+					if err != nil {
+						log.Printf("git clone failed for %s: %v - %s", repo.ID, err, string(out))
+					} else {
+						log.Printf("git clone succeeded for %s", repo.ID)
+					}
+				}()
+			}
 		}
 		if err := app.store.update(func(state *State) error {
 			found := false
