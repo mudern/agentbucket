@@ -109,6 +109,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", health)
 	mux.HandleFunc("/status", status)
+	mux.HandleFunc("/info", status) // alias — full agent info
 	mux.HandleFunc("/agent/start", startAgent)
 	mux.HandleFunc("/agent/stop", stopAgent)
 	mux.HandleFunc("/bus/register", registerAgent)
@@ -162,7 +163,17 @@ func runnerFor(config Config) RuntimeRunner {
 }
 
 func health(w http.ResponseWriter, r *http.Request) {
-	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "online": isOnline(), "agent": config.AgentID, "runtime": config.Runtime})
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"ok":             true,
+		"online":         isOnline(),
+		"agent":          config.AgentID,
+		"runtime":        config.Runtime,
+		"runtimeVersion": config.RuntimeVersion,
+		"model":          config.Model,
+		"skills":         config.Skills,
+		"mcps":           config.MCPs,
+		"version":        "1.0.0",
+	})
 }
 
 func status(w http.ResponseWriter, r *http.Request) {
