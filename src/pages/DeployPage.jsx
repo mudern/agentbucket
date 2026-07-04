@@ -194,8 +194,8 @@ export default function DeployPage() {
         apiTokenId: current.apiTokenId || firstToken?.id || '',
         runtime: current.runtime || data.runtimes?.[0] || '',
         model: current.model || firstToken?.model || firstAgent.model || '',
-        skills: capabilityTouched.skills ? current.skills : firstAgent.skills || [],
-        mcps: capabilityTouched.mcps ? current.mcps : firstAgent.mcps || [],
+        skills: capabilityTouched.skills ? current.skills : [],
+        mcps: capabilityTouched.mcps ? current.mcps : [],
       }))
     }
   }, [data])
@@ -206,8 +206,8 @@ export default function DeployPage() {
   const selectedCommit = commits.find((commit) => commit.hash === form.commitHash) ?? commits[0]
   const agents = selectedCommit?.agents ?? []
   const selectedAgent = agents.find((agent) => agent.id === form.agentId) ?? agents[0]
-  const selectedSkills = capabilityTouched.skills ? form.skills : selectedAgent?.skills ?? []
-  const selectedMcps = capabilityTouched.mcps ? form.mcps : selectedAgent?.mcps ?? []
+  const selectedSkills = capabilityTouched.skills ? form.skills : []
+  const selectedMcps = capabilityTouched.mcps ? form.mcps : []
   const selectedApiTokenId = form.apiTokenId || data?.aiTokens?.[0]?.id || ''
   const selectedApiToken = data?.aiTokens?.find((token) => token.id === selectedApiTokenId)
   // Model is determined by the selected API token, falling back to agent definition

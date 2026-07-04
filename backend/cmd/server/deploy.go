@@ -30,11 +30,16 @@ func (app *App) createDeployment(req DeployRequest) (Deployment, error) {
 	if req.Model == "" {
 		req.Model = agent.Model
 	}
-	if len(req.Skills) == 0 {
-		req.Skills = agent.Skills
+	// Always include the built-in agentbucket-api skill
+	hasAPI := false
+	for _, s := range req.Skills {
+		if s == "agentbucket-api" {
+			hasAPI = true
+			break
+		}
 	}
-	if len(req.MCPs) == 0 {
-		req.MCPs = agent.MCPs
+	if !hasAPI {
+		req.Skills = append([]string{"agentbucket-api"}, req.Skills...)
 	}
 	if len(req.ExtraInstall) == 0 {
 		req.ExtraInstall = agent.ExtraInstall
@@ -203,8 +208,27 @@ func (app *App) writeBuildContext(contextDir string, repo Repository, commit Com
 	if err := copyDir(agentDir, filepath.Join(contextDir, "agent")); err != nil {
 		return err
 	}
-	if err := copySelectedSkills(filepath.Join(repoRoot, "skills"), filepath.Join(contextDir, "skills"), req.Skills); err != nil {
+	// Copy skills from the repo
+	repoSkills := make([]string, 0, len(req.Skills))
+	builtinSkills := make([]string, 0)
+	for _, s := range req.Skills {
+		if s == "agentbucket-api" {
+			builtinSkills = append(builtinSkills, s)
+		} else {
+			repoSkills = append(repoSkills, s)
+		}
+	}
+	if err := copySelectedSkills(filepath.Join(repoRoot, "skills"), filepath.Join(contextDir, "skills"), repoSkills); err != nil {
 		return err
+	}
+	// Copy built-in agentbucket-api skill from AgentBucket's own source
+	for _, s := range builtinSkills {
+		src := filepath.Join(app.rootDir, "examples", "agent-repo", "skills", s)
+		if _, err := os.Stat(filepath.Join(src, "SKILL.md")); err == nil {
+			if err := copyDir(src, filepath.Join(contextDir, "skills", s)); err != nil {
+				return fmt.Errorf("builtin skill %s: %w", s, err)
+			}
+		}
 	}
 	if err := copyOptionalDir(filepath.Join(repoRoot, "mcp"), filepath.Join(contextDir, "mcp")); err != nil {
 		return err
