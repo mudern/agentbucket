@@ -85,6 +85,13 @@ export default function AgentsPage() {
       <div className="mb-4 text-sm text-slate-500">{filteredAgents.length} {t('agents.title')}</div>
       {loading ? (
         <LoadingPanel label={t('common.loading')} />
+      ) : filteredAgents.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-16 text-center">
+          <div className="text-sm font-medium text-slate-400">{t('agents.no_agents')}</div>
+          <Link to="/deploy" className="mt-4 inline-block rounded-xl bg-sky-600 px-5 py-2 text-sm font-medium text-white hover:bg-sky-700">
+            {t('deploy.deploy_button')}
+          </Link>
+        </div>
       ) : (
         <div className="grid gap-5 xl:grid-cols-2 2xl:grid-cols-3">
           {filteredAgents.map((agent) => (

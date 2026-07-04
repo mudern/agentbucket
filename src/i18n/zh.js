@@ -87,7 +87,7 @@ const zh = {
     mcps: 'MCP 服务',
     status: '状态',
     chat: '对话',
-    no_agents: '暂无 Agent。请先绑定仓库并扫描 Agent 定义。',
+    no_agents: '暂无已部署的 Agent。请先部署一个 Agent 后再来查看。',
     new_agent_hint: 'Agent 通过在仓库中添加 agent.toml 文件来定义。请前往部署页面的仓库管理完成仓库绑定。',
   },
   chat: {

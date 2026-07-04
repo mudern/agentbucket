@@ -87,7 +87,7 @@ const en = {
     mcps: 'MCP Servers',
     status: 'Status',
     chat: 'Chat',
-    no_agents: 'No agents found. Bind a repository and scan for agent definitions.',
+    no_agents: 'No deployed agents. Deploy an agent first to see it here.',
     new_agent_hint: 'Agents are defined by agent.toml files in repositories. Go to Repository Management to bind a repo.',
   },
   chat: {
