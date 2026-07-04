@@ -3,6 +3,7 @@ import LogoMark from './LogoMark'
 import { navGroups } from '../data'
 import { getCurrentUser } from '../api'
 import useAsyncData from '../hooks/useAsyncData'
+import useDarkMode from '../hooks/useDarkMode'
 import { useLanguage, useT, langNames, supportedLangs } from '../i18n'
 
 const navKeyMap = {
@@ -24,11 +25,12 @@ const groupKeyMap = {
 export default function Sidebar({ collapsed, onToggle, onLogout }) {
   const { data: currentUser } = useAsyncData(getCurrentUser, [])
   const { lang, setLang } = useLanguage()
+  const [dark, toggleDark] = useDarkMode()
   const t = useT()
   const allowed = (item) => item.roles.includes(currentUser?.role)
 
   return (
-    <aside className={`relative flex min-h-screen shrink-0 flex-col border-r border-slate-200 bg-white shadow-sm transition-all duration-200 ${collapsed ? 'w-16 px-3 py-4' : 'w-64 px-5 py-5'}`}>
+    <aside className={`relative flex min-h-screen shrink-0 flex-col border-r border-slate-200 bg-white shadow-sm transition-all duration-200 dark:border-slate-700 dark:bg-slate-800 ${collapsed ? 'w-16 px-3 py-4' : 'w-64 px-5 py-5'}`}>
       <button
         onClick={onToggle}
         className="absolute -right-3 top-16 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700"
@@ -89,6 +91,13 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
               ))}
             </select>
           </div>
+          <button
+            type="button"
+            onClick={toggleDark}
+            className="mt-1.5 w-full rounded-lg px-3 py-2 text-center text-xs font-medium text-slate-400 transition hover:bg-slate-50 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+          >
+            {dark ? '☀️ ' : '🌙 '}{dark ? t('common.light_mode', '浅色') : t('common.dark_mode', '暗色')}
+          </button>
           {currentUser && (
             <button
               type="button"

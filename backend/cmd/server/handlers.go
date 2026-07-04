@@ -623,6 +623,30 @@ func (app *App) deploymentByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (app *App) deploymentsStream(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		writeError(w, http.StatusInternalServerError, fmt.Errorf("streaming not supported"))
+		return
+	}
+	ctx := r.Context()
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			data, _ := json.Marshal(app.store.snapshot().Deployments)
+			fmt.Fprintf(w, "data: %s\n\n", data)
+			flusher.Flush()
+		}
+	}
+}
+
 func (app *App) deploymentStatus(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	var target *Deployment
@@ -747,6 +771,31 @@ func (app *App) deploymentStop(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "status": "stopped"})
+}
+
+func (app *App) renameSession(w http.ResponseWriter, r *http.Request, agentID string, sessionID string) {
+	var req struct{ Title string `json:"title"` }
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Title == "" {
+		writeError(w, http.StatusBadRequest, fmt.Errorf("title is required"))
+		return
+	}
+	found := false
+	_ = app.store.update(func(state *State) error {
+		sessions := state.ChatSessions[agentID]
+		for i := range sessions {
+			if sessions[i].ID == sessionID {
+				sessions[i].Title = req.Title
+				found = true
+				break
+			}
+		}
+		return nil
+	})
+	if !found {
+		writeError(w, http.StatusNotFound, fmt.Errorf("session not found"))
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 }
 
 func (app *App) deleteSession(w http.ResponseWriter, r *http.Request, agentID string, sessionID string) {

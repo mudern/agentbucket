@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import { LanguageProvider, loadTranslations } from './i18n'
+import { ToastProvider } from './components/Toast'
 import './styles.css'
 import 'highlight.js/styles/github-dark.css'
 
@@ -12,7 +13,9 @@ loadTranslations().then(() => {
     <React.StrictMode>
       <BrowserRouter>
         <LanguageProvider>
-          <App />
+          <ToastProvider>
+            <App />
+          </ToastProvider>
         </LanguageProvider>
       </BrowserRouter>
     </React.StrictMode>,

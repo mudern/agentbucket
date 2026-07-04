@@ -45,21 +45,30 @@ export default function DeployProgressPage() {
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('all')
   const [drillAgent, setDrillAgent] = useState(null)
+  const [logSearch, setLogSearch] = useState('')
+  const [expandedLogs, setExpandedLogs] = useState({})
   const { data: agents = [] } = useAsyncData(getAgents, [])
   const t = useT()
 
-  const fetchDeployments = async () => {
-    try {
-      const data = await getDeployments()
-      setDeployments(data)
-    } catch (e) { /* ignore */ }
-    finally { setLoading(false) }
-  }
-
   useEffect(() => {
-    fetchDeployments()
-    const interval = setInterval(fetchDeployments, 5000)
-    return () => clearInterval(interval)
+    const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://127.0.0.1:8080'
+    const es = new EventSource(`${API_BASE}/api/deployments/stream`)
+    es.onmessage = (e) => {
+      try {
+        setDeployments(JSON.parse(e.data))
+        setLoading(false)
+      } catch (_) {}
+    }
+    es.onerror = () => { es.close() }
+    // Fallback polling if SSE fails
+    const fallback = setInterval(async () => {
+      try {
+        const data = await getDeployments()
+        setDeployments(data)
+        setLoading(false)
+      } catch (_) {}
+    }, 10000)
+    return () => { es.close(); clearInterval(fallback) }
   }, [])
 
   const agentMap = useMemo(() => {
@@ -167,7 +176,27 @@ export default function DeployProgressPage() {
               </div>
               {dep.message && (
                 <div className="border-t border-slate-100 bg-slate-50 px-5 py-3">
-                  <pre className="max-h-32 overflow-auto rounded-lg bg-slate-900 p-3 text-[11px] text-slate-300 leading-5 whitespace-pre-wrap font-mono">{dep.message}</pre>
+                  <div className="mb-2 flex items-center gap-2">
+                    <button
+                      onClick={() => setExpandedLogs((e) => ({ ...e, [dep.id]: !e[dep.id] }))}
+                      className="rounded px-2 py-0.5 text-xs text-slate-500 hover:bg-slate-200"
+                    >
+                      {expandedLogs[dep.id] ? '收起' : '展开'}日志
+                    </button>
+                    {expandedLogs[dep.id] && (
+                      <input
+                        className="min-w-[120px] rounded border border-slate-200 px-2 py-0.5 text-xs outline-none focus:border-sky-400"
+                        placeholder="搜索日志..."
+                        value={logSearch}
+                        onChange={(e) => setLogSearch(e.target.value)}
+                      />
+                    )}
+                  </div>
+                  {expandedLogs[dep.id] && (
+                    <pre className="max-h-64 overflow-auto rounded-lg bg-slate-900 p-3 text-[11px] text-slate-300 leading-5 whitespace-pre-wrap font-mono">
+                      {logSearch ? dep.message.split('\n').filter((l) => l.toLowerCase().includes(logSearch.toLowerCase())).join('\n') : dep.message}
+                    </pre>
+                  )}
                 </div>
               )}
             </div>

@@ -133,6 +133,13 @@ export async function deleteSession(agentId, sessionId) {
   return request(`/api/agents/${agentId}/sessions/${sessionId}`, { method: 'DELETE' })
 }
 
+export async function renameSession(agentId, sessionId, title) {
+  return request(`/api/agents/${agentId}/sessions/${sessionId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ title }),
+  })
+}
+
 export async function patchRepository(id, updates) {
   return request(`/api/repositories/${id}`, { method: 'PATCH', body: JSON.stringify(updates) })
 }

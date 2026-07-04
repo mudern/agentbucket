@@ -10,7 +10,7 @@ import (
 func TestDockerfileFor(t *testing.T) {
 	dockerfile := dockerfileFor("codex", "0.142.3", []string{"apk add --no-cache ripgrep"})
 	for _, want := range []string{
-		"FROM node:20-alpine",
+		"FROM node:22-alpine",
 		"RUN apk add --no-cache ca-certificates bash curl git",
 		"RUN apk add --no-cache ripgrep",
 		"RUN npm install -g @openai/codex@0.142.3",

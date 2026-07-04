@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
-import { API_BASE, getAgentById, getAgentSessionMessages, getAgentSessions, createAgentSession, deleteSession } from '../api'
+import { API_BASE, getAgentById, getAgentSessionMessages, getAgentSessions, createAgentSession, deleteSession, renameSession } from '../api'
 import { useT, useLanguage } from '../i18n'
 import LoadingPanel from '../components/LoadingPanel'
 import useAsyncData from '../hooks/useAsyncData'
@@ -90,6 +90,8 @@ export default function AgentChatPage() {
   const [createError, setCreateError] = useState('')
   const [sessionsRefresh, setSessionsRefresh] = useState(0)
   const [sessionsOpen, setSessionsOpen] = useState(true)
+  const [editingSession, setEditingSession] = useState(null)
+  const [editTitle, setEditTitle] = useState('')
   const messagesEnd = useRef(null)
   const { lang } = useLanguage()
   const locale = { zh: 'zh-CN', en: 'en-US' }[lang] || 'zh-CN'
@@ -208,6 +210,12 @@ export default function AgentChatPage() {
 
   const t = useT()
 
+  const handleRenameSession = async (sessionId, title) => {
+    if (!title.trim()) return
+    try { await renameSession(agentId, sessionId, title); setSessionsRefresh((n) => n + 1); setEditingSession(null) }
+    catch (e) { console.error('rename failed:', e) }
+  }
+
   const handleDeleteSession = async (e, sessionId, sessionTitle) => {
     e.stopPropagation()
     if (!window.confirm(t('session.deleteConfirm', `确定要删除会话「${sessionTitle}」吗？`))) return
@@ -320,11 +328,26 @@ export default function AgentChatPage() {
                       : 'hover:bg-white'
                   }`}
                 >
-                  <div className={`truncate text-sm font-medium ${
-                    currentSessionId === session.id ? 'text-sky-900' : 'text-slate-700'
-                  }`}>
-                    {session.title}
-                  </div>
+                  {editingSession === session.id ? (
+                    <input
+                      className="w-full rounded border border-sky-300 bg-white px-2 py-1 text-sm text-slate-900 outline-none"
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleRenameSession(session.id, editTitle); if (e.key === 'Escape') setEditingSession(null) }}
+                      onBlur={() => setEditingSession(null)}
+                      autoFocus
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  ) : (
+                    <div
+                      className={`truncate text-sm font-medium cursor-pointer ${
+                        currentSessionId === session.id ? 'text-sky-900' : 'text-slate-700'
+                      }`}
+                      onDoubleClick={(e) => { e.stopPropagation(); setEditingSession(session.id); setEditTitle(session.title) }}
+                    >
+                      {session.title}
+                    </div>
+                  )}
                   <div className="mt-1 flex min-w-0 items-center gap-2 text-xs text-slate-400">
                     {session.preview && <span className="truncate">{session.preview}</span>}
                     {session.updatedAt && <span className="ml-auto shrink-0">{fmtTime(session.updatedAt)}</span>}
