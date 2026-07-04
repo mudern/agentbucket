@@ -111,6 +111,7 @@ func (app *App) routes() http.Handler {
 	mux.HandleFunc("DELETE /api/deployments/{id}", app.deploymentByID)
 	mux.HandleFunc("DELETE /api/ai-tokens/{id}", app.deleteAIToken)
 	mux.HandleFunc("DELETE /api/auth-tokens/{id}", app.deleteAuthToken)
+	mux.HandleFunc("POST /api/repositories/branches", app.listBranches)
 	mux.HandleFunc("DELETE /api/repositories/{id}", app.deleteRepository)
 	mux.HandleFunc("POST /api/repositories/{id}/sync", app.syncRepository)
 	mux.HandleFunc("PATCH /api/repositories/{id}", app.patchRepository)

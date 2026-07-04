@@ -114,6 +114,13 @@ export async function createRepository(data) {
   })
 }
 
+export async function listBranches(url) {
+  return request('/api/repositories/branches', {
+    method: 'POST',
+    body: JSON.stringify({ url }),
+  })
+}
+
 export async function deleteAIToken(id) {
   return request(`/api/ai-tokens/${id}`, { method: 'DELETE' })
 }

@@ -502,6 +502,39 @@ func (app *App) repositories(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (app *App) listBranches(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		URL string `json:"url"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.URL == "" {
+		writeError(w, http.StatusBadRequest, fmt.Errorf("url is required"))
+		return
+	}
+	cmd := exec.Command("git", "ls-remote", "--heads", req.URL)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		writeError(w, http.StatusBadRequest, fmt.Errorf("failed to list branches: %v — %s", err, string(out)))
+		return
+	}
+	var branches []string
+	for _, line := range strings.Split(string(out), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		// Format: <hash>\trefs/heads/<branch>
+		parts := strings.Split(line, "\t")
+		if len(parts) == 2 {
+			branch := strings.TrimPrefix(parts[1], "refs/heads/")
+			branches = append(branches, branch)
+		}
+	}
+	if branches == nil {
+		branches = []string{}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"branches": branches})
+}
+
 func (app *App) deployments(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:

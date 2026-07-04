@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { deleteRepository, getRepositories, createRepository, patchRepository, API_BASE } from '../api'
+import { deleteRepository, getRepositories, createRepository, listBranches, patchRepository, API_BASE } from '../api'
 import LoadingPanel from '../components/LoadingPanel'
 import { useT } from '../i18n'
 import {
@@ -36,7 +36,28 @@ export default function RepositoriesPage() {
   const [bindPath, setBindPath] = useState('agents')
   const [bindLocalPath, setBindLocalPath] = useState('')
   const [bindProvider, setBindProvider] = useState('Remote')
+  const [remoteBranches, setRemoteBranches] = useState([])
+  const [fetchingBranches, setFetchingBranches] = useState(false)
+  const [branchError, setBranchError] = useState('')
   const t = useT()
+
+  const handleFetchBranches = async () => {
+    if (!bindUrl) return
+    setFetchingBranches(true)
+    setBranchError('')
+    try {
+      const result = await listBranches(bindUrl)
+      setBranches(result.branches || [])
+      if ((result.branches || []).length === 0) {
+        setBranchError('未找到分支，请检查 URL 是否正确')
+      }
+    } catch (e) {
+      setBranchError(e.message)
+      setBranches([])
+    } finally {
+      setFetchingBranches(false)
+    }
+  }
 
   const fetchRepos = async () => {
     try {
@@ -115,15 +136,42 @@ export default function RepositoriesPage() {
                 </select>
               </label>
               {bindProvider === 'Remote' ? (
-                <label className="block text-sm text-slate-700">
-                  {t('repositories.url')}
-                  <input
-                    value={bindUrl}
-                    onChange={(e) => setBindUrl(e.target.value)}
-                    placeholder="https://github.com/org/repo.git"
-                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-sky-500"
-                  />
-                </label>
+                <>
+                  <label className="block text-sm text-slate-700">
+                    {t('repositories.url')}
+                    <div className="mt-1.5 flex gap-2">
+                      <input
+                        value={bindUrl}
+                        onChange={(e) => { setBindUrl(e.target.value); setBranches([]); setBranchError('') }}
+                        placeholder="https://github.com/org/repo.git"
+                        className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-sky-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleFetchBranches}
+                        disabled={fetchingBranches || !bindUrl}
+                        className="shrink-0 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {fetchingBranches ? '...' : '获取分支'}
+                      </button>
+                    </div>
+                  </label>
+                  {branchError && <div className="text-xs text-rose-600">{branchError}</div>}
+                  {branches.length > 0 && (
+                    <label className="block text-sm text-slate-700">
+                      {t('repositories.branch')}
+                      <select
+                        value={bindBranch}
+                        onChange={(e) => setBindBranch(e.target.value)}
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-sky-500"
+                      >
+                        {branches.map((b) => (
+                          <option key={b} value={b}>{b}</option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                </>
               ) : (
                 <label className="block text-sm text-slate-700">
                   {t('repositories.local_path')}
@@ -135,16 +183,16 @@ export default function RepositoriesPage() {
                   />
                 </label>
               )}
-              <div className="grid grid-cols-2 gap-4">
+              {bindProvider !== 'Remote' && (
                 <label className="block text-sm text-slate-700">
                   {t('repositories.branch')}
                   <input value={bindBranch} onChange={(e) => setBindBranch(e.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-sky-500" />
                 </label>
-                <label className="block text-sm text-slate-700">
-                  {t('repositories.agents_path')}
-                  <input value={bindPath} onChange={(e) => setBindPath(e.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-sky-500" />
-                </label>
-              </div>
+              )}
+              <label className="block text-sm text-slate-700">
+                {t('repositories.agents_path')}
+                <input value={bindPath} onChange={(e) => setBindPath(e.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-sky-500" />
+              </label>
               {formError && <div className="text-sm text-rose-600">{formError}</div>}
               <div className="flex justify-end gap-3 pt-2">
                 <button onClick={() => setBindOpen(false)} className="rounded-xl px-4 py-2 text-sm text-slate-600 hover:bg-slate-100">{t('common.cancel')}</button>
