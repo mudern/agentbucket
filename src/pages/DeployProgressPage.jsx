@@ -9,7 +9,9 @@ import useAsyncData from '../hooks/useAsyncData'
 const STATUS_TABS = [
   { key: 'all', label: 'common.all' },
   { key: 'running', label: 'common.running' },
-  { key: 'packaged', label: 'common.packaged' },
+  { key: 'building_context', label: 'progress.building_context' },
+  { key: 'building_image', label: 'progress.building_image' },
+  { key: 'starting_container', label: 'progress.starting_container' },
   { key: 'stopped', label: 'common.stopped' },
   { key: 'build_failed', label: 'common.build_failed' },
   { key: 'run_failed', label: 'common.run_failed' },
@@ -20,9 +22,11 @@ const COLORS = {
   running: 'border-emerald-200 bg-emerald-50 text-emerald-700',
   stopped: 'border-slate-200 bg-slate-50 text-slate-600',
   crashed: 'border-red-200 bg-red-50 text-red-700',
-  build_failed: 'border-amber-200 bg-amber-50 text-amber-700',
-  run_failed: 'border-amber-200 bg-amber-50 text-amber-700',
-  packaged: 'border-sky-200 bg-sky-50 text-sky-700',
+  build_failed: 'border-red-200 bg-red-50 text-red-700',
+  run_failed: 'border-red-200 bg-red-50 text-red-700',
+  building_context: 'border-sky-200 bg-sky-50 text-sky-700',
+  building_image: 'border-indigo-200 bg-indigo-50 text-indigo-700',
+  starting_container: 'border-amber-200 bg-amber-50 text-amber-700',
 }
 
 const DOT = {
@@ -31,7 +35,9 @@ const DOT = {
   crashed: 'bg-red-400',
   build_failed: 'bg-red-400',
   run_failed: 'bg-red-400',
-  packaged: 'bg-sky-400',
+  building_context: 'bg-sky-400 animate-pulse',
+  building_image: 'bg-indigo-400 animate-pulse',
+  starting_container: 'bg-amber-400 animate-pulse',
 }
 
 export default function DeployProgressPage() {
@@ -73,7 +79,9 @@ export default function DeployProgressPage() {
   [filtered])
 
   const hasActive = useMemo(() =>
-    deployments.some((d) => d.status === 'building' || d.status === 'packaged'),
+    deployments.some((d) =>
+      d.status === 'building_context' || d.status === 'building_image' || d.status === 'starting_container'
+    ),
   [deployments])
 
   if (loading) {

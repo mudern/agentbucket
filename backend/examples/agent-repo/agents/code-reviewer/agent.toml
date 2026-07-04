@@ -5,5 +5,5 @@ model = "MiniMax-M2.5"
 runtime = "claudecode"
 runtime_version = "latest"
 api_token = "minimax"
-skills = ["git-reader"]
+skills = ["agentbucket-api", "git-reader"]
 mcps = ["github-mcp", "filesystem-mcp"]

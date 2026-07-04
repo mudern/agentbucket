@@ -275,7 +275,7 @@ POST   /api/bus/agents/{agentId}/message
 GET    /api/bus/messages?toAgent=...
 ```
 
-Full curl examples live in [agentbucket-api-skill/SKILL.md](agentbucket-api-skill/SKILL.md).
+Full curl examples live in [agentbucket-api skill](backend/examples/agent-repo/skills/agentbucket-api/SKILL.md).
 
 ## Sidecar API
 
@@ -305,7 +305,7 @@ src/
   api/                 Frontend API client
   components/          Shared React components
   pages/               Product pages
-agentbucket-api-skill/ Curl/API skill documentation
+backend/examples/agent-repo/skills/agentbucket-api/ Default API skill for all agents
 temp.md                Current handoff notes and recent progress
 docker-compose.yml     Single-service deployment with host Docker socket
 ```

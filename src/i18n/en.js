@@ -262,6 +262,9 @@ const en = {
     step_failed: 'Deployment failed',
     elapsed: 'Elapsed',
     no_active: 'No active deployments in progress',
+    building_context: 'Preparing',
+    building_image: 'Building',
+    starting_container: 'Starting',
   },
 }
 

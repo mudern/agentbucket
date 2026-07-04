@@ -51,6 +51,8 @@ func (app *App) createDeployment(req DeployRequest) (Deployment, error) {
 	if err := os.MkdirAll(contextDir, 0o755); err != nil {
 		return Deployment{}, err
 	}
+
+	// Build context is fast — do it synchronously so errors surface immediately
 	if err := app.writeBuildContext(contextDir, repo, commit, agent, req); err != nil {
 		return Deployment{}, err
 	}
@@ -69,8 +71,8 @@ func (app *App) createDeployment(req DeployRequest) (Deployment, error) {
 		AuthTokens:     req.AuthTokens,
 		ImageTag:       "agentbucket/" + slug(agent.ID) + ":" + commit.Hash,
 		ContainerName:  "agentbucket-" + slug(agent.ID),
-		Status:         "packaged",
-		Message:        "Docker build context generated",
+		Status:         "building_context",
+		Message:        "构建上下文已生成，等待 Docker 构建...",
 		BuildContext:   contextDir,
 		HostPort:       hostPortFor(agent.ID),
 		CreatedAt:      time.Now(),
@@ -78,42 +80,101 @@ func (app *App) createDeployment(req DeployRequest) (Deployment, error) {
 	deployment.SidecarURL = fmt.Sprintf("http://%s:%d", sidecarHost(), deployment.HostPort)
 
 	if _, err := exec.LookPath("docker"); err != nil {
-		deployment.Message = "Docker CLI not found; generated build context only"
+		deployment.Status = "build_failed"
+		deployment.Message = "Docker CLI 未找到，仅生成了构建上下文"
 		return deployment, nil
 	}
+
+	// Launch async build + run — returns immediately with "building_context" status
+	go app.runDeployment(deployment)
+	return deployment, nil
+}
+
+// runDeployment performs the slow Docker build + run in background.
+// It updates the deployment status in the store at each step.
+func (app *App) runDeployment(d Deployment) {
+	// Step 2: build image
+	_ = app.store.update(func(s *State) error {
+		for i := range s.Deployments {
+			if s.Deployments[i].ID == d.ID {
+				s.Deployments[i].Status = "building_image"
+				s.Deployments[i].Message = "正在构建 Docker 镜像..."
+			}
+		}
+		return nil
+	})
+
 	ctx, cancel := context.WithTimeout(context.Background(), buildTimeout())
 	defer cancel()
-	build := exec.CommandContext(ctx, "docker", "build", "-t", deployment.ImageTag, contextDir)
+	build := exec.CommandContext(ctx, "docker", "build", "-t", d.ImageTag, d.BuildContext)
 	buildOut, err := build.CombinedOutput()
 	buildLog := string(buildOut)
 	if err != nil {
-		deployment.Status = "build_failed"
+		msg := buildLog
 		if ctx.Err() == context.DeadlineExceeded {
-			deployment.Message = "docker build timed out: " + buildLog
-		} else {
-			deployment.Message = buildLog
+			msg = "Docker 构建超时: " + buildLog
 		}
-		return deployment, nil
+		_ = app.store.update(func(s *State) error {
+			for i := range s.Deployments {
+				if s.Deployments[i].ID == d.ID {
+					s.Deployments[i].Status = "build_failed"
+					s.Deployments[i].Message = msg
+				}
+			}
+			return nil
+		})
+		log.Printf("[DEPLOY] BUILD FAILED: %s — %s", d.ID, msg[:min(200, len(msg))])
+		return
 	}
-	_ = exec.Command("docker", "rm", "-f", deployment.ContainerName).Run()
+
+	// Step 3: start container
+	_ = app.store.update(func(s *State) error {
+		for i := range s.Deployments {
+			if s.Deployments[i].ID == d.ID {
+				s.Deployments[i].Status = "starting_container"
+				s.Deployments[i].Message = "镜像构建完成，正在启动容器..."
+			}
+		}
+		return nil
+	})
+
+	_ = exec.Command("docker", "rm", "-f", d.ContainerName).Run()
 	run := exec.Command(
 		"docker", "run", "-d", "--rm",
-		"--name", deployment.ContainerName,
-		"-p", fmt.Sprintf("127.0.0.1:%d:8088", deployment.HostPort),
+		"--name", d.ContainerName,
+		"-p", fmt.Sprintf("127.0.0.1:%d:8088", d.HostPort),
 		"--add-host", "host.docker.internal:host-gateway",
 		"-e", fmt.Sprintf("AGENTBUCKET_URL=http://host.docker.internal:%d", mustPort()),
-		deployment.ImageTag,
+		d.ImageTag,
 	)
 	runOut, err := run.CombinedOutput()
 	if err != nil {
-		deployment.Status = "run_failed"
-		deployment.Message = buildLog + "\n---\n" + string(runOut)
-		return deployment, nil
+		msg := buildLog + "\n---\n容器启动失败: " + string(runOut)
+		_ = app.store.update(func(s *State) error {
+			for i := range s.Deployments {
+				if s.Deployments[i].ID == d.ID {
+					s.Deployments[i].Status = "run_failed"
+					s.Deployments[i].Message = msg
+				}
+			}
+			return nil
+		})
+		log.Printf("[DEPLOY] RUN FAILED: %s — %s", d.ID, msg[:min(200, len(msg))])
+		return
 	}
-	deployment.Status = "running"
-	// Combine build log with container ID for complete traceability
-	deployment.Message = buildLog + "\n---\ncontainer: " + strings.TrimSpace(string(runOut))
-	return deployment, nil
+
+	// Step 4: running
+	containerID := strings.TrimSpace(string(runOut))
+	_ = app.store.update(func(s *State) error {
+		for i := range s.Deployments {
+			if s.Deployments[i].ID == d.ID {
+				s.Deployments[i].Status = "running"
+				s.Deployments[i].Message = buildLog + "\n---\ncontainer: " + containerID
+			}
+		}
+		return nil
+	})
+	log.Printf("[DEPLOY] RUNNING: %s — %s", d.ID, containerID)
 }
 
 func findDeploymentTarget(repos []Repository, req DeployRequest) (Repository, Commit, Agent, error) {

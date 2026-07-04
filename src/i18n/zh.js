@@ -263,6 +263,9 @@ const zh = {
     step_failed: '部署失败',
     elapsed: '已用时间',
     no_active: '暂无进行中的部署',
+    building_context: '准备上下文',
+    building_image: '构建镜像',
+    starting_container: '启动容器',
   },
 }
 

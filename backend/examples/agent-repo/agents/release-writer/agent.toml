@@ -5,6 +5,6 @@ model = "glm-5-turbo"
 runtime = "claudecode"
 runtime_version = "latest"
 api_token = "glm"
-skills = ["git-reader", "web-browser"]
+skills = ["agentbucket-api", "git-reader", "web-browser"]
 mcps = ["github-mcp"]
 

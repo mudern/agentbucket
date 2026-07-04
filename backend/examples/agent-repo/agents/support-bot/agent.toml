@@ -5,5 +5,5 @@ model = "kimi-k2.6"
 runtime = "claudecode"
 runtime_version = "latest"
 api_token = "kimi"
-skills = ["knowledge-base", "web-browser"]
+skills = ["agentbucket-api", "knowledge-base", "web-browser"]
 mcps = ["notion-mcp"]

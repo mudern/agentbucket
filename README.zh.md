@@ -169,7 +169,7 @@ extra_install = ["apk add --no-cache github-cli"]
 
 ## API 概览
 
-完整 curl 示例见 [agentbucket-api-skill/SKILL.md](agentbucket-api-skill/SKILL.md)。
+完整 curl 示例见 [agentbucket-api skill](backend/examples/agent-repo/skills/agentbucket-api/SKILL.md)。
 
 常用接口：
 

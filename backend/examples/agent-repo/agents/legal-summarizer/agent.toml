@@ -5,7 +5,7 @@ model = "deepseek-v4-pro[1m]"
 runtime = "claudecode"
 runtime_version = "latest"
 api_token = "deepseek"
-skills = ["knowledge-base", "document-parser"]
+skills = ["agentbucket-api", "knowledge-base", "document-parser"]
 mcps = ["notion-mcp", "filesystem-mcp"]
 extra_install = ["apk add --no-cache github-cli"]
 
