@@ -415,21 +415,27 @@ export default function DeployPage() {
           {step === 2 && (
             <div>
               <div className="mb-4 text-sm font-medium text-slate-950">{t('deploy.select_agent', '\u4ed3\u5e93\u5185\u53d1\u73b0\u7684 Agent')}</div>
-              <div className="grid gap-4 xl:grid-cols-2">
-                {agents.map((agent) => (
-                  <button
-                    key={agent.id}
-                    onClick={() => selectAgent(agent.id)}
-                    className={`rounded-xl border p-5 text-left transition ${
-                      selectedAgent?.id === agent.id ? 'border-sky-200 bg-sky-50' : 'border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    <div className="text-base font-semibold text-slate-950">{agent.name}</div>
-                    <div className="mt-2 text-sm leading-6 text-slate-600">{agent.description}</div>
-                    <div className="mt-4 text-xs text-slate-400">{agent.path}</div>
-                  </button>
-                ))}
-              </div>
+              {agents.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center text-sm text-slate-500">
+                  {t('deploy.no_agents_in_commit', '\u6b64 commit \u4e2d\u672a\u627e\u5230 Agent \u5b9a\u4e49\u3002\u8bf7\u786e\u8ba4\u4ed3\u5e93\u4e2d\u5305\u542b agents/ \u76ee\u5f55\u548c agent.toml \u6587\u4ef6\u3002')}
+                </div>
+              ) : (
+                <div className="grid gap-4 xl:grid-cols-2">
+                  {agents.map((agent) => (
+                    <button
+                      key={agent.id}
+                      onClick={() => selectAgent(agent.id)}
+                      className={`rounded-xl border p-5 text-left transition ${
+                        selectedAgent?.id === agent.id ? 'border-sky-200 bg-sky-50' : 'border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="text-base font-semibold text-slate-950">{agent.name}</div>
+                      <div className="mt-2 text-sm leading-6 text-slate-600">{agent.description}</div>
+                      <div className="mt-4 text-xs text-slate-400">{agent.path}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -591,7 +597,8 @@ export default function DeployPage() {
           {step < stepLabels.length - 1 ? (
             <button
               onClick={() => setStep((current) => Math.min(current + 1, stepLabels.length - 1))}
-              className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-700"
+              disabled={step === 2 && agents.length === 0}
+              className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {t('deploy.next_step', '\u4e0b\u4e00\u6b65')}
             </button>
