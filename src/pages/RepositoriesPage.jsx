@@ -52,7 +52,7 @@ export default function RepositoriesPage() {
         setBranchError('未找到分支，请检查 URL 是否正确')
       }
     } catch (e) {
-      setBranchError(e.message)
+      setBranchError('无法自动获取分支（可能需要授权或仓库为私有），请手动输入分支名')
       setBranches([])
     } finally {
       setFetchingBranches(false)
@@ -156,8 +156,8 @@ export default function RepositoriesPage() {
                       </button>
                     </div>
                   </label>
-                  {branchError && <div className="text-xs text-rose-600">{branchError}</div>}
-                  {branches.length > 0 && (
+                  {branchError && <div className="text-xs text-amber-600">{branchError}</div>}
+                  {branches.length > 0 ? (
                     <label className="block text-sm text-slate-700">
                       {t('repositories.branch')}
                       <select
@@ -170,6 +170,13 @@ export default function RepositoriesPage() {
                         ))}
                       </select>
                     </label>
+                  ) : (
+                    branchError && (
+                      <label className="block text-sm text-slate-700">
+                        {t('repositories.branch')}
+                        <input value={bindBranch} onChange={(e) => setBindBranch(e.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-sky-500" placeholder="main" />
+                      </label>
+                    )
                   )}
                 </>
               ) : (
