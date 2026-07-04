@@ -194,7 +194,7 @@ export default function DeployPage() {
         apiTokenId: current.apiTokenId || firstToken?.id || '',
         runtime: current.runtime || data.runtimes?.[0] || '',
         model: current.model || firstToken?.model || firstAgent.model || '',
-        skills: capabilityTouched.skills ? current.skills : [],
+        skills: capabilityTouched.skills ? current.skills : ['agentbucket-api'],
         mcps: capabilityTouched.mcps ? current.mcps : [],
       }))
     }
@@ -206,7 +206,7 @@ export default function DeployPage() {
   const selectedCommit = commits.find((commit) => commit.hash === form.commitHash) ?? commits[0]
   const agents = selectedCommit?.agents ?? []
   const selectedAgent = agents.find((agent) => agent.id === form.agentId) ?? agents[0]
-  const selectedSkills = capabilityTouched.skills ? form.skills : []
+  const selectedSkills = capabilityTouched.skills ? form.skills : ['agentbucket-api']
   const selectedMcps = capabilityTouched.mcps ? form.mcps : []
   const selectedApiTokenId = form.apiTokenId || data?.aiTokens?.[0]?.id || ''
   const selectedApiToken = data?.aiTokens?.find((token) => token.id === selectedApiTokenId)

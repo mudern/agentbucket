@@ -156,27 +156,42 @@ export default function RepositoriesPage() {
                       </button>
                     </div>
                   </label>
+                  <label className="block text-sm text-slate-700">
+                    {t('repositories.branch')}
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2 py-1.5">
+                      {bindBranch && (
+                        <span className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700 ring-1 ring-sky-200">
+                          {bindBranch}
+                          <button onClick={() => setBindBranch('')} className="ml-0.5 text-sky-400 hover:text-sky-600">&times;</button>
+                        </span>
+                      )}
+                      <input
+                        value=""
+                        onChange={() => {}}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && e.target.value.trim()) { e.preventDefault(); setBindBranch(e.target.value.trim()); e.target.value = '' } }}
+                        placeholder={bindBranch ? '按 Enter 更换分支...' : '输入分支名，按 Enter 确认...'}
+                        className="min-w-[120px] flex-1 border-none bg-transparent px-1 py-1.5 text-sm text-slate-900 outline-none placeholder:text-slate-400"
+                      />
+                    </div>
+                  </label>
                   {branchError && <div className="text-xs text-amber-600">{branchError}</div>}
-                  {branches.length > 0 ? (
-                    <label className="block text-sm text-slate-700">
-                      {t('repositories.branch')}
-                      <select
-                        value={bindBranch}
-                        onChange={(e) => setBindBranch(e.target.value)}
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-sky-500"
-                      >
-                        {branches.map((b) => (
-                          <option key={b} value={b}>{b}</option>
-                        ))}
-                      </select>
-                    </label>
-                  ) : (
-                    branchError && (
-                      <label className="block text-sm text-slate-700">
-                        {t('repositories.branch')}
-                        <input value={bindBranch} onChange={(e) => setBindBranch(e.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-sky-500" placeholder="main" />
-                      </label>
-                    )
+                  {branches.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {branches.map((b) => (
+                        <button
+                          key={b}
+                          type="button"
+                          onClick={() => setBindBranch(b)}
+                          className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${
+                            bindBranch === b
+                              ? 'bg-sky-600 text-white'
+                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          }`}
+                        >
+                          {b}
+                        </button>
+                      ))}
+                    </div>
                   )}
                 </>
               ) : (
