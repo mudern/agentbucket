@@ -221,13 +221,15 @@ export default function RepositoriesPage() {
             const c = (repo.commits || [])[0]
             const repoName = (() => {
               const u = repo.url || ''
+              if (repo.provider === 'Local') return u.replace(/^file:\/\/\/?/, '')
               const m = u.match(/\/([^\/]+\/[^\/]+?)(?:\.git)?$/)
               if (m) return m[1]
-              return u.replace(/^(https?|file):\/\//, '')
+              return u.replace(/^https?:\/\//, '')
             })()
             const domain = (() => {
+              if (repo.provider === 'Local') return ''
               const u = repo.url || ''
-              const m = u.match(/^(?:https?:\/\/)?([^\/]+)/)
+              const m = u.match(/^https?:\/\/([^\/]+)/)
               return m ? m[1] : ''
             })()
             return (
