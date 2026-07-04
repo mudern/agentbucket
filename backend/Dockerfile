@@ -8,7 +8,7 @@ RUN go build -o /out/agentbucket ./cmd/server/
 FROM node:22-alpine AS frontend-build
 WORKDIR /src
 COPY package.json pnpm-lock.yaml ./
-RUN npm install -g pnpm && pnpm install
+RUN corepack enable && pnpm install --frozen-lockfile
 COPY index.html vite.config.js tailwind.config.js postcss.config.js ./
 COPY src/ ./src/
 RUN pnpm build
