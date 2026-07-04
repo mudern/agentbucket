@@ -365,7 +365,7 @@ export default function DeployPage() {
                     <div className="mt-3 grid gap-2 text-xs text-slate-500 sm:grid-cols-3">
                       <div>{'\u9ed8\u8ba4\u5206\u652f\uff1a'}{repo.branch}</div>
                       <div>{'Agent \u76ee\u5f55\uff1a'}{repo.agentsPath}</div>
-                      <div>{'Commits\uff1a'}{repo.commits.length}</div>
+                      <div>{'Commits\uff1a'}{(repo.commits || []).length}</div>
                     </div>
                   </button>
                 ))}
