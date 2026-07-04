@@ -236,7 +236,7 @@ export default function DeployPage() {
         id: token.id,
         label: token.name,
         description: token.scope || token.provider,
-        meta: [token.provider, token.model, token.status].filter(Boolean).join(' \u00b7 '),
+        meta: [token.provider, token.model, token.status].filter(Boolean).join(' ·'),
       })),
       skills: (selectedAgent?.skills ?? []).map((skill) => ({
         id: skill,
@@ -257,7 +257,7 @@ export default function DeployPage() {
         id: token.id,
         label: token.name,
         description: token.accessTarget,
-        meta: [token.functionName, token.status].filter(Boolean).join(' \u00b7 '),
+        meta: [token.functionName, token.status].filter(Boolean).join(' ·'),
       })),
     }
   }, [data, selectedAgent, selectedMcps, selectedSkills])
@@ -692,7 +692,7 @@ export default function DeployPage() {
                     {(() => { const h = healthStatus[d.id]; const healthy = !h || h.ok; return <span className={`h-2.5 w-2.5 rounded-full ${healthy ? 'bg-emerald-400' : 'bg-red-400 animate-pulse'}`} title={healthy ? 'Healthy' : (h?.error || 'Unreachable')} /> })()}
                     <span className="text-sm font-medium text-slate-900">{agentNameMap[d.agentId] || d.agentId}</span>
                   </div>
-                  <div className="mt-0.5 text-xs text-slate-400">{d.runtime} \u00b7 {d.sidecarUrl}</div>
+                  <div className="mt-0.5 text-xs text-slate-400">{d.runtime} ·{d.sidecarUrl}</div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={async () => { await stopDeployment(d.id); setDeployments((c) => c.map((x) => x.id === d.id ? { ...x, status: 'stopped' } : x)) }} className="rounded-lg border border-slate-200 px-3 py-1 text-xs text-slate-600 hover:bg-slate-50">{t('deploy.stop')}</button>
