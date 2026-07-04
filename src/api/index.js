@@ -176,6 +176,10 @@ export async function getStats() {
   return request('/api/stats')
 }
 
+export async function checkDeploymentHealth(id) {
+  return request(`/api/deployments/${id}/health`)
+}
+
 export async function createAiToken(data) {
   return request('/api/ai-tokens', { method: 'POST', body: JSON.stringify(data) })
 }

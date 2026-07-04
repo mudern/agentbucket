@@ -765,6 +765,26 @@ func (app *App) deploymentsStream(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (app *App) deploymentHealth(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	state := app.store.snapshot()
+	for i := range state.Deployments {
+		if state.Deployments[i].ID == id && state.Deployments[i].SidecarURL != "" {
+			resp, err := http.Get(state.Deployments[i].SidecarURL + "/health")
+			if err != nil {
+				writeJSON(w, http.StatusOK, map[string]any{"ok": false, "error": err.Error()})
+				return
+			}
+			defer resp.Body.Close()
+			var result map[string]any
+			json.NewDecoder(resp.Body).Decode(&result)
+			writeJSON(w, http.StatusOK, result)
+			return
+		}
+	}
+	writeError(w, http.StatusNotFound, fmt.Errorf("deployment not found"))
+}
+
 func (app *App) deploymentStatus(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	var target *Deployment

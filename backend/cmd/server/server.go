@@ -106,6 +106,7 @@ func (app *App) routes() http.Handler {
 	mux.HandleFunc("/api/tokens/resolve", app.resolveToken)
 	mux.HandleFunc("POST /api/agent-definitions/scan", app.scanAgentDefinitions)
 	mux.HandleFunc("GET /api/deployments/{id}", app.deploymentByID)
+	mux.HandleFunc("GET /api/deployments/{id}/health", app.deploymentHealth)
 	mux.HandleFunc("GET /api/deployments/{id}/status", app.deploymentStatus)
 	mux.HandleFunc("GET /api/deployments/stream", app.deploymentsStream)
 	mux.HandleFunc("POST /api/deployments/{id}/redeploy", app.deploymentRedeploy)

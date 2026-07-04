@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { createDeployment, getDeployOptions, getDeployments, getAgents, stopDeployment, startDeployment, deleteDeployment } from '../api'
+import { createDeployment, getDeployOptions, getDeployments, getAgents, checkDeploymentHealth, stopDeployment, startDeployment, deleteDeployment } from '../api'
 import LoadingPanel from '../components/LoadingPanel'
 import PageHeader from '../components/PageHeader'
 import useAsyncData from '../hooks/useAsyncData'
@@ -165,10 +165,10 @@ export default function DeployPage() {
       const status = {}
       await Promise.all(running.map(async (d) => {
         try {
-          const resp = await fetch(`${d.sidecarUrl}/health`, { signal: (() => { const ac = new AbortController(); setTimeout(() => ac.abort(), 3000); return ac.signal })() })
-          status[d.id] = resp.ok ? { ok: true } : { ok: false, error: `HTTP ${resp.status}` }
+          const result = await checkDeploymentHealth(d.id)
+          status[d.id] = { ok: result?.ok ?? false, error: result?.error }
         } catch (e) {
-          status[d.id] = { ok: false, error: e.message }
+          status[d.id] = { ok: false, error: 'unreachable' }
         }
       }))
       setHealthStatus(status)
