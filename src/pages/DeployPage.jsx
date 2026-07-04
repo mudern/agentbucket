@@ -401,7 +401,7 @@ export default function DeployPage() {
                     }`}
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <div className="font-mono text-sm font-semibold text-slate-950">{commit.hash}</div>
+                      <div className="font-mono text-sm font-semibold text-slate-950">{commit.hash.slice(0, 8)}</div>
                       <div className="text-xs text-slate-400">{commit.committedAt}</div>
                     </div>
                     <div className="mt-2 text-sm text-slate-600">{commit.message}</div>
@@ -537,7 +537,7 @@ export default function DeployPage() {
                 </div>
                 <div>
                   <dt className="text-slate-400">{t('deploy.commit_label', 'Commit')}</dt>
-                  <dd className="mt-1 font-mono text-slate-900">{selectedCommit?.hash}</dd>
+                  <dd className="mt-1 font-mono text-slate-900">{(selectedCommit?.hash || '').slice(0, 8)}</dd>
                 </div>
                 <div>
                   <dt className="text-slate-400">{t('deploy.agent', 'Agent')}</dt>
