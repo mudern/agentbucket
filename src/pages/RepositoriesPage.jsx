@@ -219,14 +219,25 @@ export default function RepositoriesPage() {
         <tbody className={tableBodyClass}>
           {filtered.map((repo) => {
             const c = (repo.commits || [])[0]
+            const repoName = (() => {
+              const u = repo.url || ''
+              const m = u.match(/\/([^\/]+\/[^\/]+?)(?:\.git)?$/)
+              if (m) return m[1]
+              return u.replace(/^(https?|file):\/\//, '')
+            })()
+            const domain = (() => {
+              const u = repo.url || ''
+              const m = u.match(/^(?:https?:\/\/)?([^\/]+)/)
+              return m ? m[1] : ''
+            })()
             return (
               <tr key={repo.id}>
                 <td className={`${tableCellClass} font-medium text-slate-950`}>
                   <HoverCard content={<div className="space-y-3"><div><div className="font-semibold text-slate-950">{repo.id}</div><div className="mt-1 break-all font-mono text-[11px] text-slate-500">{repo.url}</div></div><div className="grid grid-cols-[72px_1fr] gap-y-2"><span className="text-slate-400">平台</span><span>{repo.provider}</span><span className="text-slate-400">分支</span><span className="font-mono">{repo.branch}</span><span className="text-slate-400">Agent 目录</span><span className="font-mono">{repo.agentsPath}</span><span className="text-slate-400">最近提交</span><span className="font-mono">{(c?.hash || '').slice(0, 8)}</span></div></div>}>
-                    <span className="cursor-default underline decoration-slate-300 decoration-dotted underline-offset-4">{repo.url.replace(/^(https?|file):\/\//, '')}</span>
+                    <span className="cursor-default underline decoration-slate-300 decoration-dotted underline-offset-4">{repoName}</span>
                   </HoverCard>
                 </td>
-                <td className={tableCellClass}><div className="flex max-w-full flex-wrap gap-1.5"><SoftTag>{repo.provider}</SoftTag><SoftTag>{repo.branch}</SoftTag><SoftTag>{repo.agentsPath}</SoftTag></div></td>
+                <td className={tableCellClass}><div className="flex max-w-full flex-wrap gap-1.5">{domain && <SoftTag>{domain}</SoftTag>}<SoftTag>{repo.provider}</SoftTag><SoftTag>{repo.branch}</SoftTag><SoftTag>{repo.agentsPath}</SoftTag></div></td>
                 <td className={tableCellClass}><div className="font-mono text-xs text-slate-900">{(c?.hash || '').slice(0, 8)}</div><div className="mt-1 text-xs text-slate-400">{c?.message}</div></td>
                 <td className={tableCellClass}><StatusBadge status={repo.status} /></td>
                 <td className={tableCellClass}><RowActions status={repo.status} onEnable={async () => { await patchRepository(repo.id, { status: '启用' }); setRepositories((c) => c.map((r) => r.id === repo.id ? { ...r, status: '启用' } : r)) }} onDisable={async () => { await patchRepository(repo.id, { status: '停用' }); setRepositories((c) => c.map((r) => r.id === repo.id ? { ...r, status: '停用' } : r)) }} onDelete={() => handleDelete(repo.id)} /></td>
