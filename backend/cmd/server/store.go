@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -141,32 +142,17 @@ func (s *Store) loadUsers() ([]User, error) {
 }
 
 func ensureUserPasswordHashes(users []User) []User {
-	upgraded := false
+	upgraded := 0
 	for i := range users {
-		if users[i].PasswordHash != "" && !strings.Contains(users[i].PasswordHash, ":") {
-			// Legacy unsalted hash — upgrade to salted
-			switch users[i].Name {
-			case "Luna", "Alex":
-				users[i].PasswordHash = hashPassword("admin123")
-			case "Ivy", "Noah":
-				users[i].PasswordHash = hashPassword("user123")
-			default:
-				users[i].PasswordHash = hashPassword("password")
-			}
-			upgraded = true
-		} else if users[i].PasswordHash == "" {
-			switch users[i].Name {
-			case "Luna", "Alex":
-				users[i].PasswordHash = hashPassword("admin123")
-			case "Ivy", "Noah":
-				users[i].PasswordHash = hashPassword("user123")
-			default:
-				users[i].PasswordHash = hashPassword("password")
-			}
+		if users[i].PasswordHash == "" {
+			users[i].PasswordHash = hashPassword("password")
+		} else if !strings.Contains(users[i].PasswordHash, ":") {
+			users[i].PasswordHash = hashPassword("password")
+			upgraded++
 		}
 	}
-	if upgraded {
-		log.Printf("upgraded %d legacy password hashes to salted format", len(users))
+	if upgraded > 0 {
+		log.Printf("upgraded %d legacy password hashes to salted format", upgraded)
 	}
 	return users
 }
@@ -293,8 +279,19 @@ func readEnvFile(path string) (map[string]string, error) {
 }
 
 func seedState(rootDir string) State {
+	adminPass := randomPassword(16)
+	userPass := randomPassword(12)
+	log.Printf("")
+	log.Printf("╔══════════════════════════════════════════╗")
+	log.Printf("║        AgentBucket first start            ║")
+	log.Printf("╠══════════════════════════════════════════╣")
+	log.Printf("║  admin:    %-30s║", adminPass)
+	log.Printf("║  user:     %-30s║", userPass)
+	log.Printf("╚══════════════════════════════════════════╝")
+	log.Printf("")
+
 	return State{
-		CurrentUser: CurrentUser{ID: "u-1001", Name: "管理员", Role: "super_admin"},
+		CurrentUser: CurrentUser{ID: "u-1001", Name: "admin", Role: "super_admin"},
 		Repositories: []Repository{
 			{
 				ID:         "agentbucket-example",
@@ -313,10 +310,8 @@ func seedState(rootDir string) State {
 			{ID: 103, Name: "Internal DB", Description: "内部数据库只读访问凭据", Secret: "db_demo_placeholder", Status: "启用", UpdatedAt: "刚刚"},
 		},
 		Users: []User{
-			{ID: 1, Name: "Luna", Email: "luna@agentbucket.dev", Role: "super_admin", Active: true, PasswordHash: hashPassword("admin123")},
-			{ID: 2, Name: "Alex", Email: "alex@agentbucket.dev", Role: "admin", Active: true, PasswordHash: hashPassword("admin123")},
-			{ID: 3, Name: "Ivy", Email: "ivy@agentbucket.dev", Role: "user", Active: true, PasswordHash: hashPassword("user123")},
-			{ID: 4, Name: "Noah", Email: "noah@agentbucket.dev", Role: "user", Active: false, PasswordHash: hashPassword("user123")},
+			{ID: 1, Name: "admin", Role: "super_admin", Active: true, PasswordHash: hashPassword(adminPass)},
+			{ID: 2, Name: "user", Role: "user", Active: true, PasswordHash: hashPassword(userPass)},
 		},
 		Approvals:    []Approval{},
 		ChatSessions: map[string][]ChatSession{},
@@ -443,6 +438,18 @@ func (s *Store) snapshot() State {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.state
+}
+
+func randomPassword(length int) string {
+	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, length)
+	if _, err := rand.Read(b); err != nil {
+		return fmt.Sprintf("ab%d", time.Now().UnixNano()%1000000)
+	}
+	for i := range b {
+		b[i] = chars[int(b[i])%len(chars)]
+	}
+	return string(b)
 }
 
 func hashPassword(password string) string {

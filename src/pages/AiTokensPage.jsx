@@ -81,7 +81,7 @@ export default function AiTokensPage() {
     <div>
       <PageHeader
         title={t('aITokens.title')}
-        description={t('aITokens.import_hint')}
+        description={t('aITokens.desc', '管理 AI 模型调用的 API 凭据')}
         action={<button onClick={() => setFormOpen(true)} className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white">{t('aITokens.create_token')}</button>}
       />
 
@@ -163,7 +163,7 @@ export default function AiTokensPage() {
                       <div className="space-y-3">
                         <div>
                           <div className="font-semibold text-slate-950">{token.name}</div>
-                          <div className="mt-1 text-slate-500">{t('aITokens.import_hint')}</div>
+                          <div className="mt-1 text-slate-500">{t('aITokens.desc', '管理 AI 模型调用的 API 凭据')}</div>
                         </div>
                         <div className="grid grid-cols-[72px_1fr] gap-y-2">
                           <span className="text-slate-400">{t('aITokens.provider_label')}</span>

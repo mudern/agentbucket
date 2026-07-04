@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { deleteRepository, getRepositories, createRepository, listBranches, patchRepository, API_BASE } from '../api'
 import LoadingPanel from '../components/LoadingPanel'
 import { useT } from '../i18n'
@@ -35,6 +35,7 @@ export default function RepositoriesPage() {
   const [bindBranch, setBindBranch] = useState('main')
   const [bindPath, setBindPath] = useState('agents')
   const [bindLocalPath, setBindLocalPath] = useState('')
+  const branchInputRef = useRef(null)
   const [bindProvider, setBindProvider] = useState('Remote')
   const [remoteBranches, setRemoteBranches] = useState([])
   const [fetchingBranches, setFetchingBranches] = useState(false)
@@ -166,8 +167,7 @@ export default function RepositoriesPage() {
                         </span>
                       )}
                       <input
-                        value=""
-                        onChange={() => {}}
+                        ref={branchInputRef}
                         onKeyDown={(e) => { if (e.key === 'Enter' && e.target.value.trim()) { e.preventDefault(); setBindBranch(e.target.value.trim()); e.target.value = '' } }}
                         placeholder={bindBranch ? '按 Enter 更换分支...' : '输入分支名，按 Enter 确认...'}
                         className="min-w-[120px] flex-1 border-none bg-transparent px-1 py-1.5 text-sm text-slate-900 outline-none placeholder:text-slate-400"

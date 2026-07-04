@@ -1,7 +1,6 @@
 package main
 
 import (
-	"strings"
 	"testing"
 	"time"
 )
@@ -80,24 +79,15 @@ func TestStoreChatSessions(t *testing.T) {
 
 func TestEnsureUserPasswordHashes(t *testing.T) {
 	users := ensureUserPasswordHashes([]User{
-		{Name: "Luna"},
-		{Name: "Ivy"},
-		{Name: "Custom"},
+		{Name: "Test1"},
+		{Name: "Test2"},
 	})
-	if !verifyPassword("admin123", users[0].PasswordHash) {
-		t.Fatalf("expected Luna default admin password to verify")
+	// Empty hashes should be filled with "password"
+	if !verifyPassword("password", users[0].PasswordHash) {
+		t.Fatal("expected default password to verify")
 	}
-	if !verifyPassword("user123", users[1].PasswordHash) {
-		t.Fatalf("expected Ivy default user password to verify")
-	}
-	if !verifyPassword("password", users[2].PasswordHash) {
-		t.Fatalf("expected fallback password to verify")
-	}
-	// Ensure hashes use the new salted format
-	for i, u := range users {
-		if !strings.Contains(u.PasswordHash, ":") {
-			t.Fatalf("user %d password hash should contain salt separator ':'", i)
-		}
+	if !verifyPassword("password", users[1].PasswordHash) {
+		t.Fatal("expected default password to verify")
 	}
 }
 

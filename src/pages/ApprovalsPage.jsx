@@ -44,7 +44,7 @@ export default function ApprovalsPage() {
 
   return (
     <div>
-      <PageHeader title={t('approvals.title')} description={t('common.admin')} />
+      <PageHeader title={t('approvals.title')} description={t('approvals.pending_requests')} />
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 px-5 pt-4">
           <div className="flex gap-2">
