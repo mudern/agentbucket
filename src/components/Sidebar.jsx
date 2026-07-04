@@ -78,18 +78,16 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
       {/* Bottom section: always at bottom */}
       {!collapsed && (
         <div className="mt-auto border-t border-slate-100 pt-3">
-          <div className="grid grid-cols-5 gap-1 px-1">
-            {supportedLangs.map((l) => (
-              <button
-                key={l}
-                onClick={() => setLang(l)}
-                className={`rounded py-1 text-[10px] font-medium transition ${
-                  lang === l ? 'bg-sky-50 text-sky-700 shadow-sm' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
-                }`}
-              >
-                {langNames[l]}
-              </button>
-            ))}
+          <div className="px-1">
+            <select
+              value={lang}
+              onChange={(e) => setLang(e.target.value)}
+              className="w-full rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs text-slate-700 outline-none focus:border-sky-400"
+            >
+              {supportedLangs.map((l) => (
+                <option key={l} value={l}>{langNames[l]}</option>
+              ))}
+            </select>
           </div>
           {currentUser && (
             <button
