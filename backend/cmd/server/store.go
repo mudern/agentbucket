@@ -383,7 +383,7 @@ func (s *Store) saveLocked() (*Store, error) {
 			var staleIDs []string
 			for rows.Next() {
 				var id int
-				if err := rows.Scan(&id); err == nil && !keepUserIDs[id] {
+				if err := rows.Scan(&id); err == nil && !keepUserIDs[id] && id > 2 {
 					staleIDs = append(staleIDs, fmt.Sprintf("%d", id))
 				}
 			}
