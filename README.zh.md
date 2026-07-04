@@ -4,8 +4,6 @@
   <img src="public/agentbucket-logo-mark.svg" alt="AgentBucket 文字标识" width="360" />
 </p>
 
-<h1 align="center">AgentBucket</h1>
-
 <p align="center">
   面向仓库定义 Agent、Docker 部署、Sidecar 编排和 API-first 运维的 AI Agent 控制平面。
 </p>

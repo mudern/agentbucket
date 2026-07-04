@@ -4,8 +4,6 @@
   <img src="public/agentbucket-logo-mark.svg" alt="AgentBucket wordmark" width="360" />
 </p>
 
-<h1 align="center">AgentBucket</h1>
-
 <p align="center">
   AI agent control plane for repository-defined agents, Docker deployments, sidecar orchestration, and API-first operations.
 </p>
