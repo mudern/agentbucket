@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -112,12 +113,46 @@ func (app *App) runDeployment(d Deployment) {
 	ctx, cancel := context.WithTimeout(context.Background(), buildTimeout())
 	defer cancel()
 	build := exec.CommandContext(ctx, "docker", "build", "-t", d.ImageTag, d.BuildContext)
-	buildOut, err := build.CombinedOutput()
-	buildLog := string(buildOut)
+	// Stream build output to deployment message in real-time
+	pipe, _ := build.StdoutPipe()
+	build.Stderr = build.Stdout
+	var buildLog strings.Builder
+	if err := build.Start(); err != nil {
+		_ = app.store.update(func(s *State) error {
+			for i := range s.Deployments {
+				if s.Deployments[i].ID == d.ID {
+					s.Deployments[i].Status = "build_failed"
+					s.Deployments[i].Message = "Docker build start failed: " + err.Error()
+				}
+			}
+			return nil
+		})
+		return
+	}
+	// Read output line by line and update deployment message
+	go func() {
+		scanner := bufio.NewScanner(pipe)
+		scanner.Buffer(make([]byte, 64*1024), 1024*1024)
+		for scanner.Scan() {
+			line := scanner.Text()
+			buildLog.WriteString(line + "\n")
+			// Update message every 2 seconds (throttle DB writes)
+			app.store.update(func(s *State) error {
+				for i := range s.Deployments {
+					if s.Deployments[i].ID == d.ID {
+						s.Deployments[i].Message = buildLog.String()
+					}
+				}
+				return nil
+			})
+		}
+	}()
+	err := build.Wait()
+	finalLog := buildLog.String()
 	if err != nil {
-		msg := buildLog
+		msg := finalLog
 		if ctx.Err() == context.DeadlineExceeded {
-			msg = "Docker 构建超时: " + buildLog
+			msg = "Docker build timeout\n" + finalLog
 		}
 		_ = app.store.update(func(s *State) error {
 			for i := range s.Deployments {
@@ -131,6 +166,8 @@ func (app *App) runDeployment(d Deployment) {
 		log.Printf("[DEPLOY] BUILD FAILED: %s — %s", d.ID, msg[:min(200, len(msg))])
 		return
 	}
+
+	buildLogStr := buildLog.String()
 
 	// Step 3: start container
 	_ = app.store.update(func(s *State) error {
@@ -156,7 +193,7 @@ func (app *App) runDeployment(d Deployment) {
 	)
 	runOut, err := run.CombinedOutput()
 	if err != nil {
-		msg := buildLog + "\n---\n容器启动失败: " + string(runOut)
+		msg := buildLogStr + "\n---\ncontainer run failed: " + string(runOut)
 		_ = app.store.update(func(s *State) error {
 			for i := range s.Deployments {
 				if s.Deployments[i].ID == d.ID {
@@ -176,7 +213,7 @@ func (app *App) runDeployment(d Deployment) {
 		for i := range s.Deployments {
 			if s.Deployments[i].ID == d.ID {
 				s.Deployments[i].Status = "running"
-				s.Deployments[i].Message = buildLog + "\n---\ncontainer: " + containerID
+				s.Deployments[i].Message = buildLogStr + "\n---\ncontainer: " + containerID
 			}
 		}
 		return nil
