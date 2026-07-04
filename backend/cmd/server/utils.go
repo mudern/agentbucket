@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -17,7 +16,6 @@ var masterToken string
 func getMasterToken() string {
 	if masterToken == "" {
 		masterToken = env("AGENTBUCKET_ADMIN_TOKEN", fmt.Sprintf("ab-admin-%d", time.Now().Unix()))
-		log.Printf("Master token: %s", masterToken)
 	}
 	return masterToken
 }

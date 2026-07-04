@@ -63,8 +63,13 @@ export default function UsersPage() {
                 <td className="px-6 py-4 font-medium text-slate-950">{user.name}</td>
                 <td className="px-6 py-4">{user.email}</td>
                 <td className="px-6 py-4">
-                  <span className={`rounded-full px-2.5 py-1 text-xs ${user.role === 'admin' ? 'bg-sky-50 text-sky-700' : 'bg-slate-100 text-slate-600'}`}>
-                    {user.role === 'admin' ? t('users.role_admin') : t('users.role_user')}
+                  <span className={`rounded-full px-2.5 py-1 text-xs ${
+                    user.role === 'super_admin' ? 'bg-indigo-50 text-indigo-700' :
+                    user.role === 'admin' ? 'bg-sky-50 text-sky-700' :
+                    'bg-slate-100 text-slate-600'
+                  }`}>
+                    {user.role === 'super_admin' ? t('users.role_super_admin', '超级管理员') :
+                     user.role === 'admin' ? t('users.role_admin') : t('users.role_user')}
                   </span>
                 </td>
                 <td className="px-6 py-4">
@@ -74,23 +79,59 @@ export default function UsersPage() {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex gap-2">
-                    {user.role !== 'admin' && (
-                      <button
-                        onClick={() => handleRoleChange(user.id, 'admin')}
-                        disabled={updating === user.id}
-                        className="rounded-lg bg-sky-50 px-3 py-2 text-xs font-medium text-sky-700 hover:bg-sky-100 disabled:opacity-50"
-                      >
-                        {t('users.role_admin')}
-                      </button>
+                    {user.role === 'super_admin' && (
+                      <>
+                        <button
+                          onClick={() => handleRoleChange(user.id, 'admin')}
+                          disabled={updating === user.id}
+                          className="rounded-lg bg-sky-50 px-3 py-2 text-xs font-medium text-sky-700 hover:bg-sky-100 disabled:opacity-50"
+                        >
+                          {t('users.role_admin')}
+                        </button>
+                        <button
+                          onClick={() => handleRoleChange(user.id, 'user')}
+                          disabled={updating === user.id}
+                          className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-200 disabled:opacity-50"
+                        >
+                          {t('users.role_user')}
+                        </button>
+                      </>
                     )}
                     {user.role === 'admin' && (
-                      <button
-                        onClick={() => handleRoleChange(user.id, 'user')}
-                        disabled={updating === user.id}
-                        className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-200 disabled:opacity-50"
-                      >
-                        {t('users.role_user')}
-                      </button>
+                      <>
+                        <button
+                          onClick={() => handleRoleChange(user.id, 'super_admin')}
+                          disabled={updating === user.id}
+                          className="rounded-lg bg-indigo-50 px-3 py-2 text-xs font-medium text-indigo-700 hover:bg-indigo-100 disabled:opacity-50"
+                        >
+                          {t('users.role_super_admin', '超级管理员')}
+                        </button>
+                        <button
+                          onClick={() => handleRoleChange(user.id, 'user')}
+                          disabled={updating === user.id}
+                          className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-200 disabled:opacity-50"
+                        >
+                          {t('users.role_user')}
+                        </button>
+                      </>
+                    )}
+                    {user.role === 'user' && (
+                      <>
+                        <button
+                          onClick={() => handleRoleChange(user.id, 'super_admin')}
+                          disabled={updating === user.id}
+                          className="rounded-lg bg-indigo-50 px-3 py-2 text-xs font-medium text-indigo-700 hover:bg-indigo-100 disabled:opacity-50"
+                        >
+                          {t('users.role_super_admin', '超级管理员')}
+                        </button>
+                        <button
+                          onClick={() => handleRoleChange(user.id, 'admin')}
+                          disabled={updating === user.id}
+                          className="rounded-lg bg-sky-50 px-3 py-2 text-xs font-medium text-sky-700 hover:bg-sky-100 disabled:opacity-50"
+                        >
+                          {t('users.role_admin')}
+                        </button>
+                      </>
                     )}
                     {user.active ? (
                       <button

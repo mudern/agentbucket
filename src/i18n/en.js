@@ -230,6 +230,7 @@ const en = {
     search_placeholder: 'Search users',
     no_users: 'No users',
     role_admin: 'Admin',
+    role_super_admin: 'Super Admin',
     role_user: 'User',
     enabled_true: 'Enabled',
     enabled_false: 'Disabled',

@@ -36,7 +36,7 @@ type BusMessage struct {
 }
 
 type Store struct {
-	mu    sync.Mutex
+	mu    sync.RWMutex
 	db    *sql.DB
 	state State
 }

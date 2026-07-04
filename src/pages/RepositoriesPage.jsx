@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { deleteRepository, patchRepository } from '../api'
+import { deleteRepository, getRepositories, createRepository, patchRepository, API_BASE } from '../api'
 import LoadingPanel from '../components/LoadingPanel'
 import { useT } from '../i18n'
 import {
@@ -18,8 +18,6 @@ import {
 } from '../components/ManagementTable'
 import PageHeader from '../components/PageHeader'
 import useAsyncData from '../hooks/useAsyncData'
-
-const REPOS_API = `${import.meta.env.VITE_API_BASE ?? 'http://127.0.0.1:8080'}/api/repositories`
 
 export default function RepositoriesPage() {
   const [repositories, setRepositories] = useState([])
@@ -42,9 +40,7 @@ export default function RepositoriesPage() {
 
   const fetchRepos = async () => {
     try {
-      const resp = await fetch(REPOS_API, { headers: { 'Content-Type': 'application/json' } })
-      if (!resp.ok) throw new Error('API error')
-      const data = await resp.json()
+      const data = await getRepositories()
       setRepositories(data)
     } catch (e) { /* ignore */ }
     finally { setLoading(false) }
@@ -81,12 +77,7 @@ export default function RepositoriesPage() {
     setFormError('')
     try {
       const id = bindUrl.replace(/^https?:\/\//, '').replace(/[\/.]/g, '-').slice(0, 40)
-      const resp = await fetch(REPOS_API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, provider: bindProvider, url: bindUrl, branch: bindBranch, agentsPath: bindPath, localPath: bindLocalPath, status: '启用' }),
-      })
-      if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error || 'HTTP error')
+      await createRepository({ id, provider: bindProvider, url: bindUrl, branch: bindBranch, agentsPath: bindPath, localPath: bindLocalPath, status: '启用' })
       setBindOpen(false)
       setBindUrl('')
       setBindLocalPath('')

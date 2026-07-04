@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
-import { getAgentById, getAgentSessionMessages, getAgentSessions, createAgentSession, deleteSession } from '../api'
+import { API_BASE, getAgentById, getAgentSessionMessages, getAgentSessions, createAgentSession, deleteSession } from '../api'
 import { useT, useLanguage } from '../i18n'
 import LoadingPanel from '../components/LoadingPanel'
 import useAsyncData from '../hooks/useAsyncData'
@@ -133,11 +133,11 @@ export default function AgentChatPage() {
       id: assistantId, sessionId: currentSessionId, agentId, role: 'assistant', content: '', createdAt: new Date().toISOString(),
     }])
 
-    const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://127.0.0.1:8080'
+    const token = localStorage.getItem('agentbucket.token') || sessionStorage.getItem('agentbucket.token') || ''
     try {
       const response = await fetch(`${API_BASE}/api/agents/${agentId}/messages`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ sessionId: currentSessionId, content: text, stream: true }),
       })
       if (!response.ok) {

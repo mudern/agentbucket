@@ -230,6 +230,7 @@ const zh = {
     search_placeholder: '搜索用户',
     no_users: '暂无用户',
     role_admin: '管理员',
+    role_super_admin: '超级管理员',
     role_user: '普通用户',
     enabled_true: '启用',
     enabled_false: '禁用',

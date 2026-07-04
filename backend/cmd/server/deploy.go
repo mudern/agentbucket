@@ -95,7 +95,7 @@ func (app *App) createDeployment(req DeployRequest) (Deployment, error) {
 		"--name", deployment.ContainerName,
 		"-p", fmt.Sprintf("127.0.0.1:%d:8088", deployment.HostPort),
 		"--add-host", "host.docker.internal:host-gateway",
-		"-e", "AGENTBUCKET_URL=http://host.docker.internal:8080",
+		"-e", fmt.Sprintf("AGENTBUCKET_URL=http://host.docker.internal:%d", mustPort()),
 		deployment.ImageTag,
 	)
 	runOut, err := run.CombinedOutput()

@@ -1,11 +1,14 @@
 package main
 
 import (
+	"crypto/rand"
 	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -96,8 +99,12 @@ func (s *Store) initSchema() error {
 			return err
 		}
 	}
-	if _, err := s.db.Exec(`ALTER TABLE users ADD COLUMN password_hash TEXT NOT NULL DEFAULT ''`); err != nil && !strings.Contains(err.Error(), "duplicate column name") {
-		return err
+	// Migration: add password_hash column if missing (safe to run)
+	var colCount int
+	if err := s.db.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('users') WHERE name = 'password_hash'`).Scan(&colCount); err == nil && colCount == 0 {
+		if _, err := s.db.Exec(`ALTER TABLE users ADD COLUMN password_hash TEXT NOT NULL DEFAULT ''`); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -134,18 +141,32 @@ func (s *Store) loadUsers() ([]User, error) {
 }
 
 func ensureUserPasswordHashes(users []User) []User {
+	upgraded := false
 	for i := range users {
-		if users[i].PasswordHash != "" {
-			continue
+		if users[i].PasswordHash != "" && !strings.Contains(users[i].PasswordHash, ":") {
+			// Legacy unsalted hash — upgrade to salted
+			switch users[i].Name {
+			case "Luna", "Alex":
+				users[i].PasswordHash = hashPassword("admin123")
+			case "Ivy", "Noah":
+				users[i].PasswordHash = hashPassword("user123")
+			default:
+				users[i].PasswordHash = hashPassword("password")
+			}
+			upgraded = true
+		} else if users[i].PasswordHash == "" {
+			switch users[i].Name {
+			case "Luna", "Alex":
+				users[i].PasswordHash = hashPassword("admin123")
+			case "Ivy", "Noah":
+				users[i].PasswordHash = hashPassword("user123")
+			default:
+				users[i].PasswordHash = hashPassword("password")
+			}
 		}
-		switch users[i].Name {
-		case "Luna", "Alex":
-			users[i].PasswordHash = hashPassword("admin123")
-		case "Ivy", "Noah":
-			users[i].PasswordHash = hashPassword("user123")
-		default:
-			users[i].PasswordHash = hashPassword("password")
-		}
+	}
+	if upgraded {
+		log.Printf("upgraded %d legacy password hashes to salted format", len(users))
 	}
 	return users
 }
@@ -328,57 +349,98 @@ func (s *Store) saveLocked() (*Store, error) {
 		_ = tx.Rollback()
 		return nil, err
 	}
-	if _, err := tx.Exec(`DELETE FROM users`); err != nil {
-		_ = tx.Rollback()
-		return nil, err
-	}
-	if _, err := tx.Exec(`DELETE FROM chat_sessions`); err != nil {
-		_ = tx.Rollback()
-		return nil, err
-	}
-	if _, err := tx.Exec(`DELETE FROM chat_messages`); err != nil {
-		_ = tx.Rollback()
-		return nil, err
-	}
+	// Use INSERT OR REPLACE instead of DELETE + INSERT for users
+	keepUserIDs := map[int]bool{}
 	for _, user := range s.state.Users {
 		active := 0
 		if user.Active {
 			active = 1
 		}
-		if _, err := tx.Exec(`INSERT INTO users (id, name, email, role, active, password_hash) VALUES (?, ?, ?, ?, ?, ?)`, user.ID, user.Name, user.Email, user.Role, active, user.PasswordHash); err != nil {
+		if _, err := tx.Exec(
+			`INSERT OR REPLACE INTO users (id, name, email, role, active, password_hash) VALUES (?, ?, ?, ?, ?, ?)`,
+			user.ID, user.Name, user.Email, user.Role, active, user.PasswordHash,
+		); err != nil {
 			_ = tx.Rollback()
 			return nil, err
 		}
+		keepUserIDs[user.ID] = true
 	}
+	// Use INSERT OR REPLACE for chat sessions
+	keepSessionIDs := map[string]bool{}
 	for _, sessions := range s.state.ChatSessions {
 		for _, session := range sessions {
 			if _, err := tx.Exec(
-				`INSERT INTO chat_sessions (id, agent_id, title, preview, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`,
-				session.ID,
-				session.AgentID,
-				session.Title,
-				session.Preview,
-				formatStoredTime(session.CreatedAt),
-				formatStoredTime(session.UpdatedAt),
+				`INSERT OR REPLACE INTO chat_sessions (id, agent_id, title, preview, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`,
+				session.ID, session.AgentID, session.Title, session.Preview,
+				formatStoredTime(session.CreatedAt), formatStoredTime(session.UpdatedAt),
 			); err != nil {
 				_ = tx.Rollback()
 				return nil, err
 			}
+			keepSessionIDs[session.ID] = true
 		}
 	}
+	// Use INSERT OR REPLACE for chat messages
+	keepMessageIDs := map[string]bool{}
 	for _, messages := range s.state.ChatMessages {
 		for _, message := range messages {
 			if _, err := tx.Exec(
-				`INSERT INTO chat_messages (id, session_id, agent_id, role, content, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
-				message.ID,
-				message.SessionID,
-				message.AgentID,
-				message.Role,
-				message.Content,
+				`INSERT OR REPLACE INTO chat_messages (id, session_id, agent_id, role, content, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+				message.ID, message.SessionID, message.AgentID, message.Role, message.Content,
 				formatStoredTime(message.CreatedAt),
 			); err != nil {
 				_ = tx.Rollback()
 				return nil, err
+			}
+			keepMessageIDs[message.ID] = true
+		}
+	}
+	// Clean up stale records not in current state
+	if len(keepUserIDs) > 0 {
+		rows, err := tx.Query(`SELECT id FROM users`)
+		if err == nil {
+			var staleIDs []string
+			for rows.Next() {
+				var id int
+				if err := rows.Scan(&id); err == nil && !keepUserIDs[id] {
+					staleIDs = append(staleIDs, fmt.Sprintf("%d", id))
+				}
+			}
+			rows.Close()
+			if len(staleIDs) > 0 {
+				tx.Exec(fmt.Sprintf(`DELETE FROM users WHERE id IN (%s)`, strings.Join(staleIDs, ",")))
+			}
+		}
+	}
+	if len(keepSessionIDs) > 0 {
+		rows, err := tx.Query(`SELECT id FROM chat_sessions`)
+		if err == nil {
+			var staleIDs []string
+			for rows.Next() {
+				var id string
+				if err := rows.Scan(&id); err == nil && !keepSessionIDs[id] {
+					staleIDs = append(staleIDs, fmt.Sprintf("'%s'", strings.ReplaceAll(id, "'", "''")))
+				}
+			}
+			rows.Close()
+			if len(staleIDs) > 0 {
+				tx.Exec(fmt.Sprintf(`DELETE FROM chat_sessions WHERE id IN (%s)`, strings.Join(staleIDs, ",")))
+			}
+		}
+	}
+	if len(keepMessageIDs) > 0 {
+		rows, err := tx.Query(`SELECT id FROM chat_messages`)
+		if err == nil {
+			var staleIDs []string
+			for rows.Next() {
+				var id string
+				if err := rows.Scan(&id); err == nil && !keepMessageIDs[id] {
+					staleIDs = append(staleIDs, fmt.Sprintf("'%s'", strings.ReplaceAll(id, "'", "''")))
+				}
+			}
+			rows.Close()
+			if len(staleIDs) > 0 {
+				tx.Exec(fmt.Sprintf(`DELETE FROM chat_messages WHERE id IN (%s)`, strings.Join(staleIDs, ",")))
 			}
 		}
 	}
@@ -389,12 +451,41 @@ func (s *Store) saveLocked() (*Store, error) {
 }
 
 func (s *Store) snapshot() State {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	return s.state
 }
 
 func hashPassword(password string) string {
+	salt := make([]byte, 16)
+	if _, err := rand.Read(salt); err != nil {
+		// Fallback to a deterministic salt if crypto/rand fails
+		h := sha256.Sum256([]byte("agentbucket-fallback-salt-" + password))
+		copy(salt, h[:16])
+	}
+	hash := sha256.Sum256(append(salt, []byte(password)...))
+	return hex.EncodeToString(salt) + ":" + hex.EncodeToString(hash[:])
+}
+
+func verifyPassword(password, stored string) bool {
+	parts := strings.SplitN(stored, ":", 2)
+	if len(parts) != 2 {
+		// Legacy unsalted hash
+		return hashPasswordLegacy(password) == stored
+	}
+	salt, err := hex.DecodeString(parts[0])
+	if err != nil {
+		return false
+	}
+	expectedHash, err := hex.DecodeString(parts[1])
+	if err != nil {
+		return false
+	}
+	hash := sha256.Sum256(append(salt, []byte(password)...))
+	return hex.EncodeToString(hash[:]) == hex.EncodeToString(expectedHash)
+}
+
+func hashPasswordLegacy(password string) string {
 	hash := sha256.Sum256([]byte(password))
 	return fmt.Sprintf("%x", hash)
 }

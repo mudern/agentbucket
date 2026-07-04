@@ -1,5 +1,4 @@
-import { useMemo, useState } from 'react'
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createDeployment, getDeployOptions, getDeployments, stopDeployment, startDeployment, deleteDeployment } from '../api'
 import LoadingPanel from '../components/LoadingPanel'
 import PageHeader from '../components/PageHeader'

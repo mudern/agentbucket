@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://127.0.0.1:8080'
+export const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://127.0.0.1:8080'
 
 function getToken() {
   return localStorage.getItem('agentbucket.token') || sessionStorage.getItem('agentbucket.token') || ''
@@ -101,6 +101,17 @@ export async function createDeployment(payload) {
 
 export async function deleteRepository(id) {
   return request(`/api/repositories/${id}`, { method: 'DELETE' })
+}
+
+export async function getRepositories() {
+  return request('/api/repositories')
+}
+
+export async function createRepository(data) {
+  return request('/api/repositories', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
 }
 
 export async function deleteAIToken(id) {

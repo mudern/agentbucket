@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import LogoMark from '../components/LogoMark'
 import { useT } from '../i18n'
-
-const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://127.0.0.1:8080'
+import { API_BASE } from '../api'
 
 export default function AuthPage({ mode = 'login', onAuthenticated }) {
   const navigate = useNavigate()

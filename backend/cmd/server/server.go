@@ -53,7 +53,7 @@ func runServer() {
 		for {
 			time.Sleep(1 * time.Hour)
 			if app.store.db != nil {
-				_, _ = app.store.db.Exec(`DELETE FROM bus_messages WHERE id NOT IN (SELECT id FROM bus_messages ORDER BY created_at DESC LIMIT 1000)`)
+				_, _ = app.store.db.Exec(`DELETE FROM bus_messages WHERE id NOT IN (SELECT id FROM (SELECT id FROM bus_messages ORDER BY created_at DESC LIMIT 1000))`)
 			}
 		}
 	}()

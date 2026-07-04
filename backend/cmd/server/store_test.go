@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"testing"
 	"time"
 )
@@ -83,14 +84,20 @@ func TestEnsureUserPasswordHashes(t *testing.T) {
 		{Name: "Ivy"},
 		{Name: "Custom"},
 	})
-	if users[0].PasswordHash != hashPassword("admin123") {
-		t.Fatalf("expected Luna default admin password hash")
+	if !verifyPassword("admin123", users[0].PasswordHash) {
+		t.Fatalf("expected Luna default admin password to verify")
 	}
-	if users[1].PasswordHash != hashPassword("user123") {
-		t.Fatalf("expected Ivy default user password hash")
+	if !verifyPassword("user123", users[1].PasswordHash) {
+		t.Fatalf("expected Ivy default user password to verify")
 	}
-	if users[2].PasswordHash != hashPassword("password") {
-		t.Fatalf("expected fallback password hash")
+	if !verifyPassword("password", users[2].PasswordHash) {
+		t.Fatalf("expected fallback password to verify")
+	}
+	// Ensure hashes use the new salted format
+	for i, u := range users {
+		if !strings.Contains(u.PasswordHash, ":") {
+			t.Fatalf("user %d password hash should contain salt separator ':'", i)
+		}
 	}
 }
 
