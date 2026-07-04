@@ -240,11 +240,18 @@ export default function RepositoriesPage() {
             const domain = (() => {
               if (repo.provider === 'Local') return ''
               const u = repo.url || ''
-              // SSH: git@github.com:org/repo → github.com
               const sm = u.match(/^git@([^:]+):/)
               if (sm) return sm[1]
               const m = u.match(/^https?:\/\/([^\/]+)/)
               return m ? m[1] : ''
+            })()
+            const scheme = (() => {
+              if (repo.provider === 'Local') return ''
+              const u = repo.url || ''
+              if (u.startsWith('git@')) return 'SSH'
+              if (u.startsWith('https://')) return 'HTTPS'
+              if (u.startsWith('http://')) return 'HTTP'
+              return ''
             })()
             return (
               <tr key={repo.id}>
@@ -253,7 +260,7 @@ export default function RepositoriesPage() {
                     <span className="cursor-default underline decoration-slate-300 decoration-dotted underline-offset-4">{repoName}</span>
                   </HoverCard>
                 </td>
-                <td className={tableCellClass}><div className="flex max-w-full flex-wrap gap-1.5">{domain && <SoftTag>{domain}</SoftTag>}<SoftTag>{repo.provider}</SoftTag><SoftTag>{repo.branch}</SoftTag><SoftTag>{repo.agentsPath}</SoftTag></div></td>
+                <td className={tableCellClass}><div className="flex max-w-full flex-wrap gap-1.5">{domain && <SoftTag>{domain}</SoftTag>}{scheme && <SoftTag>{scheme}</SoftTag>}<SoftTag>{repo.provider}</SoftTag><SoftTag>{repo.branch}</SoftTag><SoftTag>{repo.agentsPath}</SoftTag></div></td>
                 <td className={tableCellClass}><div className="font-mono text-xs text-slate-900">{(c?.hash || '').slice(0, 8)}</div><div className="mt-1 text-xs text-slate-400">{c?.message}</div></td>
                 <td className={tableCellClass}><StatusBadge status={repo.status} /></td>
                 <td className={tableCellClass}><RowActions status={repo.status} onEnable={async () => { await patchRepository(repo.id, { status: '启用' }); setRepositories((c) => c.map((r) => r.id === repo.id ? { ...r, status: '启用' } : r)) }} onDisable={async () => { await patchRepository(repo.id, { status: '停用' }); setRepositories((c) => c.map((r) => r.id === repo.id ? { ...r, status: '停用' } : r)) }} onDelete={() => handleDelete(repo.id)} /></td>
