@@ -1,7 +1,13 @@
 import { createContext, useContext, useState, useCallback } from 'react'
 
-const supportedLangs = ['zh', 'en']
+const supportedLangs = ['zh', 'en', 'fr', 'ja', 'de', 'ko', 'es', 'ar', 'pt', 'it']
 const defaultLang = 'zh'
+
+const langNames = {
+  zh: '中文', en: 'EN', fr: 'FR', ja: '日本語',
+  de: 'DE', ko: '한국어', es: 'ES', ar: 'العربية',
+  pt: 'PT', it: 'IT',
+}
 
 const LanguageContext = createContext()
 
@@ -38,6 +44,14 @@ export async function loadTranslations() {
   _translations = {
     zh: (await import('./zh.js')).default,
     en: (await import('./en.js')).default,
+    fr: (await import('./fr.js')).default,
+    ja: (await import('./ja.js')).default,
+    de: (await import('./de.js')).default,
+    ko: (await import('./ko.js')).default,
+    es: (await import('./es.js')).default,
+    ar: (await import('./ar.js')).default,
+    pt: (await import('./pt.js')).default,
+    it: (await import('./it.js')).default,
   }
   return _translations
 }
@@ -55,3 +69,5 @@ export function useT() {
     return val ?? fallback ?? key
   }, [lang])
 }
+
+export { langNames, supportedLangs }

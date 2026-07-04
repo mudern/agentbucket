@@ -17,6 +17,19 @@
   <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-ready-2496ED?style=flat&logo=docker&logoColor=white" alt="Docker" /></a>
 </p>
 
+<p align="center">
+  <a href="README.md">English</a> |
+  <a href="README.zh.md">中文</a> |
+  <a href="README.fr.md">Français</a> |
+  <a href="README.ja.md">日本語</a> |
+  <a href="README.de.md">Deutsch</a> |
+  <a href="README.ko.md">한국어</a> |
+  <a href="README.es.md">Español</a> |
+  <a href="README.ar.md">العربية</a> |
+  <a href="README.pt.md">Português</a> |
+  <a href="README.it.md">Italiano</a>
+</p>
+
 AgentBucket scans agent definitions from Git/GitHub/local repositories, packages selected agents with standard skills and MCP configs into Docker images, runs a sidecar in each container, and exposes both a web UI and curl-friendly APIs for deployment, chat, token resolution, and agent-to-agent messaging.
 
 ## What It Does

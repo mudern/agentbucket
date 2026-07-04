@@ -3,7 +3,7 @@ import LogoMark from './LogoMark'
 import { navGroups } from '../data'
 import { getCurrentUser } from '../api'
 import useAsyncData from '../hooks/useAsyncData'
-import { useLanguage, useT } from '../i18n'
+import { useLanguage, useT, langNames, supportedLangs } from '../i18n'
 
 const navKeyMap = {
   '部署 Agent': 'nav.deploy_agent',
@@ -78,23 +78,18 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
       {/* Bottom section: always at bottom */}
       {!collapsed && (
         <div className="mt-auto border-t border-slate-100 pt-3">
-          <div className="flex gap-1 px-1">
-            <button
-              onClick={() => setLang('zh')}
-              className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition ${
-                lang === 'zh' ? 'bg-sky-50 text-sky-700 shadow-sm' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
-              }`}
-            >
-              中文
-            </button>
-            <button
-              onClick={() => setLang('en')}
-              className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition ${
-                lang === 'en' ? 'bg-sky-50 text-sky-700 shadow-sm' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
-              }`}
-            >
-              EN
-            </button>
+          <div className="grid grid-cols-5 gap-1 px-1">
+            {supportedLangs.map((l) => (
+              <button
+                key={l}
+                onClick={() => setLang(l)}
+                className={`rounded py-1 text-[10px] font-medium transition ${
+                  lang === l ? 'bg-sky-50 text-sky-700 shadow-sm' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+                }`}
+              >
+                {langNames[l]}
+              </button>
+            ))}
           </div>
           {currentUser && (
             <button
