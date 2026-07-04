@@ -22,25 +22,30 @@ func (app *App) scanRepositories(repos []Repository) []Repository {
 		if next.Provider != "Local" && next.URL != "" {
 			gitDir := filepath.Join(next.LocalPath, ".git")
 			if _, err := os.Stat(gitDir); os.IsNotExist(err) {
-				go func() {
-					os.MkdirAll(filepath.Dir(next.LocalPath), 0o755)
-					cmd := exec.Command("git", "clone", "-b", next.Branch, next.URL, next.LocalPath)
-					out, err := cmd.CombinedOutput()
-					if err != nil {
-						log.Printf("git clone failed for %s: %v - %s", next.ID, err, string(out))
-					} else {
-						log.Printf("git clone succeeded for %s", next.ID)
+				go func(url, branch, localPath, id string) {
+					os.MkdirAll(filepath.Dir(localPath), 0o755)
+					args := []string{"clone"}
+					if branch != "" {
+						args = append(args, "-b", branch)
 					}
-				}()
+					args = append(args, url, localPath)
+					out, err := exec.Command("git", args...).CombinedOutput()
+					if err != nil {
+						log.Printf("[CLONE] failed %s: %v", id, err)
+					} else {
+						log.Printf("[CLONE] ok %s", id)
+					}
+					_ = out
+				}(next.URL, next.Branch, next.LocalPath, next.ID)
 			}
 		}
-		next.Commits = scanCommits(repo)
+		next.Commits = scanCommits(next)
 		if next.Commits == nil {
 			next.Commits = []Commit{}
 		}
 		if len(next.Commits) == 0 {
 			// No git history — create a synthetic commit from filesystem scan
-			agents := scanAgents(repo)
+			agents := scanAgents(next)
 			if len(agents) > 0 {
 				next.Commits = []Commit{{
 					Hash:        shortHash(repo.URL + repo.LocalPath + repo.AgentsPath),
