@@ -53,8 +53,11 @@ export default function DeployProgressPage() {
   useEffect(() => {
     const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://127.0.0.1:8080'
     let abort = false
-    let fallbackTimer = null
 
+    // Load initial data via fast API call
+    getDeployments().then((data) => { setDeployments(data); setLoading(false) }).catch(() => setLoading(false))
+
+    // Then connect SSE for live updates
     const connectSSE = async () => {
       try {
         const resp = await fetch(`${API_BASE}/api/deployments/stream`)
@@ -69,28 +72,15 @@ export default function DeployProgressPage() {
           buffer = lines.pop() || ''
           for (const line of lines) {
             if (line.startsWith('data: ')) {
-              try {
-                setDeployments(JSON.parse(line.slice(6)))
-                setLoading(false)
-              } catch (_) {}
+              try { setDeployments(JSON.parse(line.slice(6))) } catch (_) {}
             }
           }
         }
       } catch (_) {}
-      // SSE failed — start polling
-      if (!abort && !fallbackTimer) {
-        fallbackTimer = setInterval(async () => {
-          try {
-            const data = await getDeployments()
-            setDeployments(data)
-            setLoading(false)
-          } catch (_) {}
-        }, 5000)
-      }
     }
     connectSSE()
 
-    return () => { abort = true; if (fallbackTimer) clearInterval(fallbackTimer) }
+    return () => { abort = true }
   }, [])
 
   const agentMap = useMemo(() => {
