@@ -59,9 +59,13 @@ export async function loadTranslations() {
 export function useT() {
   const { lang } = useLanguage()
   return useCallback((key, fallback) => {
-    if (!_translations || !_translations[lang]) return fallback || key
+    if (!_translations) return fallback || key
+    // Use selected language, fall back to English
+    let t = _translations[lang]
+    if (!t || Object.keys(t).length === 0) t = _translations.en
+    if (!t) return fallback || key
     const keys = key.split('.')
-    let val = _translations[lang]
+    let val = t
     for (const k of keys) {
       if (val == null) break
       val = val[k]
