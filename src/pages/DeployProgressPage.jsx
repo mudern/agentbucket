@@ -52,23 +52,45 @@ export default function DeployProgressPage() {
 
   useEffect(() => {
     const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://127.0.0.1:8080'
-    const es = new EventSource(`${API_BASE}/api/deployments/stream`)
-    es.onmessage = (e) => {
+    let abort = false
+    let fallbackTimer = null
+
+    const connectSSE = async () => {
       try {
-        setDeployments(JSON.parse(e.data))
-        setLoading(false)
+        const resp = await fetch(`${API_BASE}/api/deployments/stream`)
+        const reader = resp.body.getReader()
+        const decoder = new TextDecoder()
+        let buffer = ''
+        while (!abort) {
+          const { done, value } = await reader.read()
+          if (done) break
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() || ''
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                setDeployments(JSON.parse(line.slice(6)))
+                setLoading(false)
+              } catch (_) {}
+            }
+          }
+        }
       } catch (_) {}
+      // SSE failed — start polling
+      if (!abort && !fallbackTimer) {
+        fallbackTimer = setInterval(async () => {
+          try {
+            const data = await getDeployments()
+            setDeployments(data)
+            setLoading(false)
+          } catch (_) {}
+        }, 5000)
+      }
     }
-    es.onerror = () => { es.close() }
-    // Fallback polling if SSE fails
-    const fallback = setInterval(async () => {
-      try {
-        const data = await getDeployments()
-        setDeployments(data)
-        setLoading(false)
-      } catch (_) {}
-    }, 10000)
-    return () => { es.close(); clearInterval(fallback) }
+    connectSSE()
+
+    return () => { abort = true; if (fallbackTimer) clearInterval(fallbackTimer) }
   }, [])
 
   const agentMap = useMemo(() => {

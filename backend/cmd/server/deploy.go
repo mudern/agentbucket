@@ -147,6 +147,8 @@ func (app *App) runDeployment(d Deployment) {
 	run := exec.Command(
 		"docker", "run", "-d", "--rm",
 		"--name", d.ContainerName,
+			"-l", "agentbucket=true",
+			"-l", fmt.Sprintf("agentbucket.agent-id=%s", d.AgentID),
 		"-p", fmt.Sprintf("127.0.0.1:%d:8088", d.HostPort),
 		"--add-host", "host.docker.internal:host-gateway",
 		"-e", fmt.Sprintf("AGENTBUCKET_URL=http://host.docker.internal:%d", mustPort()),
