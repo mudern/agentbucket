@@ -143,7 +143,7 @@ export default function RepositoriesPage() {
                       <input
                         value={bindUrl}
                         onChange={(e) => { setBindUrl(e.target.value); setBranches([]); setBranchError('') }}
-                        placeholder="https://github.com/org/repo.git"
+                        placeholder="https://github.com/org/repo.git 或 git@github.com:org/repo.git"
                         className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-sky-500"
                       />
                       <button
@@ -229,6 +229,10 @@ export default function RepositoriesPage() {
             const repoName = (() => {
               const u = repo.url || ''
               if (repo.provider === 'Local') return u.replace(/^file:\/\/\/?/, '')
+              // SSH: git@github.com:org/repo.git → org/repo
+              const sm = u.match(/^git@([^:]+):(.+?)(?:\.git)?$/)
+              if (sm) return sm[2]
+              // HTTPS: https://github.com/org/repo.git → org/repo
               const m = u.match(/\/([^\/]+\/[^\/]+?)(?:\.git)?$/)
               if (m) return m[1]
               return u.replace(/^https?:\/\//, '')
@@ -236,6 +240,9 @@ export default function RepositoriesPage() {
             const domain = (() => {
               if (repo.provider === 'Local') return ''
               const u = repo.url || ''
+              // SSH: git@github.com:org/repo → github.com
+              const sm = u.match(/^git@([^:]+):/)
+              if (sm) return sm[1]
               const m = u.match(/^https?:\/\/([^\/]+)/)
               return m ? m[1] : ''
             })()

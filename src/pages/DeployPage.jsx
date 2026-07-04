@@ -378,7 +378,7 @@ export default function DeployPage() {
                     }`}
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <div className="font-medium text-slate-950">{(() => { const u = repo.url || ''; if (repo.provider === 'Local') return u.replace(/^file:\/\/\/?/, ''); const m = u.match(/\/([^\/]+\/[^\/]+?)(?:\.git)?$/); return m ? m[1] : u.replace(/^https?:\/\//, '') })()}</div>
+                      <div className="font-medium text-slate-950">{(() => { const u = repo.url || ''; if (repo.provider === 'Local') return u.replace(/^file:\/\/\/?/, ''); const sm = u.match(/^git@([^:]+):(.+?)(?:\.git)?$/); if (sm) return sm[2]; const m = u.match(/\/([^\/]+\/[^\/]+?)(?:\.git)?$/); return m ? m[1] : u.replace(/^https?:\/\//, '') })()}</div>
                       <span className="rounded-full bg-white px-2.5 py-1 text-xs text-slate-500">{repo.provider}</span>
                     </div>
                     <div className="mt-3 grid gap-2 text-xs text-slate-500 sm:grid-cols-3">
