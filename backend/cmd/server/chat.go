@@ -40,6 +40,37 @@ func chatKey(agentID string, sessionID string) string {
 	return agentID + "::" + sessionID
 }
 
+// resolveAgentConfig merges deployment overrides with agent definition defaults.
+// Deploy-time choices (token, model, runtime) take precedence over agent.toml values.
+func (app *App) resolveAgentConfig(agent Agent, tokens []AIToken, deployments []Deployment) (tokenName string, model string, runtime string) {
+	tokenName = agent.APIToken
+	model = agent.Model
+	runtime = agent.Runtime
+	// If there's a deployment for this agent, use its configuration
+	for _, d := range deployments {
+		if d.AgentID == agent.ID {
+			if d.Runtime != "" {
+				runtime = d.Runtime
+			}
+			if d.Model != "" {
+				model = d.Model
+			}
+			// Resolve apiTokenId to token name
+			if d.APITokenID > 0 {
+				for _, t := range tokens {
+					if t.ID == d.APITokenID {
+						tokenName = t.Name
+						model = t.Model // Token's model takes highest priority
+						break
+					}
+				}
+			}
+			break
+		}
+	}
+	return
+}
+
 func (app *App) buildAssistantMessage(agentID string, sessionID string, userContent string) ChatMessage {
 	now := time.Now()
 	state := app.store.snapshot()
@@ -67,6 +98,12 @@ func (app *App) buildAssistantMessage(agentID string, sessionID string, userCont
 			Role: "assistant", Content: "未找到 Agent 定义。", CreatedAt: now,
 		}
 	}
+
+	// Merge deployment overrides: user-chosen token/model/runtime take precedence over agent.toml
+	resolvedToken, resolvedModel, resolvedRuntime := app.resolveAgentConfig(agent, state.AITokens, state.Deployments)
+	agent.APIToken = resolvedToken
+	agent.Model = resolvedModel
+	agent.Runtime = resolvedRuntime
 
 	// Auto-register on the bus so other agents can discover this one
 	app.bus.register(BusAgent{
@@ -440,6 +477,12 @@ func (app *App) streamAgentMessage(w http.ResponseWriter, agentID string, userCo
 		sseError(w, "agent not found")
 		return
 	}
+
+	// Merge deployment overrides: user-chosen token/model/runtime take precedence
+	resolvedToken, resolvedModel, resolvedRuntime := app.resolveAgentConfig(agent, state.AITokens, state.Deployments)
+	agent.APIToken = resolvedToken
+	agent.Model = resolvedModel
+	agent.Runtime = resolvedRuntime
 
 	// Try streaming through sidecar if agent has a running deployment
 	for _, d := range state.Deployments {

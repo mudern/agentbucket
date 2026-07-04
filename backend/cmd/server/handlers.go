@@ -488,6 +488,8 @@ func (app *App) deployments(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusBadRequest, err)
 			return
 		}
+		log.Printf("[DEPLOY] REQUEST: agentId=%q model=%q runtime=%q apiTokenId=%d skills=%v mcps=%v",
+			req.AgentID, req.Model, req.Runtime, req.APITokenID, req.Skills, req.MCPs)
 		deployment, err := app.createDeployment(req)
 		if err != nil {
 			writeError(w, http.StatusBadRequest, err)

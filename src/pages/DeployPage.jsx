@@ -285,19 +285,21 @@ export default function DeployPage() {
     setDeploying(true)
     setDeployError('')
     setDeployResult(null)
+    const payload = {
+      repositoryId: selectedRepository?.id,
+      commitHash: selectedCommit?.hash,
+      agentId: selectedAgent?.id,
+      apiTokenId: Number(selectedApiTokenId),
+      model: selectedModel,
+      runtime: selectedRuntime,
+      runtimeVersion: selectedRuntimeVersion,
+      skills: selectedSkills,
+      mcps: selectedMcps,
+      authTokens: form.authTokens,
+    }
+    console.log('[DEPLOY] SENDING:', JSON.stringify(payload, null, 2))
     try {
-      const result = await createDeployment({
-        repositoryId: selectedRepository?.id,
-        commitHash: selectedCommit?.hash,
-        agentId: selectedAgent?.id,
-        apiTokenId: Number(selectedApiTokenId),
-        model: selectedModel,
-        runtime: selectedRuntime,
-        runtimeVersion: selectedRuntimeVersion,
-        skills: selectedSkills,
-        mcps: selectedMcps,
-        authTokens: form.authTokens,
-      })
+      const result = await createDeployment(payload)
       setDeployResult(result)
       // Navigate to progress page after successful deployment
       setTimeout(() => navigate('/deploy/progress'), 800)

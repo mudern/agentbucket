@@ -43,6 +43,7 @@ func runServer() {
 	}
 
 	app.recoverRunningContainers()
+	app.dedupDeployments()
 	go app.startHealthChecker(30 * time.Second)
 	go app.startGitSyncer(5 * time.Minute)
 
@@ -286,6 +287,29 @@ func (app *App) syncGitRepo(repo *Repository) {
 		return nil
 	})
 	log.Printf("git sync: %s updated", repo.ID)
+}
+
+func (app *App) dedupDeployments() {
+	_ = app.store.update(func(s *State) error {
+		seen := map[string]int{} // agentID -> index in result slice
+		var deduped []Deployment
+		for _, d := range s.Deployments {
+			if idx, exists := seen[d.AgentID]; exists {
+				// Keep the newer one (higher ID or later CreatedAt)
+				if d.CreatedAt.After(deduped[idx].CreatedAt) {
+					deduped[idx] = d
+				}
+			} else {
+				seen[d.AgentID] = len(deduped)
+				deduped = append(deduped, d)
+			}
+		}
+		if len(deduped) < len(s.Deployments) {
+			log.Printf("[DEDUP] cleaned %d duplicate deployments, %d remain", len(s.Deployments)-len(deduped), len(deduped))
+			s.Deployments = deduped
+		}
+		return nil
+	})
 }
 
 func dirExists(path string) bool {

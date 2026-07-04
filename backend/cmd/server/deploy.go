@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -18,6 +19,8 @@ func (app *App) createDeployment(req DeployRequest) (Deployment, error) {
 	if err != nil {
 		return Deployment{}, err
 	}
+	log.Printf("[DEPLOY] TARGET: repo=%s commit=%s agent=%s agent.model=%q agent.runtime=%q agent.apiToken=%q",
+		repo.ID, commit.Hash[:8], agent.ID, agent.Model, agent.Runtime, agent.APIToken)
 	if req.Runtime == "" {
 		req.Runtime = agent.Runtime
 	}
@@ -39,6 +42,9 @@ func (app *App) createDeployment(req DeployRequest) (Deployment, error) {
 	if !isSupportedRuntime(req.Runtime) {
 		return Deployment{}, fmt.Errorf("unsupported runtime %q", req.Runtime)
 	}
+
+	log.Printf("[DEPLOY] FINAL: model=%q runtime=%q runtimeVersion=%q skills=%v mcps=%v apiTokenId=%d",
+		req.Model, req.Runtime, req.RuntimeVersion, req.Skills, req.MCPs, req.APITokenID)
 
 	id := fmt.Sprintf("dep-%s-%d", slug(agent.ID), time.Now().Unix())
 	contextDir := filepath.Join(app.dataDir, "deployments", id, "context")
@@ -161,6 +167,7 @@ func (app *App) writeBuildContext(contextDir string, repo Repository, commit Com
 	if err != nil {
 		return err
 	}
+	log.Printf("[DEPLOY] CONFIG written: %s", string(raw))
 	if err := os.WriteFile(filepath.Join(contextDir, "agentbucket.config.json"), raw, 0o644); err != nil {
 		return err
 	}
