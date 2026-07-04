@@ -156,6 +156,18 @@ export default function DeployPage() {
     return map
   }, [agentList])
 
+  const tokenNameMap = useMemo(() => {
+    const map = {}
+    if (data?.aiTokens) for (const t of data.aiTokens) map[t.id] = t.name
+    return map
+  }, [data])
+
+  const agentDescMap = useMemo(() => {
+    const map = {}
+    for (const a of agentList) map[a.id] = a.description
+    return map
+  }, [agentList])
+
   // Periodic health check for running deployments
   useEffect(() => {
     const check = async () => {
@@ -692,7 +704,14 @@ export default function DeployPage() {
                     {(() => { const h = healthStatus[d.id]; const healthy = !h || h.ok; return <span className={`h-2.5 w-2.5 rounded-full ${healthy ? 'bg-emerald-400' : 'bg-red-400 animate-pulse'}`} title={healthy ? 'Healthy' : (h?.error || 'Unreachable')} /> })()}
                     <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{agentNameMap[d.agentId] || d.agentId}</span>
                   </div>
-                  <div className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">{d.runtime}</div>
+                  <div className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+                    {[d.model, tokenNameMap[d.apiTokenId], d.runtime, ...(d.skills || [])].filter(Boolean).join(' · ')}
+                  </div>
+                  {agentDescMap[d.agentId] && (
+                    <div className="mt-0.5 max-w-xs truncate text-xs text-slate-400 dark:text-slate-500">
+                      {agentDescMap[d.agentId]}
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={async () => { await stopDeployment(d.id); setDeployments((c) => c.map((x) => x.id === d.id ? { ...x, status: 'stopped' } : x)) }} className="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:hover:bg-slate-700 dark:bg-slate-900">{t('deploy.stop')}</button>
