@@ -18,7 +18,7 @@ export default function AgentCard({ agent }) {
   return (
     <Link
       to={`/agents/${agent.id}`}
-      className="group rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-md"
+      className="group rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-sky-200 dark:hover:border-sky-700 hover:shadow-md"
     >
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
@@ -41,7 +41,7 @@ export default function AgentCard({ agent }) {
       </div>
       <div className="mb-4 flex flex-wrap gap-2">
         {agent.tags.map((tag) => (
-          <span key={tag} className="rounded-full bg-sky-50 px-2.5 py-1 text-xs text-sky-700">
+          <span key={tag} className="rounded-full bg-sky-50 px-2.5 py-1 text-xs text-sky-700 dark:bg-sky-900/50 dark:text-sky-300">
             #{tag}
           </span>
         ))}

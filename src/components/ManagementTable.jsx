@@ -141,4 +141,4 @@ export function RowActions({ status, onEnable, onDisable, onDelete }) {
 export const tableHeadClass = 'bg-slate-50 dark:bg-slate-900 text-left text-slate-500 dark:text-slate-400'
 export const tableBodyClass = 'divide-y divide-slate-200 dark:divide-slate-700 text-slate-700 dark:text-slate-300'
 export const tableHeaderCellClass = 'whitespace-nowrap px-6 py-4 align-top'
-export const tableCellClass = 'px-6 py-4 align-top'
+export const tableCellClass = 'px-6 py-4 align-top dark:text-slate-300'

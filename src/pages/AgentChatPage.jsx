@@ -324,8 +324,8 @@ export default function AgentChatPage() {
                   onClick={() => setActiveSession(session.id)}
                   className={`group relative w-full rounded-xl px-3 py-2.5 pr-8 text-left transition ${
                     currentSessionId === session.id
-                      ? 'bg-white shadow-sm ring-1 ring-sky-200'
-                      : 'hover:bg-white'
+                      ? 'bg-white shadow-sm ring-1 ring-sky-200 dark:bg-slate-700 dark:ring-sky-800'
+                      : 'hover:bg-white dark:hover:bg-slate-700'
                   }`}
                 >
                   {editingSession === session.id ? (

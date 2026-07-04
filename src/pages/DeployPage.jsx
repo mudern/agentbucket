@@ -23,7 +23,7 @@ function CapabilityCard({ title, description, value, count, onOpen }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="text-sm font-semibold text-slate-950 dark:text-slate-50">{title}</div>
-          <div className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{description}</div>
+          <div className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400 dark:text-slate-400">{description}</div>
         </div>
         <span className="shrink-0 rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-[10px] font-medium text-slate-500 dark:text-slate-400">
           {count}
@@ -58,7 +58,7 @@ function CapabilityPickerModal({ open, title, mode, items, selected, onClose, on
               {multi ? t('common.selected_count').replace(/\{count\}/g, selectedCount) : t('deploy.single_mode')}
             </div>
           </div>
-          <button onClick={onClose} className="rounded-lg px-2 py-1 text-sm text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:text-slate-300">
+          <button onClick={onClose} className="rounded-lg px-2 py-1 text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:text-slate-300">
             {t('common.close')}
           </button>
         </div>
@@ -73,10 +73,10 @@ function CapabilityPickerModal({ open, title, mode, items, selected, onClose, on
             />
             {multi && (
               <div className="flex shrink-0 gap-2">
-                <button type="button" onClick={onSelectAll} className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900">
+                <button type="button" onClick={onSelectAll} className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:hover:bg-slate-700 dark:bg-slate-900">
                   {t('common.select_all')}
                 </button>
-                <button type="button" onClick={onClear} className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900">
+                <button type="button" onClick={onClear} className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:hover:bg-slate-700 dark:bg-slate-900">
                   {t('common.clear')}
                 </button>
               </div>
@@ -94,25 +94,25 @@ function CapabilityPickerModal({ open, title, mode, items, selected, onClose, on
                   type="button"
                   onClick={() => (multi ? onToggle(item.id) : onSelectOne(item.id))}
                   className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition ${
-                    checked ? 'border-sky-200 bg-sky-50' : 'border-slate-200 dark:border-slate-700 bg-white hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900'
+                    checked ? 'border-sky-200 bg-sky-50 dark:border-sky-800 dark:bg-sky-900/50' : 'border-slate-200 dark:border-slate-700 bg-white hover:bg-slate-50 dark:hover:bg-slate-700 dark:hover:bg-slate-700 dark:bg-slate-900'
                   }`}
                 >
                   <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold ${
-                    checked ? 'border-sky-600 bg-sky-600 text-white' : 'border-slate-300 dark:border-slate-600 bg-white text-transparent'
+                    checked ? 'border-sky-600 bg-sky-600 text-white dark:border-sky-400 dark:bg-sky-500' : 'border-slate-300 dark:border-slate-600 bg-white text-transparent'
                   }`}>
                     &#10003;
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium text-slate-900 dark:text-slate-100">{item.label}</span>
-                    {item.description && <span className="mt-1 block text-xs leading-5 text-slate-500 dark:text-slate-400">{item.description}</span>}
-                    {item.meta && <span className="mt-2 inline-flex rounded-full bg-white dark:bg-slate-800 px-2 py-0.5 text-[10px] text-slate-400 dark:text-slate-500 ring-1 ring-slate-200">{item.meta}</span>}
+                    {item.description && <span className="mt-1 block text-xs leading-5 text-slate-500 dark:text-slate-400 dark:text-slate-400">{item.description}</span>}
+                    {item.meta && <span className="mt-2 inline-flex rounded-full bg-white dark:bg-slate-800 px-2 py-0.5 text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-500 ring-1 ring-slate-200 dark:ring-slate-600">{item.meta}</span>}
                   </span>
                 </button>
               )
             })}
           </div>
           {filteredItems.length === 0 && (
-            <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-700 p-8 text-center text-sm text-slate-400 dark:text-slate-500">
+            <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-700 p-8 text-center text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500">
               {t('common.no_match')}
             </div>
           )}
@@ -352,12 +352,12 @@ export default function DeployPage() {
                 <button
                   onClick={() => setStep(index)}
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition ${
-                    index <= step ? 'bg-sky-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500'
+                    index <= step ? 'bg-sky-600 text-white dark:bg-sky-500' : 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500'
                   }`}
                 >
                   {index + 1}
                 </button>
-                <div className="hidden text-sm font-medium text-slate-700 dark:text-slate-300 md:block">{label}</div>
+                <div className="hidden text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300 md:block">{label}</div>
                 {index < stepLabels.length - 1 && <div className="h-px flex-1 bg-slate-200" />}
               </div>
             ))}
@@ -374,7 +374,7 @@ export default function DeployPage() {
                     key={repo.id}
                     onClick={() => selectRepository(repo.id)}
                     className={`rounded-xl border p-5 text-left transition ${
-                      selectedRepository?.id === repo.id ? 'border-sky-200 bg-sky-50' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900'
+                      selectedRepository?.id === repo.id ? 'border-sky-200 bg-sky-50 dark:border-sky-800 dark:bg-sky-900/50' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 dark:hover:bg-slate-700 dark:bg-slate-900'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-3">
@@ -416,7 +416,7 @@ export default function DeployPage() {
                       setCapabilityTouched({ skills: false, mcps: false })
                     }}
                     className={`w-full rounded-xl border p-4 text-left transition ${
-                      selectedCommit?.hash === commit.hash ? 'border-sky-200 bg-sky-50' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900'
+                      selectedCommit?.hash === commit.hash ? 'border-sky-200 bg-sky-50 dark:border-sky-800 dark:bg-sky-900/50' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 dark:hover:bg-slate-700 dark:bg-slate-900'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-3">
@@ -445,7 +445,7 @@ export default function DeployPage() {
                       key={agent.id}
                       onClick={() => selectAgent(agent.id)}
                       className={`rounded-xl border p-5 text-left transition ${
-                        selectedAgent?.id === agent.id ? 'border-sky-200 bg-sky-50' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900'
+                        selectedAgent?.id === agent.id ? 'border-sky-200 bg-sky-50 dark:border-sky-800 dark:bg-sky-900/50' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 dark:hover:bg-slate-700 dark:bg-slate-900'
                       }`}
                     >
                       <div className="text-base font-semibold text-slate-950 dark:text-slate-50">{agent.name}</div>
@@ -463,7 +463,7 @@ export default function DeployPage() {
               <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/70 p-5">
                 <div className="mb-4">
                   <div className="text-sm font-semibold text-slate-950 dark:text-slate-50">{t('deploy.runtime_config')}</div>
-                  <div className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{t('deploy.runtime_config_desc')}</div>
+                  <div className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400 dark:text-slate-400">{t('deploy.runtime_config_desc')}</div>
                 </div>
                 <div className="grid gap-4">
                   <div className="block text-sm text-slate-700 dark:text-slate-300">
@@ -484,7 +484,7 @@ export default function DeployPage() {
                         <option key={runtime}>{runtime}</option>
                       ))}
                     </select>
-                    <div className="mt-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                    <div className="mt-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs leading-5 text-slate-500 dark:text-slate-400 dark:text-slate-400">
                       {runtimeDescriptions[selectedRuntime] ?? t('deploy.runtime_hint_default')}
                     </div>
                   </label>
@@ -506,7 +506,7 @@ export default function DeployPage() {
               <div>
                 <div className="mb-4">
                   <div className="text-sm font-semibold text-slate-950 dark:text-slate-50">{t('deploy.capabilities')}</div>
-                  <div className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{t('deploy.capabilities_desc')}</div>
+                  <div className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400 dark:text-slate-400">{t('deploy.capabilities_desc')}</div>
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <CapabilityCard
@@ -609,7 +609,7 @@ export default function DeployPage() {
           <button
             onClick={() => setStep((current) => Math.max(current - 1, 0))}
             disabled={step === 0}
-            className="rounded-xl bg-slate-100 dark:bg-slate-700 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-xl bg-slate-100 dark:bg-slate-700 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {t('deploy.prev_step', '\u4e0a\u4e00\u6b65')}
           </button>
@@ -695,7 +695,7 @@ export default function DeployPage() {
                   <div className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">{d.runtime} ·{d.sidecarUrl}</div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={async () => { await stopDeployment(d.id); setDeployments((c) => c.map((x) => x.id === d.id ? { ...x, status: 'stopped' } : x)) }} className="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900">{t('deploy.stop')}</button>
+                  <button onClick={async () => { await stopDeployment(d.id); setDeployments((c) => c.map((x) => x.id === d.id ? { ...x, status: 'stopped' } : x)) }} className="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:hover:bg-slate-700 dark:bg-slate-900">{t('deploy.stop')}</button>
                   <button onClick={async () => { await deleteDeployment(d.id); setDeployments((c) => c.filter((x) => x.id !== d.id)) }} className="rounded-lg px-3 py-1 text-xs text-rose-600 hover:bg-rose-50">{t('deploy.delete_deployment')}</button>
                 </div>
               </div>
