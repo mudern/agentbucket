@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,6 +14,26 @@ func (app *App) scanRepositories(repos []Repository) []Repository {
 	scanned := make([]Repository, 0, len(repos))
 	for _, repo := range repos {
 		next := repo
+		// Auto-generate localPath for Remote repos that don't have one yet
+		if next.Provider != "Local" && next.LocalPath == "" && next.URL != "" {
+			next.LocalPath = filepath.Join(app.dataDir, "repos", slug(next.URL))
+		}
+		// Auto-clone Remote repos that haven't been cloned yet
+		if next.Provider != "Local" && next.URL != "" {
+			gitDir := filepath.Join(next.LocalPath, ".git")
+			if _, err := os.Stat(gitDir); os.IsNotExist(err) {
+				go func() {
+					os.MkdirAll(filepath.Dir(next.LocalPath), 0o755)
+					cmd := exec.Command("git", "clone", "-b", next.Branch, next.URL, next.LocalPath)
+					out, err := cmd.CombinedOutput()
+					if err != nil {
+						log.Printf("git clone failed for %s: %v - %s", next.ID, err, string(out))
+					} else {
+						log.Printf("git clone succeeded for %s", next.ID)
+					}
+				}()
+			}
+		}
 		next.Commits = scanCommits(repo)
 		if len(next.Commits) == 0 {
 			// No git history — create a synthetic commit from filesystem scan

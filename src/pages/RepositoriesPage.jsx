@@ -35,7 +35,7 @@ export default function RepositoriesPage() {
   const [bindBranch, setBindBranch] = useState('main')
   const [bindPath, setBindPath] = useState('agents')
   const [bindLocalPath, setBindLocalPath] = useState('')
-  const [bindProvider, setBindProvider] = useState('GitHub')
+  const [bindProvider, setBindProvider] = useState('Remote')
   const t = useT()
 
   const fetchRepos = async () => {
@@ -110,18 +110,31 @@ export default function RepositoriesPage() {
               <label className="block text-sm text-slate-700">
                 {t('repositories.provider')}
                 <select value={bindProvider} onChange={(e) => setBindProvider(e.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-sky-500">
-                  <option>GitHub</option><option>GitLab</option><option>Local</option>
+                  <option value="Remote">Remote (GitHub / GitLab / URL)</option>
+                  <option value="Local">Local</option>
                 </select>
               </label>
-              <label className="block text-sm text-slate-700">
-                {bindProvider === 'Local' ? t('repositories.local_path') : t('repositories.url')}
-                <input
-                  value={bindProvider === 'Local' ? bindLocalPath : bindUrl}
-                  onChange={(e) => bindProvider === 'Local' ? setBindLocalPath(e.target.value) : setBindUrl(e.target.value)}
-                  placeholder={bindProvider === 'Local' ? '/path/to/agent-repo' : 'https://github.com/org/repo'}
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-sky-500"
-                />
-              </label>
+              {bindProvider === 'Remote' ? (
+                <label className="block text-sm text-slate-700">
+                  {t('repositories.url')}
+                  <input
+                    value={bindUrl}
+                    onChange={(e) => setBindUrl(e.target.value)}
+                    placeholder="https://github.com/org/repo.git"
+                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-sky-500"
+                  />
+                </label>
+              ) : (
+                <label className="block text-sm text-slate-700">
+                  {t('repositories.local_path')}
+                  <input
+                    value={bindLocalPath}
+                    onChange={(e) => setBindLocalPath(e.target.value)}
+                    placeholder="/path/to/agent-repo"
+                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-sky-500"
+                  />
+                </label>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <label className="block text-sm text-slate-700">
                   {t('repositories.branch')}

@@ -305,16 +305,7 @@ func seedState(rootDir string) State {
 				LocalPath:  filepath.Join(rootDir, "examples", "agent-repo"),
 				Status:     "启用",
 			},
-			{
-				ID:         "github-test-agents",
-				Provider:   "GitHub",
-				URL:        "https://github.com/mudern/agentbucket-test-agents",
-				Branch:     "main",
-				AgentsPath: "agents",
-				LocalPath:  "/tmp/agentbucket-test-agents",
-				Status:     "启用",
 			},
-		},
 		AITokens: []AIToken{},
 		AuthTokens: []AuthToken{
 			{ID: 101, Name: "Test Public API", AccessTarget: "测试外部公开 API，所有已部署 Agent 可访问", Script: "tokens/test_public.py", FunctionName: "get_token", Argument: "scope", Status: "启用", UpdatedAt: "刚刚"},
