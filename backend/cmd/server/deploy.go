@@ -284,7 +284,7 @@ WORKDIR /src
 COPY sidecar/main.go .
 RUN go build -o /out/agentbucket-sidecar main.go
 
-FROM node:20-alpine
+FROM node:22-alpine
 RUN apk add --no-cache ca-certificates bash curl git
 ` + extraLine + installLine + `
 WORKDIR /app

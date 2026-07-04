@@ -5,7 +5,7 @@ RUN go mod download
 COPY backend/cmd/ ./cmd/
 RUN go build -o /out/agentbucket ./cmd/server/
 
-FROM node:20-alpine AS frontend-build
+FROM node:22-alpine AS frontend-build
 WORKDIR /src
 COPY package.json pnpm-lock.yaml ./
 RUN npm install -g pnpm && pnpm install --frozen-lockfile
