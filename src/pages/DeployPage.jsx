@@ -165,7 +165,7 @@ export default function DeployPage() {
       const status = {}
       await Promise.all(running.map(async (d) => {
         try {
-          const resp = await fetch(`${d.sidecarUrl}/health`, { signal: AbortSignal.timeout(5000) })
+          const resp = await fetch(`${d.sidecarUrl}/health`, { signal: (() => { const ac = new AbortController(); setTimeout(() => ac.abort(), 5000); return ac.signal })() })
           status[d.id] = resp.ok ? { ok: true } : { ok: false, error: `HTTP ${resp.status}` }
         } catch (e) {
           status[d.id] = { ok: false, error: e.message }

@@ -443,7 +443,7 @@ export default function AgentChatPage() {
                   }}
                   disabled={sending || !currentSessionId}
                   placeholder={currentSessionId ? t('chat.input_placeholder') : t('chat.empty_state')}
-                  className="w-full resize-none rounded-t-2xl bg-transparent px-4 pt-3 text-sm text-slate-900 dark:text-slate-100 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 dark:text-slate-500"
+                  className="w-full resize-none rounded-t-2xl bg-transparent px-4 pt-3 text-sm text-slate-900 dark:text-slate-100 dark:text-slate-100 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 dark:text-slate-500"
                 />
                 <div className="flex items-center justify-between rounded-b-2xl bg-slate-50 dark:bg-slate-900 px-4 py-2">
                   <div className="text-xs text-slate-400 dark:text-slate-500">
