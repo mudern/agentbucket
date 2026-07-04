@@ -180,6 +180,8 @@ const en = {
     last_sync: 'Last Sync',
     sync: 'Sync',
     no_repos: 'No repositories. Bind a repository containing agent definitions.',
+    url_required: 'Repository URL is required',
+    local_path_required: 'Local repository path is required',
     confirm_delete: 'Are you sure you want to delete this repository?',
     bind_form_title: 'Bind New Repository',
     edit_form_title: 'Edit Repository',

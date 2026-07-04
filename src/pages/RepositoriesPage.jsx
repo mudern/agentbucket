@@ -69,15 +69,22 @@ export default function RepositoriesPage() {
   }
 
   const handleBind = async () => {
-    if (!bindUrl || !bindLocalPath) {
-      setFormError(t('repositories.no_repos'))
+    if (!bindUrl) {
+      setFormError(t('repositories.url_required'))
+      return
+    }
+    const isRemote = bindProvider !== 'Local'
+    if (!isRemote && !bindLocalPath) {
+      setFormError(t('repositories.local_path_required'))
       return
     }
     setSaving(true)
     setFormError('')
     try {
       const id = bindUrl.replace(/^https?:\/\//, '').replace(/[\/.]/g, '-').slice(0, 40)
-      await createRepository({ id, provider: bindProvider, url: bindUrl, branch: bindBranch, agentsPath: bindPath, localPath: bindLocalPath, status: '启用' })
+      // Auto-generate localPath for remote repos — backend also sets a default
+      const localPath = isRemote ? '' : bindLocalPath
+      await createRepository({ id, provider: bindProvider, url: bindUrl, branch: bindBranch, agentsPath: bindPath, localPath, status: '启用' })
       setBindOpen(false)
       setBindUrl('')
       setBindLocalPath('')
@@ -107,12 +114,13 @@ export default function RepositoriesPage() {
                 </select>
               </label>
               <label className="block text-sm text-slate-700">
-                {t('repositories.url')}
-                <input value={bindUrl} onChange={(e) => setBindUrl(e.target.value)} placeholder="https://github.com/org/repo" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-sky-500" />
-              </label>
-              <label className="block text-sm text-slate-700">
-                {t('repositories.local_path')}
-                <input value={bindLocalPath} onChange={(e) => setBindLocalPath(e.target.value)} placeholder="/path/to/cloned/repo" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-sky-500" />
+                {bindProvider === 'Local' ? t('repositories.local_path') : t('repositories.url')}
+                <input
+                  value={bindProvider === 'Local' ? bindLocalPath : bindUrl}
+                  onChange={(e) => bindProvider === 'Local' ? setBindLocalPath(e.target.value) : setBindUrl(e.target.value)}
+                  placeholder={bindProvider === 'Local' ? '/path/to/agent-repo' : 'https://github.com/org/repo'}
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-sky-500"
+                />
               </label>
               <div className="grid grid-cols-2 gap-4">
                 <label className="block text-sm text-slate-700">

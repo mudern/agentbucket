@@ -251,7 +251,7 @@ func (app *App) startGitSyncer(interval time.Duration) {
 func (app *App) syncAllGitRepos() {
 	state := app.store.snapshot()
 	for _, repo := range state.Repositories {
-		if repo.Provider != "GitHub" {
+		if repo.Provider == "Local" {
 			continue
 		}
 		app.syncGitRepo(&repo)

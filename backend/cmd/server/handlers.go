@@ -456,7 +456,8 @@ func (app *App) repositories(w http.ResponseWriter, r *http.Request) {
 			repo.Status = "启用"
 		}
 		// Auto-clone for GitHub repositories
-		if repo.Provider == "GitHub" && repo.URL != "" {
+		// Auto-clone for remote repos (not Local): GitHub, GitLab, etc.
+		if repo.Provider != "Local" && repo.URL != "" {
 			if repo.LocalPath == "" {
 				repo.LocalPath = filepath.Join(app.dataDir, "repos", slug(repo.URL))
 			}

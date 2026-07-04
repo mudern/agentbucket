@@ -181,6 +181,8 @@ const zh = {
     last_sync: '最近同步',
     sync: '同步',
     no_repos: '暂无仓库。请绑定一个包含 Agent 定义的仓库。',
+    url_required: '请输入仓库地址',
+    local_path_required: '请输入本地仓库路径',
     confirm_delete: '确定要删除这个仓库吗？',
     bind_form_title: '绑定新仓库',
     edit_form_title: '编辑仓库',
