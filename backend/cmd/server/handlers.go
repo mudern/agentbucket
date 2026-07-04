@@ -671,6 +671,51 @@ func (app *App) deploymentStatus(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (app *App) deploymentRedeploy(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	state := app.store.snapshot()
+	var target *Deployment
+	for i := range state.Deployments {
+		if state.Deployments[i].ID == id {
+			target = &state.Deployments[i]
+			break
+		}
+	}
+	if target == nil {
+		writeError(w, http.StatusNotFound, fmt.Errorf("deployment not found"))
+		return
+	}
+	req := DeployRequest{
+		RepositoryID:   target.RepositoryID,
+		CommitHash:     target.CommitHash,
+		AgentID:        target.AgentID,
+		APITokenID:     target.APITokenID,
+		Model:          target.Model,
+		Runtime:        target.Runtime,
+		RuntimeVersion: target.RuntimeVersion,
+		Skills:         target.Skills,
+		MCPs:           target.MCPs,
+		AuthTokens:     target.AuthTokens,
+	}
+	deployment, err := app.createDeployment(req)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err)
+		return
+	}
+	// Replace old deployment
+	_ = app.store.update(func(s *State) error {
+		for i := range s.Deployments {
+			if s.Deployments[i].ID == id {
+				s.Deployments[i] = deployment
+				return nil
+			}
+		}
+		s.Deployments = append([]Deployment{deployment}, s.Deployments...)
+		return nil
+	})
+	writeJSON(w, http.StatusCreated, deployment)
+}
+
 func (app *App) deploymentStart(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	var target *Deployment

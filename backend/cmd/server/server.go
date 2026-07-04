@@ -107,6 +107,7 @@ func (app *App) routes() http.Handler {
 	mux.HandleFunc("GET /api/deployments/{id}", app.deploymentByID)
 	mux.HandleFunc("GET /api/deployments/{id}/status", app.deploymentStatus)
 	mux.HandleFunc("GET /api/deployments/stream", app.deploymentsStream)
+	mux.HandleFunc("POST /api/deployments/{id}/redeploy", app.deploymentRedeploy)
 	mux.HandleFunc("POST /api/deployments/{id}/start", app.deploymentStart)
 	mux.HandleFunc("POST /api/deployments/{id}/stop", app.deploymentStop)
 	mux.HandleFunc("DELETE /api/deployments/{id}", app.deploymentByID)

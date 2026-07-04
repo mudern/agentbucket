@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
+import ErrorBoundary from './components/ErrorBoundary'
 import Layout from './components/Layout'
 import AgentChatPage from './pages/AgentChatPage'
+import DashboardPage from './pages/DashboardPage'
 import AgentsPage from './pages/AgentsPage'
 import AiTokensPage from './pages/AiTokensPage'
 import ApprovalsPage from './pages/ApprovalsPage'
@@ -45,8 +47,10 @@ export default function App() {
         element={
           authenticated ? (
           <Layout onLogout={handleLogout}>
+            <ErrorBoundary>
             <Routes>
-              <Route path="/" element={<AgentsPage />} />
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/agents" element={<AgentsPage />} />
               <Route path="/deploy" element={<DeployPage />} />
               <Route path="/deploy/progress" element={<DeployProgressPage />} />
               <Route path="/agents/:agentId" element={<AgentChatPage />} />
@@ -57,6 +61,7 @@ export default function App() {
               <Route path="/auth-tokens" element={<AuthTokensPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+            </ErrorBoundary>
           </Layout>
           ) : (
             <Navigate to="/login" replace />

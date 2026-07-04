@@ -9,7 +9,7 @@ export const navGroups = [
     title: 'Agent',
     items: [
       { label: '部署 Agent', path: '/deploy', roles: ['admin', 'super_admin'] },
-      { label: '所有 Agent', path: '/', roles: ['user', 'admin', 'super_admin'] },
+      { label: '所有 Agent', path: '/agents', roles: ['user', 'admin', 'super_admin'] },
       { label: '部署进度', path: '/deploy/progress', roles: ['admin', 'super_admin', 'user'] },
     ],
   },

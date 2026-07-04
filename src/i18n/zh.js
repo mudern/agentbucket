@@ -1,5 +1,9 @@
 const zh = {
   common: {
+    dashboard: 'Dashboard',
+    dashboard_desc: 'AgentBucket 控制平面概览',
+    confirm_delete_title: '确认删除',
+    confirm_delete_msg: '此操作不可撤销，确定要继续吗？',
     back: '← 返回',
     cancel: '取消',
     close: '关闭',

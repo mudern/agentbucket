@@ -238,7 +238,7 @@ export default function AgentChatPage() {
     <div className="flex h-[calc(100vh-4rem)] min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
       <div className="flex h-14 shrink-0 items-center gap-3 border-b border-slate-200 dark:border-slate-700 px-4 sm:px-5">
         <Link
-          to="/"
+          to="/agents"
           className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 shadow-sm transition hover:border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900 hover:text-slate-700 dark:text-slate-300"
           aria-label={t('chat.back_to_agents')}
           title={t('chat.back_to_agents')}
