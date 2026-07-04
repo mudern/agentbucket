@@ -18,18 +18,18 @@ function CapabilityCard({ title, description, value, count, onOpen }) {
     <button
       type="button"
       onClick={onOpen}
-      className="rounded-xl border border-slate-200 bg-white p-4 text-left transition hover:border-sky-200 hover:bg-sky-50/40"
+      className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-left transition hover:border-sky-200 hover:bg-sky-50/40"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-sm font-semibold text-slate-950">{title}</div>
-          <div className="mt-1 text-xs leading-5 text-slate-500">{description}</div>
+          <div className="text-sm font-semibold text-slate-950 dark:text-slate-50">{title}</div>
+          <div className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{description}</div>
         </div>
-        <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500">
+        <span className="shrink-0 rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-[10px] font-medium text-slate-500 dark:text-slate-400">
           {count}
         </span>
       </div>
-      <div className="mt-4 truncate text-sm text-slate-700">{value}</div>
+      <div className="mt-4 truncate text-sm text-slate-700 dark:text-slate-300">{value}</div>
       <div className="mt-3 text-xs font-medium text-sky-700">{t('common.open_picker')}</div>
     </button>
   )
@@ -50,33 +50,33 @@ function CapabilityPickerModal({ open, title, mode, items, selected, onClose, on
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/30 px-4 py-8">
-      <div className="flex max-h-[82vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
-        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-5 py-4">
+      <div className="flex max-h-[82vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xl">
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 dark:border-slate-700 px-5 py-4">
           <div>
-            <div className="text-base font-semibold text-slate-950">{title}</div>
-            <div className="mt-1 text-xs text-slate-400">
+            <div className="text-base font-semibold text-slate-950 dark:text-slate-50">{title}</div>
+            <div className="mt-1 text-xs text-slate-400 dark:text-slate-500">
               {multi ? t('common.selected_count').replace(/\{count\}/g, selectedCount) : t('deploy.single_mode')}
             </div>
           </div>
-          <button onClick={onClose} className="rounded-lg px-2 py-1 text-sm text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+          <button onClick={onClose} className="rounded-lg px-2 py-1 text-sm text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:text-slate-300">
             {t('common.close')}
           </button>
         </div>
 
-        <div className="shrink-0 border-b border-slate-200 bg-slate-50/70 p-4">
+        <div className="shrink-0 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/70 p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder={t('deploy.search_placeholder')}
-              className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-sky-400"
+              className="min-w-0 flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 dark:text-slate-500 focus:border-sky-400"
             />
             {multi && (
               <div className="flex shrink-0 gap-2">
-                <button type="button" onClick={onSelectAll} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50">
+                <button type="button" onClick={onSelectAll} className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900">
                   {t('common.select_all')}
                 </button>
-                <button type="button" onClick={onClear} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50">
+                <button type="button" onClick={onClear} className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900">
                   {t('common.clear')}
                 </button>
               </div>
@@ -94,25 +94,25 @@ function CapabilityPickerModal({ open, title, mode, items, selected, onClose, on
                   type="button"
                   onClick={() => (multi ? onToggle(item.id) : onSelectOne(item.id))}
                   className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition ${
-                    checked ? 'border-sky-200 bg-sky-50' : 'border-slate-200 bg-white hover:bg-slate-50'
+                    checked ? 'border-sky-200 bg-sky-50' : 'border-slate-200 dark:border-slate-700 bg-white hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900'
                   }`}
                 >
                   <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold ${
-                    checked ? 'border-sky-600 bg-sky-600 text-white' : 'border-slate-300 bg-white text-transparent'
+                    checked ? 'border-sky-600 bg-sky-600 text-white' : 'border-slate-300 dark:border-slate-600 bg-white text-transparent'
                   }`}>
                     &#10003;
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium text-slate-900">{item.label}</span>
-                    {item.description && <span className="mt-1 block text-xs leading-5 text-slate-500">{item.description}</span>}
-                    {item.meta && <span className="mt-2 inline-flex rounded-full bg-white px-2 py-0.5 text-[10px] text-slate-400 ring-1 ring-slate-200">{item.meta}</span>}
+                    <span className="block truncate text-sm font-medium text-slate-900 dark:text-slate-100">{item.label}</span>
+                    {item.description && <span className="mt-1 block text-xs leading-5 text-slate-500 dark:text-slate-400">{item.description}</span>}
+                    {item.meta && <span className="mt-2 inline-flex rounded-full bg-white dark:bg-slate-800 px-2 py-0.5 text-[10px] text-slate-400 dark:text-slate-500 ring-1 ring-slate-200">{item.meta}</span>}
                   </span>
                 </button>
               )
             })}
           </div>
           {filteredItems.length === 0 && (
-            <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-400">
+            <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-700 p-8 text-center text-sm text-slate-400 dark:text-slate-500">
               {t('common.no_match')}
             </div>
           )}
@@ -344,20 +344,20 @@ export default function DeployPage() {
     <div>
       <PageHeader title={t('deploy.title')} description={t('deploy.select_repo')} />
 
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 px-6 py-5">
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
+        <div className="border-b border-slate-200 dark:border-slate-700 px-6 py-5">
           <div className="flex items-center gap-3">
             {stepLabels.map((label, index) => (
               <div key={label} className="flex flex-1 items-center gap-3">
                 <button
                   onClick={() => setStep(index)}
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition ${
-                    index <= step ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-400'
+                    index <= step ? 'bg-sky-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500'
                   }`}
                 >
                   {index + 1}
                 </button>
-                <div className="hidden text-sm font-medium text-slate-700 md:block">{label}</div>
+                <div className="hidden text-sm font-medium text-slate-700 dark:text-slate-300 md:block">{label}</div>
                 {index < stepLabels.length - 1 && <div className="h-px flex-1 bg-slate-200" />}
               </div>
             ))}
@@ -367,21 +367,21 @@ export default function DeployPage() {
         <div className="min-h-[460px] p-6">
           {step === 0 && (
             <div>
-              <div className="mb-4 text-sm font-medium text-slate-950">{t('deploy.no_repos', '\u4ece\u4ed3\u5e93\u7ba1\u7406\u4e2d\u9009\u62e9\u5df2\u7ed1\u5b9a\u4ed3\u5e93')}</div>
+              <div className="mb-4 text-sm font-medium text-slate-950 dark:text-slate-50">{t('deploy.no_repos', '\u4ece\u4ed3\u5e93\u7ba1\u7406\u4e2d\u9009\u62e9\u5df2\u7ed1\u5b9a\u4ed3\u5e93')}</div>
               <div className="grid gap-4 xl:grid-cols-2">
                 {repositories.map((repo) => (
                   <button
                     key={repo.id}
                     onClick={() => selectRepository(repo.id)}
                     className={`rounded-xl border p-5 text-left transition ${
-                      selectedRepository?.id === repo.id ? 'border-sky-200 bg-sky-50' : 'border-slate-200 hover:bg-slate-50'
+                      selectedRepository?.id === repo.id ? 'border-sky-200 bg-sky-50' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <div className="font-medium text-slate-950">{(() => { const u = repo.url || ''; if (repo.provider === 'Local') return u.replace(/^file:\/\/\/?/, ''); const sm = u.match(/^git@([^:]+):(.+?)(?:\.git)?$/); if (sm) return sm[2]; const m = u.match(/\/([^\/]+\/[^\/]+?)(?:\.git)?$/); return m ? m[1] : u.replace(/^https?:\/\//, '') })()}</div>
-                      <span className="rounded-full bg-white px-2.5 py-1 text-xs text-slate-500">{repo.provider}</span>
+                      <div className="font-medium text-slate-950 dark:text-slate-50">{(() => { const u = repo.url || ''; if (repo.provider === 'Local') return u.replace(/^file:\/\/\/?/, ''); const sm = u.match(/^git@([^:]+):(.+?)(?:\.git)?$/); if (sm) return sm[2]; const m = u.match(/\/([^\/]+\/[^\/]+?)(?:\.git)?$/); return m ? m[1] : u.replace(/^https?:\/\//, '') })()}</div>
+                      <span className="rounded-full bg-white dark:bg-slate-800 px-2.5 py-1 text-xs text-slate-500 dark:text-slate-400">{repo.provider}</span>
                     </div>
-                    <div className="mt-3 grid gap-2 text-xs text-slate-500 sm:grid-cols-3">
+                    <div className="mt-3 grid gap-2 text-xs text-slate-500 dark:text-slate-400 sm:grid-cols-3">
                       <div>{'\u9ed8\u8ba4\u5206\u652f\uff1a'}{repo.branch}</div>
                       <div>{'Agent \u76ee\u5f55\uff1a'}{repo.agentsPath}</div>
                       <div>{'Commits\uff1a'}{(repo.commits || []).length}</div>
@@ -390,7 +390,7 @@ export default function DeployPage() {
                 ))}
               </div>
               {repositories.length === 0 && (
-                <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
+                <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 p-6 text-sm text-slate-500 dark:text-slate-400">
                   {t('deploy.no_repos')}
                 </div>
               )}
@@ -399,7 +399,7 @@ export default function DeployPage() {
 
           {step === 1 && (
             <div>
-              <div className="mb-4 text-sm font-medium text-slate-950">{t('deploy.select_commit')}</div>
+              <div className="mb-4 text-sm font-medium text-slate-950 dark:text-slate-50">{t('deploy.select_commit')}</div>
               <div className="space-y-3">
                 {commits.map((commit) => (
                   <button
@@ -416,15 +416,15 @@ export default function DeployPage() {
                       setCapabilityTouched({ skills: false, mcps: false })
                     }}
                     className={`w-full rounded-xl border p-4 text-left transition ${
-                      selectedCommit?.hash === commit.hash ? 'border-sky-200 bg-sky-50' : 'border-slate-200 hover:bg-slate-50'
+                      selectedCommit?.hash === commit.hash ? 'border-sky-200 bg-sky-50' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <div className="font-mono text-sm font-semibold text-slate-950">{commit.hash.slice(0, 8)}</div>
-                      <div className="text-xs text-slate-400">{commit.committedAt}</div>
+                      <div className="font-mono text-sm font-semibold text-slate-950 dark:text-slate-50">{commit.hash.slice(0, 8)}</div>
+                      <div className="text-xs text-slate-400 dark:text-slate-500">{commit.committedAt}</div>
                     </div>
-                    <div className="mt-2 text-sm text-slate-600">{commit.message}</div>
-                    <div className="mt-2 text-xs text-slate-400">{'\u53d1\u73b0 '}{(commit.agents || []).length}{' \u4e2a Agent'}</div>
+                    <div className="mt-2 text-sm text-slate-600 dark:text-slate-400">{commit.message}</div>
+                    <div className="mt-2 text-xs text-slate-400 dark:text-slate-500">{'\u53d1\u73b0 '}{(commit.agents || []).length}{' \u4e2a Agent'}</div>
                   </button>
                 ))}
               </div>
@@ -433,9 +433,9 @@ export default function DeployPage() {
 
           {step === 2 && (
             <div>
-              <div className="mb-4 text-sm font-medium text-slate-950">{t('deploy.select_agent', '\u4ed3\u5e93\u5185\u53d1\u73b0\u7684 Agent')}</div>
+              <div className="mb-4 text-sm font-medium text-slate-950 dark:text-slate-50">{t('deploy.select_agent', '\u4ed3\u5e93\u5185\u53d1\u73b0\u7684 Agent')}</div>
               {agents.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center text-sm text-slate-500">
+                <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 p-10 text-center text-sm text-slate-500 dark:text-slate-400">
                   {t('deploy.no_agents_in_commit', '\u6b64 commit \u4e2d\u672a\u627e\u5230 Agent \u5b9a\u4e49\u3002\u8bf7\u786e\u8ba4\u4ed3\u5e93\u4e2d\u5305\u542b agents/ \u76ee\u5f55\u548c agent.toml \u6587\u4ef6\u3002')}
                 </div>
               ) : (
@@ -445,12 +445,12 @@ export default function DeployPage() {
                       key={agent.id}
                       onClick={() => selectAgent(agent.id)}
                       className={`rounded-xl border p-5 text-left transition ${
-                        selectedAgent?.id === agent.id ? 'border-sky-200 bg-sky-50' : 'border-slate-200 hover:bg-slate-50'
+                        selectedAgent?.id === agent.id ? 'border-sky-200 bg-sky-50' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900'
                       }`}
                     >
-                      <div className="text-base font-semibold text-slate-950">{agent.name}</div>
-                      <div className="mt-2 text-sm leading-6 text-slate-600">{agent.description}</div>
-                      <div className="mt-4 text-xs text-slate-400">{agent.path}</div>
+                      <div className="text-base font-semibold text-slate-950 dark:text-slate-50">{agent.name}</div>
+                      <div className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">{agent.description}</div>
+                      <div className="mt-4 text-xs text-slate-400 dark:text-slate-500">{agent.path}</div>
                     </button>
                   ))}
                 </div>
@@ -460,40 +460,40 @@ export default function DeployPage() {
 
           {step === 3 && selectedAgent && (
             <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/70 p-5">
                 <div className="mb-4">
-                  <div className="text-sm font-semibold text-slate-950">{t('deploy.runtime_config')}</div>
-                  <div className="mt-1 text-xs leading-5 text-slate-500">{t('deploy.runtime_config_desc')}</div>
+                  <div className="text-sm font-semibold text-slate-950 dark:text-slate-50">{t('deploy.runtime_config')}</div>
+                  <div className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{t('deploy.runtime_config_desc')}</div>
                 </div>
                 <div className="grid gap-4">
-                  <div className="block text-sm text-slate-700">
+                  <div className="block text-sm text-slate-700 dark:text-slate-300">
                     <div className="mb-1">{t('deploy.model')}</div>
-                    <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                      <span className="text-sm font-medium text-slate-900">{selectedModel || t('common.not_selected')}</span>
-                      <span className="text-xs text-slate-400">— {t('deploy.model_from_token', '由 API Token 决定')}</span>
+                    <div className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 py-3">
+                      <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{selectedModel || t('common.not_selected')}</span>
+                      <span className="text-xs text-slate-400 dark:text-slate-500">— {t('deploy.model_from_token', '由 API Token 决定')}</span>
                     </div>
                   </div>
-                  <label className="block text-sm text-slate-700">
+                  <label className="block text-sm text-slate-700 dark:text-slate-300">
                     {t('deploy.runtime')}
                     <select
                       value={selectedRuntime}
                       onChange={(event) => updateForm('runtime', event.target.value)}
-                      className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-sky-500"
+                      className="mt-2 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-slate-900 dark:text-slate-100 outline-none focus:border-sky-500"
                     >
                       {data.runtimes.map((runtime) => (
                         <option key={runtime}>{runtime}</option>
                       ))}
                     </select>
-                    <div className="mt-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs leading-5 text-slate-500">
+                    <div className="mt-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
                       {runtimeDescriptions[selectedRuntime] ?? t('deploy.runtime_hint_default')}
                     </div>
                   </label>
-                  <label className="block text-sm text-slate-700">
+                  <label className="block text-sm text-slate-700 dark:text-slate-300">
                     {t('deploy.runtime_version')}
                     <select
                       value={selectedRuntimeVersion}
                       onChange={(event) => updateForm('runtimeVersion', event.target.value)}
-                      className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-sky-500"
+                      className="mt-2 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-slate-900 dark:text-slate-100 outline-none focus:border-sky-500"
                     >
                       {(data.runtimeTags ?? ['latest']).map((version) => (
                         <option key={version}>{version}</option>
@@ -505,8 +505,8 @@ export default function DeployPage() {
 
               <div>
                 <div className="mb-4">
-                  <div className="text-sm font-semibold text-slate-950">{t('deploy.capabilities')}</div>
-                  <div className="mt-1 text-xs leading-5 text-slate-500">{t('deploy.capabilities_desc')}</div>
+                  <div className="text-sm font-semibold text-slate-950 dark:text-slate-50">{t('deploy.capabilities')}</div>
+                  <div className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{t('deploy.capabilities_desc')}</div>
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <CapabilityCard
@@ -543,52 +543,52 @@ export default function DeployPage() {
           )}
 
           {step === 4 && (
-            <div className="max-w-4xl rounded-2xl border border-slate-200 bg-slate-50 p-5">
-              <div className="mb-4 text-sm font-semibold text-slate-950">{t('deploy.review_and_deploy')}</div>
+            <div className="max-w-4xl rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-5">
+              <div className="mb-4 text-sm font-semibold text-slate-950 dark:text-slate-50">{t('deploy.review_and_deploy')}</div>
               <dl className="grid gap-4 text-sm md:grid-cols-2">
                 <div>
-                  <dt className="text-slate-400">{t('deploy.repo_label', '\u4ed3\u5e93')}</dt>
-                  <dd className="mt-1 text-slate-900">{selectedRepository?.url}</dd>
+                  <dt className="text-slate-400 dark:text-slate-500">{t('deploy.repo_label', '\u4ed3\u5e93')}</dt>
+                  <dd className="mt-1 text-slate-900 dark:text-slate-100">{selectedRepository?.url}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-400">{'\u5206\u652f'}</dt>
-                  <dd className="mt-1 text-slate-900">{selectedRepository?.branch}</dd>
+                  <dt className="text-slate-400 dark:text-slate-500">{'\u5206\u652f'}</dt>
+                  <dd className="mt-1 text-slate-900 dark:text-slate-100">{selectedRepository?.branch}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-400">{t('deploy.commit_label', 'Commit')}</dt>
-                  <dd className="mt-1 font-mono text-slate-900">{(selectedCommit?.hash || '').slice(0, 8)}</dd>
+                  <dt className="text-slate-400 dark:text-slate-500">{t('deploy.commit_label', 'Commit')}</dt>
+                  <dd className="mt-1 font-mono text-slate-900 dark:text-slate-100">{(selectedCommit?.hash || '').slice(0, 8)}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-400">{t('deploy.agent', 'Agent')}</dt>
-                  <dd className="mt-1 text-slate-900">{selectedAgent?.name}</dd>
+                  <dt className="text-slate-400 dark:text-slate-500">{t('deploy.agent', 'Agent')}</dt>
+                  <dd className="mt-1 text-slate-900 dark:text-slate-100">{selectedAgent?.name}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-400">{t('deploy.api_token')}</dt>
-                  <dd className="mt-1 text-slate-900">{selectedApiToken?.name}</dd>
+                  <dt className="text-slate-400 dark:text-slate-500">{t('deploy.api_token')}</dt>
+                  <dd className="mt-1 text-slate-900 dark:text-slate-100">{selectedApiToken?.name}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-400">{t('deploy.model')}</dt>
-                  <dd className="mt-1 text-slate-900">{selectedModel}</dd>
+                  <dt className="text-slate-400 dark:text-slate-500">{t('deploy.model')}</dt>
+                  <dd className="mt-1 text-slate-900 dark:text-slate-100">{selectedModel}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-400">{t('deploy.runtime')}</dt>
-                  <dd className="mt-1 text-slate-900">{selectedRuntime}:{selectedRuntimeVersion}</dd>
+                  <dt className="text-slate-400 dark:text-slate-500">{t('deploy.runtime')}</dt>
+                  <dd className="mt-1 text-slate-900 dark:text-slate-100">{selectedRuntime}:{selectedRuntimeVersion}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-400">{'\u58f0\u660e\u6587\u4ef6'}</dt>
-                  <dd className="mt-1 text-slate-900">{selectedAgent?.path}</dd>
+                  <dt className="text-slate-400 dark:text-slate-500">{'\u58f0\u660e\u6587\u4ef6'}</dt>
+                  <dd className="mt-1 text-slate-900 dark:text-slate-100">{selectedAgent?.path}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-400">{t('deploy.skill')}</dt>
-                  <dd className="mt-1 text-slate-900">{selectedSkills.join('、') || t('common.not_selected')}</dd>
+                  <dt className="text-slate-400 dark:text-slate-500">{t('deploy.skill')}</dt>
+                  <dd className="mt-1 text-slate-900 dark:text-slate-100">{selectedSkills.join('、') || t('common.not_selected')}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-400">{t('deploy.mcp')}</dt>
-                  <dd className="mt-1 text-slate-900">{selectedMcps.join('、') || t('common.not_selected')}</dd>
+                  <dt className="text-slate-400 dark:text-slate-500">{t('deploy.mcp')}</dt>
+                  <dd className="mt-1 text-slate-900 dark:text-slate-100">{selectedMcps.join('、') || t('common.not_selected')}</dd>
                 </div>
                 <div className="md:col-span-2">
-                  <dt className="text-slate-400">{t('deploy.auth_token')}</dt>
-                  <dd className="mt-1 text-slate-900">{selectedTokenNames.join('、') || t('common.not_selected')}</dd>
+                  <dt className="text-slate-400 dark:text-slate-500">{t('deploy.auth_token')}</dt>
+                  <dd className="mt-1 text-slate-900 dark:text-slate-100">{selectedTokenNames.join('、') || t('common.not_selected')}</dd>
                 </div>
               </dl>
               {deployResult && (
@@ -605,11 +605,11 @@ export default function DeployPage() {
           )}
         </div>
 
-        <div className="flex items-center justify-between border-t border-slate-200 px-6 py-4">
+        <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-700 px-6 py-4">
           <button
             onClick={() => setStep((current) => Math.max(current - 1, 0))}
             disabled={step === 0}
-            className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-xl bg-slate-100 dark:bg-slate-700 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {t('deploy.prev_step', '\u4e0a\u4e00\u6b65')}
           </button>
@@ -680,22 +680,22 @@ export default function DeployPage() {
       />
 
       {deployments.filter((d) => d.status === 'running').length > 0 && (
-        <div className="mt-8 rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 px-6 py-4">
-            <h2 className="text-lg font-semibold text-slate-900">{t('deploy.running_deployments')}</h2>
+        <div className="mt-8 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
+          <div className="border-b border-slate-200 dark:border-slate-700 px-6 py-4">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t('deploy.running_deployments')}</h2>
           </div>
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-slate-100 dark:divide-slate-700">
             {deployments.filter((d) => d.status === 'running').map((d) => (
               <div key={d.id} className="flex items-center justify-between px-6 py-4">
                 <div>
                   <div className="flex items-center gap-2">
                     {(() => { const h = healthStatus[d.id]; const healthy = !h || h.ok; return <span className={`h-2.5 w-2.5 rounded-full ${healthy ? 'bg-emerald-400' : 'bg-red-400 animate-pulse'}`} title={healthy ? 'Healthy' : (h?.error || 'Unreachable')} /> })()}
-                    <span className="text-sm font-medium text-slate-900">{agentNameMap[d.agentId] || d.agentId}</span>
+                    <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{agentNameMap[d.agentId] || d.agentId}</span>
                   </div>
-                  <div className="mt-0.5 text-xs text-slate-400">{d.runtime} ·{d.sidecarUrl}</div>
+                  <div className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">{d.runtime} ·{d.sidecarUrl}</div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={async () => { await stopDeployment(d.id); setDeployments((c) => c.map((x) => x.id === d.id ? { ...x, status: 'stopped' } : x)) }} className="rounded-lg border border-slate-200 px-3 py-1 text-xs text-slate-600 hover:bg-slate-50">{t('deploy.stop')}</button>
+                  <button onClick={async () => { await stopDeployment(d.id); setDeployments((c) => c.map((x) => x.id === d.id ? { ...x, status: 'stopped' } : x)) }} className="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900">{t('deploy.stop')}</button>
                   <button onClick={async () => { await deleteDeployment(d.id); setDeployments((c) => c.filter((x) => x.id !== d.id)) }} className="rounded-lg px-3 py-1 text-xs text-rose-600 hover:bg-rose-50">{t('deploy.delete_deployment')}</button>
                 </div>
               </div>

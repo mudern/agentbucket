@@ -45,8 +45,8 @@ export default function ApprovalsPage() {
   return (
     <div>
       <PageHeader title={t('approvals.title')} description={t('approvals.pending_requests')} />
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 px-5 pt-4">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
+        <div className="border-b border-slate-200 dark:border-slate-700 px-5 pt-4">
           <div className="flex gap-2">
             {[
               ['pending', t('approvals.status_pending')],
@@ -56,7 +56,7 @@ export default function ApprovalsPage() {
                 key={value}
                 onClick={() => setTab(value)}
                 className={`rounded-t-xl px-4 py-2 text-sm font-medium transition ${
-                  tab === value ? 'bg-sky-50 text-sky-700' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                  tab === value ? 'bg-sky-50 text-sky-700' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900 hover:text-slate-900 dark:text-slate-100'
                 }`}
               >
                 {label}
@@ -65,8 +65,8 @@ export default function ApprovalsPage() {
           </div>
         </div>
 
-        <table className="min-w-full divide-y divide-slate-200 text-sm">
-          <thead className="bg-slate-50 text-left text-slate-500">
+        <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700 text-sm">
+          <thead className="bg-slate-50 dark:bg-slate-900 text-left text-slate-500 dark:text-slate-400">
             <tr>
               <th className="px-6 py-4">{t('common.type')}</th>
               <th className="px-6 py-4">{t('approvals.requester')}</th>
@@ -75,10 +75,10 @@ export default function ApprovalsPage() {
               <th className="px-6 py-4">{t('common.actions')}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200 text-slate-700">
+          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-slate-700 dark:text-slate-300">
             {filteredApprovals.map((item) => (
               <tr key={item.id}>
-                <td className="px-6 py-4 font-medium text-slate-950">{item.type}</td>
+                <td className="px-6 py-4 font-medium text-slate-950 dark:text-slate-50">{item.type}</td>
                 <td className="px-6 py-4">{item.applicant}</td>
                 <td className="max-w-xl px-6 py-4 leading-6">{item.summary}</td>
                 <td className="px-6 py-4">
@@ -101,20 +101,20 @@ export default function ApprovalsPage() {
                       <button
                         onClick={() => handleAction(item.id, 'reject')}
                         disabled={acting === item.id}
-                        className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-200 disabled:opacity-50"
+                        className="rounded-lg bg-slate-100 dark:bg-slate-700 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200 disabled:opacity-50"
                       >
                         {t('approvals.reject')}
                       </button>
                     </div>
                   ) : (
-                    <span className="text-slate-500">{item.reviewer || '-'}</span>
+                    <span className="text-slate-500 dark:text-slate-400">{item.reviewer || '-'}</span>
                   )}
                 </td>
               </tr>
             ))}
             {filteredApprovals.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-slate-400">{t('approvals.no_approvals')}</td>
+                <td colSpan={5} className="px-6 py-12 text-center text-slate-400 dark:text-slate-500">{t('approvals.no_approvals')}</td>
               </tr>
             )}
           </tbody>

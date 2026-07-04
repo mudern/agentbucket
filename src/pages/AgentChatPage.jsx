@@ -36,12 +36,12 @@ function MessageBubble({ message, onSelectOption, formatTime, t }) {
           <div className={`overflow-hidden rounded-2xl px-4 py-3 text-sm leading-7 ${
             message.role === 'user'
               ? 'bg-sky-600 text-white'
-              : 'border border-slate-200 bg-white text-slate-700 shadow-sm'
+              : 'border border-slate-200 dark:border-slate-700 bg-white text-slate-700 dark:text-slate-300 shadow-sm'
           }`}>
             <div className={`prose prose-sm max-w-none break-words prose-pre:max-w-[calc(75vw-6rem)] prose-pre:overflow-x-auto prose-img:max-w-full ${
               message.role === 'user'
                 ? 'prose-invert'
-                : 'prose-slate prose-headings:text-slate-900'
+                : 'prose-slate prose-headings:text-slate-900 dark:text-slate-100'
             }`}>
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
@@ -61,7 +61,7 @@ function MessageBubble({ message, onSelectOption, formatTime, t }) {
                 <button
                   key={idx}
                   onClick={() => onSelectOption?.(opt)}
-                  className="rounded-xl border-2 border-sky-300 bg-white px-5 py-2 text-sm font-medium text-sky-700 shadow-sm transition hover:bg-sky-600 hover:text-white hover:border-sky-600"
+                  className="rounded-xl border-2 border-sky-300 bg-white dark:bg-slate-800 px-5 py-2 text-sm font-medium text-sky-700 shadow-sm transition hover:bg-sky-600 hover:text-white hover:border-sky-600"
                 >
                   {opt}
                 </button>
@@ -70,7 +70,7 @@ function MessageBubble({ message, onSelectOption, formatTime, t }) {
           </div>
         )}
 
-        <div className={`mt-1 text-[10px] text-slate-400 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
+        <div className={`mt-1 text-[10px] text-slate-400 dark:text-slate-500 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
           {formatTime(message.createdAt)}
         </div>
       </div>
@@ -235,11 +235,11 @@ export default function AgentChatPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex h-14 shrink-0 items-center gap-3 border-b border-slate-200 px-4 sm:px-5">
+    <div className="flex h-[calc(100vh-4rem)] min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
+      <div className="flex h-14 shrink-0 items-center gap-3 border-b border-slate-200 dark:border-slate-700 px-4 sm:px-5">
         <Link
           to="/"
-          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700"
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 shadow-sm transition hover:border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900 hover:text-slate-700 dark:text-slate-300"
           aria-label={t('chat.back_to_agents')}
           title={t('chat.back_to_agents')}
         >
@@ -249,27 +249,27 @@ export default function AgentChatPage() {
         </Link>
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-2">
-            <h1 className="truncate text-sm font-semibold text-slate-950 sm:text-base">{agent.name}</h1>
+            <h1 className="truncate text-sm font-semibold text-slate-950 dark:text-slate-50 sm:text-base">{agent.name}</h1>
             <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
               agent.status === '已部署' ? 'bg-emerald-50 text-emerald-700'
-              : agent.status === t('chat.status_offline') ? 'bg-slate-100 text-slate-500'
+              : agent.status === t('chat.status_offline') ? 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
               : 'bg-emerald-50 text-emerald-700'
             }`}>
               {agent.status}
             </span>
           </div>
-          <div className="mt-0.5 truncate text-xs text-slate-400 sm:hidden">
+          <div className="mt-0.5 truncate text-xs text-slate-400 dark:text-slate-500 sm:hidden">
             {currentSession?.title ?? t('chat.no_session', '未选择会话')} · {agent.model}
           </div>
-          <div className="mt-0.5 hidden truncate text-xs text-slate-400 sm:block">
+          <div className="mt-0.5 hidden truncate text-xs text-slate-400 dark:text-slate-500 sm:block">
             {currentSession?.title ?? t('chat.no_session', '未选择会话')}
           </div>
         </div>
         <div className="hidden shrink-0 items-center gap-2 md:flex">
-          <span className="max-w-44 truncate rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-500">
+          <span className="max-w-44 truncate rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-2.5 py-1 text-xs text-slate-500 dark:text-slate-400">
             {agent.model}
           </span>
-          <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-500">
+          <span className="rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-2.5 py-1 text-xs text-slate-500 dark:text-slate-400">
             {agent.runtime}
           </span>
         </div>
@@ -279,7 +279,7 @@ export default function AgentChatPage() {
         <button
           type="button"
           onClick={() => setSessionsOpen((open) => !open)}
-          className={`absolute z-20 hidden h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700 xl:flex ${
+          className={`absolute z-20 hidden h-7 w-7 items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-white text-slate-400 dark:text-slate-500 shadow-sm transition-all duration-200 hover:border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900 hover:text-slate-700 dark:text-slate-300 xl:flex ${
             sessionsOpen ? 'left-[17.25rem] top-16' : 'left-4 top-4'
           }`}
           aria-label={sessionsOpen ? t('chat.collapse_sessions', '收起会话栏') : t('chat.expand_sessions', '展开会话栏')}
@@ -290,11 +290,11 @@ export default function AgentChatPage() {
           </svg>
         </button>
         {sessionsOpen && (
-          <aside className="hidden w-72 shrink-0 flex-col border-r border-slate-200 bg-slate-50/80 xl:flex">
-            <div className="shrink-0 border-b border-slate-200 px-3 pb-3 pt-3">
+          <aside className="hidden w-72 shrink-0 flex-col border-r border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/80 xl:flex">
+            <div className="shrink-0 border-b border-slate-200 dark:border-slate-700 px-3 pb-3 pt-3">
               <div className="mb-2 flex items-center justify-between px-1">
-                <div className="text-xs font-semibold text-slate-500">{t('chat.sessions', '会话')}</div>
-                <div className="text-[10px] text-slate-400">{sessions.length} 个</div>
+                <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">{t('chat.sessions', '会话')}</div>
+                <div className="text-[10px] text-slate-400 dark:text-slate-500">{sessions.length} 个</div>
               </div>
               <div className="flex gap-1.5">
                 <input
@@ -303,7 +303,7 @@ export default function AgentChatPage() {
                   onChange={(e) => setNewTitle(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') handleCreateSession() }}
                   placeholder={t('chat.new_session')}
-                  className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-sky-400"
+                  className="min-w-0 flex-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 dark:text-slate-500 focus:border-sky-400"
                 />
                 <button
                   onClick={handleCreateSession}
@@ -330,7 +330,7 @@ export default function AgentChatPage() {
                 >
                   {editingSession === session.id ? (
                     <input
-                      className="w-full rounded border border-sky-300 bg-white px-2 py-1 text-sm text-slate-900 outline-none"
+                      className="w-full rounded border border-sky-300 bg-white dark:bg-slate-800 px-2 py-1 text-sm text-slate-900 dark:text-slate-100 outline-none"
                       value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter') handleRenameSession(session.id, editTitle); if (e.key === 'Escape') setEditingSession(null) }}
@@ -341,20 +341,20 @@ export default function AgentChatPage() {
                   ) : (
                     <div
                       className={`truncate text-sm font-medium cursor-pointer ${
-                        currentSessionId === session.id ? 'text-sky-900' : 'text-slate-700'
+                        currentSessionId === session.id ? 'text-sky-900' : 'text-slate-700 dark:text-slate-300'
                       }`}
                       onDoubleClick={(e) => { e.stopPropagation(); setEditingSession(session.id); setEditTitle(session.title) }}
                     >
                       {session.title}
                     </div>
                   )}
-                  <div className="mt-1 flex min-w-0 items-center gap-2 text-xs text-slate-400">
+                  <div className="mt-1 flex min-w-0 items-center gap-2 text-xs text-slate-400 dark:text-slate-500">
                     {session.preview && <span className="truncate">{session.preview}</span>}
                     {session.updatedAt && <span className="ml-auto shrink-0">{fmtTime(session.updatedAt)}</span>}
                   </div>
                   <button
                     onClick={(e) => handleDeleteSession(e, session.id, session.title)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-300 opacity-0 transition hover:text-red-500 group-hover:opacity-100"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-300 dark:text-slate-600 opacity-0 transition hover:text-red-500 group-hover:opacity-100"
                     title={t('chat.delete_session')}
                     aria-label={t('chat.delete_session')}
                   >
@@ -364,19 +364,19 @@ export default function AgentChatPage() {
                   </button>
                 </button>
               ))}
-              {sessionsLoading && <div className="px-3 py-2 text-sm text-slate-400">{t('common.loading')}</div>}
+              {sessionsLoading && <div className="px-3 py-2 text-sm text-slate-400 dark:text-slate-500">{t('common.loading')}</div>}
               {!sessionsLoading && sessions.length === 0 && (
-                <div className="px-3 py-4 text-center text-xs text-slate-400">{t('chat.no_session', '暂无会话，输入标题创建')}</div>
+                <div className="px-3 py-4 text-center text-xs text-slate-400 dark:text-slate-500">{t('chat.no_session', '暂无会话，输入标题创建')}</div>
               )}
             </div>
             {(agent.skills?.length > 0 || agent.mcps?.length > 0) && (
-              <div className="shrink-0 border-t border-slate-200 p-3">
-                <div className="space-y-1 text-[10px] leading-relaxed text-slate-400">
+              <div className="shrink-0 border-t border-slate-200 dark:border-slate-700 p-3">
+                <div className="space-y-1 text-[10px] leading-relaxed text-slate-400 dark:text-slate-500">
                   {agent.skills?.length > 0 && (
-                    <div><span className="font-medium text-slate-500">Skills:</span> {agent.skills.join(', ')}</div>
+                    <div><span className="font-medium text-slate-500 dark:text-slate-400">Skills:</span> {agent.skills.join(', ')}</div>
                   )}
                   {agent.mcps?.length > 0 && (
-                    <div><span className="font-medium text-slate-500">MCPs:</span> {agent.mcps.join(', ')}</div>
+                    <div><span className="font-medium text-slate-500 dark:text-slate-400">MCPs:</span> {agent.mcps.join(', ')}</div>
                   )}
                 </div>
               </div>
@@ -385,17 +385,17 @@ export default function AgentChatPage() {
         )}
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <div className="flex-1 overflow-y-auto bg-slate-50/50 p-4 sm:p-5" style={{ scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 #f1f5f9' }}>
+          <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900/50 p-4 sm:p-5" style={{ scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 #f1f5f9' }}>
             <div className="mx-auto max-w-4xl space-y-6">
               {messagesLoading && (
-                <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-400">
+                <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-700 p-8 text-center text-sm text-slate-400 dark:text-slate-500">
                   {t('common.loading')}
                 </div>
               )}
               {!messagesLoading && messages.length === 0 && (
-                <div className="rounded-xl border border-dashed border-slate-200 bg-white p-10 text-center">
-                  <div className="text-sm font-medium text-slate-600">{t('chat.start_chat_with', '开始与 {name} 对话').replace('{name}', agent.name)}</div>
-                  <div className="mt-1 text-xs text-slate-400">{t('chat.empty_state', '输入消息并按 Ctrl+Enter 发送')}</div>
+                <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-10 text-center">
+                  <div className="text-sm font-medium text-slate-600 dark:text-slate-400">{t('chat.start_chat_with', '开始与 {name} 对话').replace('{name}', agent.name)}</div>
+                  <div className="mt-1 text-xs text-slate-400 dark:text-slate-500">{t('chat.empty_state', '输入消息并按 Ctrl+Enter 发送')}</div>
                 </div>
               )}
               {messages.map((msg) => (
@@ -410,7 +410,7 @@ export default function AgentChatPage() {
               {sending && (
                 <div className="flex gap-3">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-xs font-bold text-white">AI</div>
-                  <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 shadow-sm">
                     <div className="flex gap-1.5">
                       <div className="h-2 w-2 animate-bounce rounded-full bg-sky-400" style={{ animationDelay: '0ms' }} />
                       <div className="h-2 w-2 animate-bounce rounded-full bg-sky-400" style={{ animationDelay: '150ms' }} />
@@ -423,14 +423,14 @@ export default function AgentChatPage() {
             </div>
           </div>
 
-          <div className="shrink-0 border-t border-slate-200 bg-white p-4">
+          <div className="shrink-0 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
             <div className="mx-auto max-w-4xl">
               {sendError && (
                 <div className="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-600">
                   {sendError}
                 </div>
               )}
-              <div className="rounded-2xl border border-slate-200 bg-white shadow-sm transition focus-within:border-sky-300 focus-within:shadow-md">
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm transition focus-within:border-sky-300 focus-within:shadow-md">
                 <textarea
                   rows="3"
                   value={draft}
@@ -443,10 +443,10 @@ export default function AgentChatPage() {
                   }}
                   disabled={sending || !currentSessionId}
                   placeholder={currentSessionId ? t('chat.input_placeholder') : t('chat.empty_state')}
-                  className="w-full resize-none rounded-t-2xl bg-transparent px-4 pt-3 text-sm text-slate-900 outline-none placeholder:text-slate-400"
+                  className="w-full resize-none rounded-t-2xl bg-transparent px-4 pt-3 text-sm text-slate-900 dark:text-slate-100 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 dark:text-slate-500"
                 />
-                <div className="flex items-center justify-between rounded-b-2xl bg-slate-50 px-4 py-2">
-                  <div className="text-xs text-slate-400">
+                <div className="flex items-center justify-between rounded-b-2xl bg-slate-50 dark:bg-slate-900 px-4 py-2">
+                  <div className="text-xs text-slate-400 dark:text-slate-500">
                     {currentSessionId ? t('chat.send_hint', 'Ctrl+Enter 发送 · 支持 Markdown') : t('chat.create_session_hint', '先在左侧创建会话')}
                   </div>
                   <button

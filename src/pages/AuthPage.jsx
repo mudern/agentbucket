@@ -52,18 +52,18 @@ export default function AuthPage({ mode = 'login', onAuthenticated }) {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 px-6 py-10">
+    <div className="flex min-h-screen items-center justify-center bg-slate-100 dark:bg-slate-700 px-6 py-10">
       <main className="w-full max-w-[440px]">
         <div className="mb-8 flex justify-center">
           <LogoMark />
         </div>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="mb-6 grid grid-cols-2 rounded-xl bg-slate-100 p-1 text-sm font-medium">
+        <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+          <div className="mb-6 grid grid-cols-2 rounded-xl bg-slate-100 dark:bg-slate-700 p-1 text-sm font-medium">
             <Link
               to="/login"
               className={`rounded-lg px-3 py-2.5 text-center transition ${
-                !isRegister ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-900'
+                !isRegister ? 'bg-white text-slate-950 dark:text-slate-50 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-slate-100'
               }`}
             >
               {t('auth.login_button')}
@@ -71,7 +71,7 @@ export default function AuthPage({ mode = 'login', onAuthenticated }) {
             <Link
               to="/register"
               className={`rounded-lg px-3 py-2.5 text-center transition ${
-                isRegister ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-900'
+                isRegister ? 'bg-white text-slate-950 dark:text-slate-50 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-slate-100'
               }`}
             >
               {t('auth.register_button')}
@@ -79,8 +79,8 @@ export default function AuthPage({ mode = 'login', onAuthenticated }) {
           </div>
 
           <div className="mb-6">
-            <h1 className="text-xl font-semibold text-slate-950">{isRegister ? t('auth.register_title') : t('auth.login_title')}</h1>
-            <p className="mt-2 text-sm leading-6 text-slate-500">
+            <h1 className="text-xl font-semibold text-slate-950 dark:text-slate-50">{isRegister ? t('auth.register_title') : t('auth.login_title')}</h1>
+            <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
               {isRegister ? t('auth.register_hint') : t('auth.login_hint')}
             </p>
           </div>
@@ -92,44 +92,44 @@ export default function AuthPage({ mode = 'login', onAuthenticated }) {
           )}
 
           <form className="space-y-4" onSubmit={handleSubmit}>
-            <label className="block text-sm font-medium text-slate-700">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
               {t('auth.username_placeholder')}
               <input
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder={t('auth.username_placeholder')}
-                className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
+                className="mt-2 h-11 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-sm text-slate-900 dark:text-slate-100 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 dark:text-slate-500 focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
               />
             </label>
 
-            <label className="block text-sm font-medium text-slate-700">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
               {t('auth.password_placeholder')}
-              <div className="mt-2 flex h-11 overflow-hidden rounded-xl border border-slate-200 bg-white focus-within:border-sky-500 focus-within:ring-4 focus-within:ring-sky-100">
+              <div className="mt-2 flex h-11 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus-within:border-sky-500 focus-within:ring-4 focus-within:ring-sky-100">
                 <input
                   required
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={t('auth.password_placeholder')}
-                  className="min-w-0 flex-1 bg-transparent px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400"
+                  className="min-w-0 flex-1 bg-transparent px-3 text-sm text-slate-900 dark:text-slate-100 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 dark:text-slate-500"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((current) => !current)}
-                  className="shrink-0 border-l border-slate-200 px-3 text-xs font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
+                  className="shrink-0 border-l border-slate-200 dark:border-slate-700 px-3 text-xs font-medium text-slate-500 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900 hover:text-slate-800"
                 >
                   {showPassword ? t('auth.hide_password') : t('auth.show_password')}
                 </button>
               </div>
             </label>
 
-            <label className="flex items-center gap-2 text-sm text-slate-600">
+            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
               <input
                 type="checkbox"
                 checked={remember}
                 onChange={(e) => setRemember(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-sky-600 focus:ring-sky-500"
               />
               {t('auth.remember_me')}
             </label>

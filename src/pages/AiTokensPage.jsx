@@ -87,40 +87,40 @@ export default function AiTokensPage() {
 
       {formOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/30 px-4 py-8">
-          <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
-            <div className="border-b border-slate-200 px-5 py-4">
-              <div className="text-base font-semibold text-slate-950">{t('aITokens.create_form_title')}</div>
+          <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xl">
+            <div className="border-b border-slate-200 dark:border-slate-700 px-5 py-4">
+              <div className="text-base font-semibold text-slate-950 dark:text-slate-50">{t('aITokens.create_form_title')}</div>
             </div>
             <div className="grid gap-4 p-5">
-              <label className="block text-sm text-slate-700">
+              <label className="block text-sm text-slate-700 dark:text-slate-300">
                 {t('aITokens.token_name')}
-                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-sky-500" placeholder="e.g. DeepSeek V4" />
+                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="mt-2 w-full rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3 outline-none focus:border-sky-500" placeholder="e.g. DeepSeek V4" />
               </label>
-              <label className="block text-sm text-slate-700">
+              <label className="block text-sm text-slate-700 dark:text-slate-300">
                 {t('aITokens.provider_label')}
-                <select value={form.provider} onChange={(e) => setForm({ ...form, provider: e.target.value })} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-sky-500">
+                <select value={form.provider} onChange={(e) => setForm({ ...form, provider: e.target.value })} className="mt-2 w-full rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3 outline-none focus:border-sky-500">
                   <option>DeepSeek</option><option>OpenAI</option><option>Anthropic</option><option>GLM</option><option>Kimi</option><option>MiniMax</option>
                 </select>
               </label>
-              <label className="block text-sm text-slate-700">
+              <label className="block text-sm text-slate-700 dark:text-slate-300">
                 {t('aITokens.api_key')}
-                <input type="password" value={form.apiKey} onChange={(e) => setForm({ ...form, apiKey: e.target.value })} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-sky-500" />
+                <input type="password" value={form.apiKey} onChange={(e) => setForm({ ...form, apiKey: e.target.value })} className="mt-2 w-full rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3 outline-none focus:border-sky-500" />
               </label>
-              <label className="block text-sm text-slate-700">
+              <label className="block text-sm text-slate-700 dark:text-slate-300">
                 {t('aITokens.base_url')}
-                <input value={form.baseUrl} onChange={(e) => setForm({ ...form, baseUrl: e.target.value })} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-sky-500" placeholder="https://api.deepseek.com" />
+                <input value={form.baseUrl} onChange={(e) => setForm({ ...form, baseUrl: e.target.value })} className="mt-2 w-full rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3 outline-none focus:border-sky-500" placeholder="https://api.deepseek.com" />
               </label>
-              <label className="block text-sm text-slate-700">
+              <label className="block text-sm text-slate-700 dark:text-slate-300">
                 {t('aITokens.model')}
-                <input value={form.model} onChange={(e) => setForm({ ...form, model: e.target.value })} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-sky-500" placeholder="deepseek-v4-pro" />
+                <input value={form.model} onChange={(e) => setForm({ ...form, model: e.target.value })} className="mt-2 w-full rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3 outline-none focus:border-sky-500" placeholder="deepseek-v4-pro" />
               </label>
-              <label className="block text-sm text-slate-700">
+              <label className="block text-sm text-slate-700 dark:text-slate-300">
                 {t('aITokens.scope')}
-                <input value={form.scope} onChange={(e) => setForm({ ...form, scope: e.target.value })} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-sky-500" placeholder={t('aITokens.scope')} />
+                <input value={form.scope} onChange={(e) => setForm({ ...form, scope: e.target.value })} className="mt-2 w-full rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3 outline-none focus:border-sky-500" placeholder={t('aITokens.scope')} />
               </label>
             </div>
-            <div className="flex justify-end gap-3 border-t border-slate-200 px-5 py-4">
-              <button onClick={() => setFormOpen(false)} className="rounded-lg px-4 py-2 text-sm text-slate-500 hover:bg-slate-100">{t('common.cancel')}</button>
+            <div className="flex justify-end gap-3 border-t border-slate-200 dark:border-slate-700 px-5 py-4">
+              <button onClick={() => setFormOpen(false)} className="rounded-lg px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700">{t('common.cancel')}</button>
               <button onClick={handleSubmit} className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700">{t('common.save')}</button>
             </div>
           </div>
@@ -157,18 +157,18 @@ export default function AiTokensPage() {
           <tbody className={tableBodyClass}>
             {filteredTokens.map((token) => (
               <tr key={token.id}>
-                <td className={`${tableCellClass} font-medium text-slate-950`}>
+                <td className={`${tableCellClass} font-medium text-slate-950 dark:text-slate-50`}>
                   <HoverCard
                     content={
                       <div className="space-y-3">
                         <div>
-                          <div className="font-semibold text-slate-950">{token.name}</div>
-                          <div className="mt-1 text-slate-500">{t('aITokens.desc', '管理 AI 模型调用的 API 凭据')}</div>
+                          <div className="font-semibold text-slate-950 dark:text-slate-50">{token.name}</div>
+                          <div className="mt-1 text-slate-500 dark:text-slate-400">{t('aITokens.desc', '管理 AI 模型调用的 API 凭据')}</div>
                         </div>
                         <div className="grid grid-cols-[72px_1fr] gap-y-2">
-                          <span className="text-slate-400">{t('aITokens.provider_label')}</span>
+                          <span className="text-slate-400 dark:text-slate-500">{t('aITokens.provider_label')}</span>
                           <span>{token.provider}</span>
-                          <span className="text-slate-400">{t('aITokens.scope')}</span>
+                          <span className="text-slate-400 dark:text-slate-500">{t('aITokens.scope')}</span>
                           <span>{token.scope}</span>
                         </div>
                       </div>

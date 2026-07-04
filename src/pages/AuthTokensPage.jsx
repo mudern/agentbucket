@@ -82,22 +82,22 @@ export default function AuthTokensPage() {
       />
       {importOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/30 px-4 py-8" onClick={() => setImportOpen(false)}>
-          <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <div className="border-b border-slate-200 px-5 py-4">
-              <div className="text-base font-semibold text-slate-950">{t('authTokens.create_form_title')}</div>
+          <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="border-b border-slate-200 dark:border-slate-700 px-5 py-4">
+              <div className="text-base font-semibold text-slate-950 dark:text-slate-50">{t('authTokens.create_form_title')}</div>
             </div>
             <div className="grid gap-4 p-5">
-              <label className="block text-sm text-slate-700">
+              <label className="block text-sm text-slate-700 dark:text-slate-300">
                 {t('common.name')}
-                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="GitHub Token" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-500" />
+                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="GitHub Token" className="mt-2 w-full rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3 text-sm outline-none focus:border-sky-500" />
               </label>
-              <label className="block text-sm text-slate-700">
+              <label className="block text-sm text-slate-700 dark:text-slate-300">
                 {t('common.description')}
-                <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="访问 GitHub 仓库和 Issues" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-500" />
+                <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="访问 GitHub 仓库和 Issues" className="mt-2 w-full rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3 text-sm outline-none focus:border-sky-500" />
               </label>
-              <label className="block text-sm text-slate-700">
+              <label className="block text-sm text-slate-700 dark:text-slate-300">
                 {t('authTokens.secret')}
-                <div className="mt-2 flex overflow-hidden rounded-xl border border-slate-200 bg-white focus-within:border-sky-500">
+                <div className="mt-2 flex overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus-within:border-sky-500">
                   <input
                     type={showSecret ? 'text' : 'password'}
                     value={form.secret}
@@ -105,15 +105,15 @@ export default function AuthTokensPage() {
                     placeholder="ghp_xxxx"
                     className="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm outline-none"
                   />
-                  <button type="button" onClick={() => setShowSecret((s) => !s)} className="shrink-0 border-l border-slate-200 px-3 text-xs text-slate-500 hover:bg-slate-50">
+                  <button type="button" onClick={() => setShowSecret((s) => !s)} className="shrink-0 border-l border-slate-200 dark:border-slate-700 px-3 text-xs text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900">
                     {showSecret ? t('auth.hide_password') : t('auth.show_password')}
                   </button>
                 </div>
               </label>
               {formError && <div className="text-sm text-rose-600">{formError}</div>}
             </div>
-            <div className="flex justify-end gap-3 border-t border-slate-200 px-5 py-4">
-              <button onClick={() => setImportOpen(false)} className="rounded-lg px-4 py-2 text-sm text-slate-500 hover:bg-slate-100">{t('common.cancel')}</button>
+            <div className="flex justify-end gap-3 border-t border-slate-200 dark:border-slate-700 px-5 py-4">
+              <button onClick={() => setImportOpen(false)} className="rounded-lg px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700">{t('common.cancel')}</button>
               <button onClick={handleCreate} disabled={saving} className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-50">{saving ? t('common.loading') : t('common.save')}</button>
             </div>
           </div>
@@ -142,15 +142,15 @@ export default function AuthTokensPage() {
           <tbody className={tableBodyClass}>
             {filteredTokens.map((token) => (
               <tr key={token.id}>
-                <td className={`${tableCellClass} font-medium text-slate-950`}>
+                <td className={`${tableCellClass} font-medium text-slate-950 dark:text-slate-50`}>
                   <HoverCard
                     content={
                       <div className="space-y-3">
                         <div>
-                          <div className="font-semibold text-slate-950">{token.name}</div>
-                          <div className="mt-1 leading-5 text-slate-500">{token.description}</div>
+                          <div className="font-semibold text-slate-950 dark:text-slate-50">{token.name}</div>
+                          <div className="mt-1 leading-5 text-slate-500 dark:text-slate-400">{token.description}</div>
                         </div>
-                        <div className="text-xs text-slate-400">Secret 不会在前端展示，Agent 通过 Sidecar 获取。</div>
+                        <div className="text-xs text-slate-400 dark:text-slate-500">Secret 不会在前端展示，Agent 通过 Sidecar 获取。</div>
                       </div>
                     }
                   >
@@ -158,7 +158,7 @@ export default function AuthTokensPage() {
                   </HoverCard>
                 </td>
                 <td className={tableCellClass}>
-                  <div className="max-w-sm truncate text-slate-700">{token.description || '-'}</div>
+                  <div className="max-w-sm truncate text-slate-700 dark:text-slate-300">{token.description || '-'}</div>
                 </td>
                 <td className={tableCellClass}>
                   <StatusBadge status={token.status} />

@@ -44,23 +44,23 @@ export default function AgentsPage() {
         }
       />
 
-      <div className="mb-6 grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:grid-cols-[1.2fr_1fr]">
+      <div className="mb-6 grid gap-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm lg:grid-cols-[1.2fr_1fr]">
         <label className="block">
-          <div className="mb-2 text-sm text-slate-600">{t('agents.search_placeholder')}</div>
+          <div className="mb-2 text-sm text-slate-600 dark:text-slate-400">{t('agents.search_placeholder')}</div>
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t('agents.search_placeholder')}
-            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-sky-500"
+            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 outline-none ring-0 placeholder:text-slate-400 dark:placeholder:text-slate-500 dark:text-slate-500 focus:border-sky-500"
           />
         </label>
         <label className="block">
-          <div className="mb-2 text-sm text-slate-600">{t('agents.no_agents', '按 Tag 过滤')}</div>
+          <div className="mb-2 text-sm text-slate-600 dark:text-slate-400">{t('agents.no_agents', '按 Tag 过滤')}</div>
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setSelectedTags([])}
               className={`rounded-full px-3 py-2 text-sm transition ${
-                selectedTags.length === 0 ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                selectedTags.length === 0 ? 'bg-sky-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
               }`}
             >
               {t('common.all')}
@@ -72,7 +72,7 @@ export default function AgentsPage() {
                 className={`rounded-full px-3 py-2 text-sm transition ${
                   selectedTags.includes(tag)
                     ? 'bg-sky-600 text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
                 }`}
               >
                 #{tag}
@@ -82,12 +82,12 @@ export default function AgentsPage() {
         </label>
       </div>
 
-      <div className="mb-4 text-sm text-slate-500">{filteredAgents.length} {t('agents.title')}</div>
+      <div className="mb-4 text-sm text-slate-500 dark:text-slate-400">{filteredAgents.length} {t('agents.title')}</div>
       {loading ? (
         <LoadingPanel label={t('common.loading')} />
       ) : filteredAgents.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-16 text-center">
-          <div className="text-sm font-medium text-slate-400">{t('agents.no_agents')}</div>
+        <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-16 text-center">
+          <div className="text-sm font-medium text-slate-400 dark:text-slate-500">{t('agents.no_agents')}</div>
           <Link to="/deploy" className="mt-4 inline-block rounded-xl bg-sky-600 px-5 py-2 text-sm font-medium text-white hover:bg-sky-700">
             {t('deploy.deploy_button')}
           </Link>

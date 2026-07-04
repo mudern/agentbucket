@@ -46,7 +46,6 @@ func NewStore(path string, rootDir string) (*Store, error) {
 		}
 		store.state.Users = users
 	}
-	store.state.Users = ensureUserPasswordHashes(store.state.Users)
 	if err := store.loadChat(); err != nil {
 		return nil, err
 	}
