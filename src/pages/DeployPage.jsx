@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { createDeployment, getDeployOptions, getDeployments, stopDeployment, startDeployment, deleteDeployment } from '../api'
 import LoadingPanel from '../components/LoadingPanel'
 import PageHeader from '../components/PageHeader'
@@ -122,6 +123,7 @@ function CapabilityPickerModal({ open, title, mode, items, selected, onClose, on
 }
 
 export default function DeployPage() {
+  const navigate = useNavigate()
   const t = useT()
   const stepLabels = [t('deploy.step_repo'), t('deploy.step_commit'), t('deploy.step_agent'), t('deploy.step_config'), t('deploy.step_confirm')]
 
@@ -159,10 +161,11 @@ export default function DeployPage() {
   const selectedSkills = capabilityTouched.skills ? form.skills : selectedAgent?.skills ?? []
   const selectedMcps = capabilityTouched.mcps ? form.mcps : selectedAgent?.mcps ?? []
   const selectedApiTokenId = form.apiTokenId || data?.aiTokens?.[0]?.id || ''
-  const selectedModel = form.model || selectedAgent?.model || data?.models?.[0] || ''
+  const selectedApiToken = data?.aiTokens?.find((token) => token.id === selectedApiTokenId)
+  // Model is determined by the selected API token, falling back to agent definition
+  const selectedModel = selectedApiToken?.model || selectedAgent?.model || ''
   const selectedRuntime = form.runtime || data?.runtimes?.[0] || ''
   const selectedRuntimeVersion = form.runtimeVersion || data?.runtimeTags?.[0] || 'latest'
-  const selectedApiToken = data?.aiTokens?.find((token) => token.id === selectedApiTokenId)
   const runtimeDescriptions = {
     codex: t('deploy.runtime_hint_codex'),
     claudecode: t('deploy.runtime_hint_claudecode'),
@@ -274,6 +277,8 @@ export default function DeployPage() {
         authTokens: form.authTokens,
       })
       setDeployResult(result)
+      // Navigate to progress page after successful deployment
+      setTimeout(() => navigate('/deploy/progress'), 800)
     } catch (error) {
       setDeployError(error.message)
     } finally {
@@ -405,18 +410,13 @@ export default function DeployPage() {
                   <div className="mt-1 text-xs leading-5 text-slate-500">{t('deploy.runtime_config_desc')}</div>
                 </div>
                 <div className="grid gap-4">
-                  <label className="block text-sm text-slate-700">
-                    {t('deploy.model')}
-                    <select
-                      value={selectedModel}
-                      onChange={(event) => updateForm('model', event.target.value)}
-                      className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-sky-500"
-                    >
-                      {data.models.map((model) => (
-                        <option key={model}>{model}</option>
-                      ))}
-                    </select>
-                  </label>
+                  <div className="block text-sm text-slate-700">
+                    <div className="mb-1">{t('deploy.model')}</div>
+                    <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                      <span className="text-sm font-medium text-slate-900">{selectedModel || t('common.not_selected')}</span>
+                      <span className="text-xs text-slate-400">— {t('deploy.model_from_token', '由 API Token 决定')}</span>
+                    </div>
+                  </div>
                   <label className="block text-sm text-slate-700">
                     {t('deploy.runtime')}
                     <select
@@ -555,14 +555,14 @@ export default function DeployPage() {
             disabled={step === 0}
             className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {t('deploy.step_confirm', '\u4e0a\u4e00\u6b65')}
+            {t('deploy.prev_step', '\u4e0a\u4e00\u6b65')}
           </button>
           {step < stepLabels.length - 1 ? (
             <button
               onClick={() => setStep((current) => Math.min(current + 1, stepLabels.length - 1))}
               className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-700"
             >
-              {t('deploy.step_config', '\u4e0b\u4e00\u6b65')}
+              {t('deploy.next_step', '\u4e0b\u4e00\u6b65')}
             </button>
           ) : (
             <button
@@ -622,26 +622,32 @@ export default function DeployPage() {
         onClear={() => updateForm('authTokens', [])}
       />
 
-      {deployments.length > 0 && (
+      {deployments.filter((d) => d.status === 'running').length > 0 && (
         <div className="mt-8 rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 px-6 py-4">
             <h2 className="text-lg font-semibold text-slate-900">{t('deploy.running_deployments')}</h2>
           </div>
           <div className="divide-y divide-slate-100">
-            {deployments.map((d) => (
+            {deployments.filter((d) => d.status === 'running').map((d) => (
               <div key={d.id} className="flex items-center justify-between px-6 py-4">
                 <div>
-                  <div className="text-sm font-medium text-slate-900">{d.agentId}</div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" title="Running" />
+                    <span className="text-sm font-medium text-slate-900">{d.agentId}</span>
+                  </div>
                   <div className="mt-0.5 text-xs text-slate-400">{d.runtime} \u00b7 {d.sidecarUrl}</div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${d.status === 'running' ? 'bg-emerald-50 text-emerald-700' : d.status === 'stopped' ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-500'}`}>{d.status}</span>
-                  {d.status === 'running' && (
-                    <button onClick={async () => { await stopDeployment(d.id); setDeployments((c) => c.map((x) => x.id === d.id ? { ...x, status: 'stopped' } : x)) }} className="rounded-lg border border-slate-200 px-3 py-1 text-xs text-slate-600 hover:bg-slate-50">{t('deploy.stop')}</button>
-                  )}
-                  {d.status === 'stopped' && (
-                    <button onClick={async () => { await startDeployment(d.id); setDeployments((c) => c.map((x) => x.id === d.id ? { ...x, status: 'running' } : x)) }} className="rounded-lg bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700">{t('deploy.start')}</button>
-                  )}
+                  <a
+                    href={d.sidecarUrl ? `${d.sidecarUrl}/health` : '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-lg border border-slate-200 px-3 py-1 text-xs text-sky-600 hover:bg-sky-50"
+                    title={t('deploy.check_health', 'Sidecar \u5065\u5eb7\u68c0\u67e5')}
+                  >
+                    {t('deploy.check_health', '\u5065\u5eb7\u68c0\u67e5')}
+                  </a>
+                  <button onClick={async () => { await stopDeployment(d.id); setDeployments((c) => c.map((x) => x.id === d.id ? { ...x, status: 'stopped' } : x)) }} className="rounded-lg border border-slate-200 px-3 py-1 text-xs text-slate-600 hover:bg-slate-50">{t('deploy.stop')}</button>
                   <button onClick={async () => { await deleteDeployment(d.id); setDeployments((c) => c.filter((x) => x.id !== d.id)) }} className="rounded-lg px-3 py-1 text-xs text-rose-600 hover:bg-rose-50">{t('deploy.delete_deployment')}</button>
                 </div>
               </div>
