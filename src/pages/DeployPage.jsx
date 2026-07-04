@@ -146,6 +146,7 @@ export default function DeployPage() {
   const [deployments, setDeployments] = useState([])
   const [picker, setPicker] = useState(null)
   const [capabilityTouched, setCapabilityTouched] = useState({ skills: false, mcps: false })
+  const [healthStatus, setHealthStatus] = useState({}) // deploymentId -> { ok, error }
   const { data, loading } = useAsyncData(getDeployOptions, [])
   const { data: agentList = [] } = useAsyncData(getAgents, [])
 
@@ -155,8 +156,26 @@ export default function DeployPage() {
     return map
   }, [agentList])
 
+  // Periodic health check for running deployments
   useEffect(() => {
-    getDeployments().then(setDeployments).catch(() => {})
+    const check = async () => {
+      const deps = await getDeployments().catch(() => [])
+      setDeployments(deps)
+      const running = deps.filter((d) => d.status === 'running' && d.sidecarUrl)
+      const status = {}
+      await Promise.all(running.map(async (d) => {
+        try {
+          const resp = await fetch(`${d.sidecarUrl}/health`, { signal: AbortSignal.timeout(5000) })
+          status[d.id] = resp.ok ? { ok: true } : { ok: false, error: `HTTP ${resp.status}` }
+        } catch (e) {
+          status[d.id] = { ok: false, error: e.message }
+        }
+      }))
+      setHealthStatus(status)
+    }
+    check()
+    const interval = setInterval(check, 15000)
+    return () => clearInterval(interval)
   }, [deployResult])
 
   // Initialize form with first available values when data loads
@@ -670,21 +689,12 @@ export default function DeployPage() {
               <div key={d.id} className="flex items-center justify-between px-6 py-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" title="Running" />
+                    {(() => { const h = healthStatus[d.id]; const healthy = !h || h.ok; return <span className={`h-2.5 w-2.5 rounded-full ${healthy ? 'bg-emerald-400' : 'bg-red-400 animate-pulse'}`} title={healthy ? 'Healthy' : (h?.error || 'Unreachable')} /> })()}
                     <span className="text-sm font-medium text-slate-900">{agentNameMap[d.agentId] || d.agentId}</span>
                   </div>
                   <div className="mt-0.5 text-xs text-slate-400">{d.runtime} \u00b7 {d.sidecarUrl}</div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <a
-                    href={d.sidecarUrl ? `${d.sidecarUrl}/health` : '#'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-lg border border-slate-200 px-3 py-1 text-xs text-sky-600 hover:bg-sky-50"
-                    title={t('deploy.check_health', 'Sidecar \u5065\u5eb7\u68c0\u67e5')}
-                  >
-                    {t('deploy.check_health', '\u5065\u5eb7\u68c0\u67e5')}
-                  </a>
                   <button onClick={async () => { await stopDeployment(d.id); setDeployments((c) => c.map((x) => x.id === d.id ? { ...x, status: 'stopped' } : x)) }} className="rounded-lg border border-slate-200 px-3 py-1 text-xs text-slate-600 hover:bg-slate-50">{t('deploy.stop')}</button>
                   <button onClick={async () => { await deleteDeployment(d.id); setDeployments((c) => c.filter((x) => x.id !== d.id)) }} className="rounded-lg px-3 py-1 text-xs text-rose-600 hover:bg-rose-50">{t('deploy.delete_deployment')}</button>
                 </div>
