@@ -1,7 +1,12 @@
 const zh = {
   common: {
-    dashboard: 'Dashboard',
+    dashboard: '首页',
     dashboard_desc: 'AgentBucket 控制平面概览',
+    failed: '失败',
+    quick_actions: '快捷操作',
+    recent_deployments: '最近部署',
+    view_all: '查看全部',
+    no_deployments_yet: '暂无部署，去部署一个',
     confirm_delete_title: '确认删除',
     confirm_delete_msg: '此操作不可撤销，确定要继续吗？',
     back: '← 返回',

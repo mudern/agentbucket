@@ -66,26 +66,26 @@ export default function DashboardPage() {
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label={t('agents.title')} value={agents.length} icon="🤖" color="sky" to="/agents" />
         <StatCard label={t('common.running')} value={running.length} icon="🟢" color="emerald" to="/deploy/progress" />
-        <StatCard label="Failed" value={failed.length} icon="⚠️" color={failed.length > 0 ? 'rose' : 'slate'} to="/deploy/progress" />
+        <StatCard label={t('common.failed', 'Failed')} value={failed.length} icon="⚠️" color={failed.length > 0 ? 'rose' : 'slate'} to="/deploy/progress" />
         <StatCard label={t('repositories.title')} value={repos.length} icon="📦" color="slate" to="/repositories" />
       </div>
 
       {/* Alerts */}
       {inProgress.length > 0 && (
         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
-          {inProgress.length} deployment(s) in progress — <Link to="/deploy/progress" className="font-medium underline">View</Link>
+          {inProgress.length} {t('deploy.deploying')} — <Link to="/deploy/progress" className="font-medium underline">{t('common.view_all', '查看')}</Link>
         </div>
       )}
       {failed.length > 0 && (
         <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-800 dark:bg-rose-900/30 dark:text-rose-300">
-          {failed.length} deployment(s) failed — <Link to="/deploy/progress" className="font-medium underline">Review</Link>
+          {failed.length} {t('progress.step_failed')} — <Link to="/deploy/progress" className="font-medium underline">{t('common.view_all', '查看')}</Link>
         </div>
       )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Quick Actions */}
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-600 dark:bg-slate-800">
-          <h3 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">Quick Actions</h3>
+          <h3 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">{t('common.quick_actions', '快捷操作')}</h3>
           <div className="space-y-2">
             <Link to="/deploy" className="block rounded-xl bg-sky-600 px-4 py-3 text-center text-sm font-medium text-white transition hover:bg-sky-700">
               {t('deploy.deploy_button')}
@@ -102,11 +102,11 @@ export default function DashboardPage() {
         {/* Recent Deployments */}
         <div className="lg:col-span-2 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-600 dark:bg-slate-800">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Recent Deployments</h3>
-            <Link to="/deploy/progress" className="text-xs text-sky-600 hover:underline dark:text-sky-400">View all</Link>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('common.recent_deployments', '最近部署')}</h3>
+            <Link to="/deploy/progress" className="text-xs text-sky-600 hover:underline dark:text-sky-400">{t('common.view_all', '查看全部')}</Link>
           </div>
           {recent.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-400 dark:text-slate-500">No deployments yet. <Link to="/deploy" className="text-sky-600 underline">Deploy one</Link></p>
+            <p className="py-8 text-center text-sm text-slate-400 dark:text-slate-500">{t('common.no_deployments_yet', '暂无部署')} <Link to="/deploy" className="text-sky-600 underline">{t('deploy.deploy_button')}</Link></p>
           ) : (
             <div className="space-y-2">
               {recent.map((d) => (
