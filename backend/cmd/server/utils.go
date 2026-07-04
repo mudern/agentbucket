@@ -22,7 +22,7 @@ func withAuth(store *Store, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Skip auth for health check, current user, deploy options, login, agents (read-only UI)
 		path := r.URL.Path
-		if path == "/health" || path == "/api/deploy-options" || path == "/api/login" || path == "/api/current-user" || path == "/api/agents" || path == "/api/deployments" {
+		if path == "/health" || path == "/api/deploy-options" || path == "/api/login" || path == "/api/current-user" || path == "/api/agents" || path == "/api/deployments" || strings.HasPrefix(path, "/api/deployments/") {
 			next.ServeHTTP(w, r)
 			return
 		}
