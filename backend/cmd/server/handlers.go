@@ -494,7 +494,18 @@ func (app *App) deployments(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if err := app.store.update(func(state *State) error {
-			state.Deployments = append([]Deployment{deployment}, state.Deployments...)
+			// Replace existing deployment for the same agent (overwrite)
+			replaced := false
+			for i := range state.Deployments {
+				if state.Deployments[i].AgentID == deployment.AgentID {
+					state.Deployments[i] = deployment
+					replaced = true
+					break
+				}
+			}
+			if !replaced {
+				state.Deployments = append([]Deployment{deployment}, state.Deployments...)
+			}
 			return nil
 		}); err != nil {
 			writeError(w, http.StatusInternalServerError, err)

@@ -152,6 +152,28 @@ export default function DeployPage() {
     getDeployments().then(setDeployments).catch(() => {})
   }, [deployResult])
 
+  // Initialize form with first available values when data loads
+  useEffect(() => {
+    if (!data) return
+    const firstRepo = data.repositories?.[0]
+    const firstCommit = firstRepo?.commits?.[0]
+    const firstAgent = firstCommit?.agents?.[0]
+    const firstToken = data.aiTokens?.[0]
+    if (firstRepo && firstCommit && firstAgent) {
+      setForm((current) => ({
+        ...current,
+        repositoryId: current.repositoryId || firstRepo.id,
+        commitHash: current.commitHash || firstCommit.hash,
+        agentId: current.agentId || firstAgent.id,
+        apiTokenId: current.apiTokenId || firstToken?.id || '',
+        runtime: current.runtime || data.runtimes?.[0] || '',
+        model: current.model || firstToken?.model || firstAgent.model || '',
+        skills: capabilityTouched.skills ? current.skills : firstAgent.skills || [],
+        mcps: capabilityTouched.mcps ? current.mcps : firstAgent.mcps || [],
+      }))
+    }
+  }, [data])
+
   const repositories = data?.repositories ?? []
   const selectedRepository = repositories.find((repo) => repo.id === form.repositoryId) ?? repositories[0]
   const commits = selectedRepository?.commits ?? []
