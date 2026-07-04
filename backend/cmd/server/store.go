@@ -39,11 +39,9 @@ func NewStore(path string, rootDir string) (*Store, error) {
 	if err := json.Unmarshal(raw, &store.state); err != nil {
 		return nil, err
 	}
-	if len(store.state.Users) == 0 {
-		users, err := store.loadUsers()
-		if err != nil {
-			return nil, err
-		}
+	// Always reload users from SQL table on startup (more reliable than JSON state)
+	users, err := store.loadUsers()
+	if err == nil && len(users) > 0 {
 		store.state.Users = users
 	}
 	if err := store.loadChat(); err != nil {

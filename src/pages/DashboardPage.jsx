@@ -14,7 +14,7 @@ function StatCard({ label, value, sub, icon, color, to }) {
     slate: 'border-slate-200 bg-slate-50 dark:border-slate-600 dark:bg-slate-800',
   }[color] || ''
   const inner = (
-    <div className={`rounded-2xl border p-4 ${c} ${to ? 'cursor-pointer transition hover:-translate-y-0.5 hover:shadow-md' : ''}`}>
+    <div className={`rounded-2xl border p-4 h-full ${c} ${to ? 'cursor-pointer transition hover:-translate-y-0.5 hover:shadow-md' : ''}`}>
       <div className="flex items-center justify-between">
         <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{value}</div>
         {icon && <span className="text-xl opacity-60">{icon}</span>}
@@ -44,7 +44,7 @@ export default function DashboardPage() {
       <PageHeader title={t('common.dashboard', '首页')} description={t('common.dashboard_desc', '控制平面概览')} />
 
       {/* Row 1: Core stats */}
-      <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5 items-stretch">
         <StatCard label={t('agents.title')} value={(deployments?.running || 0) || 0} sub={`${(deployments?.total || 0) || 0} total`} icon="🟢" color="emerald" to="/agents" />
         <StatCard label={t('common.running')} value={(deployments?.running || 0) || 0} icon="🚀" color="sky" to="/deploy/progress" />
         <StatCard label={t('common.failed', '失败')} value={(deployments?.failed || 0) || 0} icon="⚠️" color={((deployments?.failed || 0) || 0) > 0 ? 'rose' : 'slate'} to="/deploy/progress" />
@@ -53,7 +53,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Row 2: Tokens + Chat + Bus */}
-      <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 items-stretch">
         <StatCard label={t('aITokens.title')} value={(tokens?.ai?.enabled || 0) || 0} sub={`${(tokens?.ai?.disabled || 0) || 0} disabled`} icon="🔑" color="sky" to="/ai-tokens" />
         <StatCard label={t('authTokens.title')} value={(tokens?.auth?.enabled || 0) || 0} icon="🔐" color="slate" to="/auth-tokens" />
         <StatCard label={t('chat.sessions')} value={(chat?.totalSessions || 0) || 0} sub={`${(chat?.todayMessages || 0) || 0} today`} icon="💬" color="sky" to="/agents" />
