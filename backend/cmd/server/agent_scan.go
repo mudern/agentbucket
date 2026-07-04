@@ -15,12 +15,16 @@ func (app *App) scanRepositories(repos []Repository) []Repository {
 		next := repo
 		next.Commits = scanCommits(repo)
 		if len(next.Commits) == 0 {
-			next.Commits = []Commit{{
-				Hash:        shortHash(repo.URL + repo.LocalPath + repo.AgentsPath),
-				Message:     "scanned local agent manifests",
-				CommittedAt: "刚刚",
-				Agents:      scanAgents(repo),
-			}}
+			// No git history — create a synthetic commit from filesystem scan
+			agents := scanAgents(repo)
+			if len(agents) > 0 {
+				next.Commits = []Commit{{
+					Hash:        shortHash(repo.URL + repo.LocalPath + repo.AgentsPath),
+					Message:     "scanned local agent manifests",
+					CommittedAt: "刚刚",
+					Agents:      agents,
+				}}
+			}
 		}
 		scanned = append(scanned, next)
 	}
@@ -74,25 +78,68 @@ func scanCommits(repo Repository) []Commit {
 
 func scanAgents(repo Repository) []Agent {
 	root := repoPath(repo)
-	agentsDir := filepath.Join(root, filepath.FromSlash(repo.AgentsPath))
-	entries, err := os.ReadDir(agentsDir)
-	if err != nil {
-		return []Agent{} // empty slice, not nil — avoids JSON null
+	gitDir := filepath.Join(root, ".git")
+	hasGit := true
+	if _, err := os.Stat(gitDir); os.IsNotExist(err) {
+		hasGit = false
 	}
-	var agents []Agent
-	for _, entry := range entries {
-		if !entry.IsDir() {
-			continue
+
+	agentsDirRel := filepath.FromSlash(repo.AgentsPath)
+	var entries []string
+	if hasGit {
+		// Read agent directories from git tree at HEAD — only committed files count
+		cmd := exec.Command("git", "-C", root, "ls-tree", "--name-only", "HEAD:"+agentsDirRel)
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			return []Agent{}
 		}
-		manifest := filepath.Join(agentsDir, entry.Name(), "agent.toml")
-		agent, err := parseAgentManifest(manifest)
+		for _, name := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+			name = strings.TrimSpace(name)
+			if name != "" {
+				entries = append(entries, name)
+			}
+		}
+	} else {
+		// Fallback: read from filesystem for non-git local dirs
+		agentsDir := filepath.Join(root, agentsDirRel)
+		dirEntries, err := os.ReadDir(agentsDir)
+		if err != nil {
+			return []Agent{}
+		}
+		for _, de := range dirEntries {
+			if de.IsDir() {
+				entries = append(entries, de.Name())
+			}
+		}
+	}
+
+	agents := make([]Agent, 0)
+	for _, name := range entries {
+		var raw []byte
+		var manifestPath string
+		if hasGit {
+			manifestPath = filepath.Join(agentsDirRel, name, "agent.toml")
+			cmd := exec.Command("git", "-C", root, "show", "HEAD:"+manifestPath)
+			out, err := cmd.CombinedOutput()
+			if err != nil {
+				continue
+			}
+			raw = out
+		} else {
+			manifestPath = filepath.Join(root, agentsDirRel, name, "agent.toml")
+			var err error
+			raw, err = os.ReadFile(manifestPath)
+			if err != nil {
+				continue
+			}
+		}
+		agent, err := parseAgentManifestFrom(raw)
 		if err != nil {
 			continue
 		}
-		rel, _ := filepath.Rel(root, manifest)
-		agent.Path = filepath.ToSlash(rel)
+		agent.Path = filepath.ToSlash(filepath.Join(repo.AgentsPath, name, "agent.toml"))
 		if agent.ID == "" {
-			agent.ID = entry.Name()
+			agent.ID = name
 		}
 		if agent.Name == "" {
 			agent.Name = agent.ID
@@ -153,6 +200,10 @@ func parseAgentManifest(path string) (Agent, error) {
 	if err != nil {
 		return Agent{}, err
 	}
+	return parseAgentManifestFrom(raw)
+}
+
+func parseAgentManifestFrom(raw []byte) (Agent, error) {
 	values := parseSimpleTOML(string(raw))
 	return Agent{
 		ID:             values["id"].scalar,
