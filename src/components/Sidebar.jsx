@@ -44,10 +44,10 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
         <LogoMark compact={collapsed} />
       </div>
 
-      {/* Navigation */}
-      {!collapsed && currentUser && (
+      {/* Navigation — always render the flex-1 container for consistent layout */}
+      {!collapsed && (
         <nav className="flex-1 space-y-6">
-          {navGroups.map((group) => (
+          {currentUser && navGroups.map((group) => (
             <div key={group.title}>
               <div className="mb-2 px-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
                 {t(groupKeyMap[group.title], group.title)}
