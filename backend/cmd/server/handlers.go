@@ -221,6 +221,19 @@ func (app *App) agents(w http.ResponseWriter, r *http.Request) {
 			for _, d := range state.Deployments {
 				if d.AgentID == agent.ID && d.Status == "running" {
 					agent.Status = "已部署"
+					// Override agent definition with deployment-time choices
+					if d.Model != "" {
+						agent.Model = d.Model
+					}
+					if d.Runtime != "" {
+						agent.Runtime = d.Runtime
+					}
+					if len(d.Skills) > 0 {
+						agent.Skills = d.Skills
+					}
+					if len(d.MCPs) > 0 {
+						agent.MCPs = d.MCPs
+					}
 					break
 				}
 			}
