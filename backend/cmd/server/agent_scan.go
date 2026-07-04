@@ -35,6 +35,9 @@ func (app *App) scanRepositories(repos []Repository) []Repository {
 			}
 		}
 		next.Commits = scanCommits(repo)
+		if next.Commits == nil {
+			next.Commits = []Commit{}
+		}
 		if len(next.Commits) == 0 {
 			// No git history — create a synthetic commit from filesystem scan
 			agents := scanAgents(repo)

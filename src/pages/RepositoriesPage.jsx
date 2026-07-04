@@ -54,8 +54,8 @@ export default function RepositoriesPage() {
   const statuses = useMemo(() => [...new Set(repositories.map((r) => r.status))], [repositories])
 
   const filtered = useMemo(() => repositories.filter((repo) => {
-    const c = repo.commits[0]
-    const text = [repo.url, repo.provider, repo.branch, repo.agentsPath, repo.status, c?.hash, c?.message, String(c?.agents?.length ?? 0)].join(' ').toLowerCase()
+    const c = (repo.commits || [])[0]
+    const text = [repo.url, repo.provider, repo.branch, repo.agentsPath, repo.status, c?.hash, c?.message, String((c?.agents || []).length)].join(' ').toLowerCase()
     return (!query || text.includes(query.toLowerCase())) && (platform === 'all' || repo.provider === platform) && (branch === 'all' || repo.branch === branch) && (agentsPath === 'all' || repo.agentsPath === agentsPath) && (status === 'all' || repo.status === status)
   }), [query, platform, branch, agentsPath, status, repositories])
 
@@ -170,7 +170,7 @@ export default function RepositoriesPage() {
         </thead>
         <tbody className={tableBodyClass}>
           {filtered.map((repo) => {
-            const c = repo.commits[0]
+            const c = (repo.commits || [])[0]
             return (
               <tr key={repo.id}>
                 <td className={`${tableCellClass} font-medium text-slate-950`}>
