@@ -389,7 +389,7 @@ export default function DeployPage() {
                       setForm((current) => ({
                         ...current,
                         commitHash: commit.hash,
-                        agentId: commit.agents[0]?.id ?? '',
+                        agentId: (commit.agents || [])[0]?.id ?? '',
                         model: '',
                         skills: [],
                         mcps: [],
@@ -405,7 +405,7 @@ export default function DeployPage() {
                       <div className="text-xs text-slate-400">{commit.committedAt}</div>
                     </div>
                     <div className="mt-2 text-sm text-slate-600">{commit.message}</div>
-                    <div className="mt-2 text-xs text-slate-400">{'\u53d1\u73b0 '}{commit.agents.length}{' \u4e2a Agent'}</div>
+                    <div className="mt-2 text-xs text-slate-400">{'\u53d1\u73b0 '}{(commit.agents || []).length}{' \u4e2a Agent'}</div>
                   </button>
                 ))}
               </div>

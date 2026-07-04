@@ -77,7 +77,7 @@ func scanAgents(repo Repository) []Agent {
 	agentsDir := filepath.Join(root, filepath.FromSlash(repo.AgentsPath))
 	entries, err := os.ReadDir(agentsDir)
 	if err != nil {
-		return nil
+		return []Agent{} // empty slice, not nil — avoids JSON null
 	}
 	var agents []Agent
 	for _, entry := range entries {
@@ -198,7 +198,7 @@ func parseSimpleTOML(raw string) map[string]tomlValue {
 func parseTOMLStringList(value string) []string {
 	value = strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(value, "["), "]"))
 	if value == "" {
-		return nil
+		return []string{}
 	}
 	var items []string
 	for _, item := range strings.Split(value, ",") {
