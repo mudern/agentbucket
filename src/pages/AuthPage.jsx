@@ -81,7 +81,7 @@ export default function AuthPage({ mode = 'login', onAuthenticated }) {
           <div className="mb-6">
             <h1 className="text-xl font-semibold text-slate-950">{isRegister ? t('auth.register_title') : t('auth.login_title')}</h1>
             <p className="mt-2 text-sm leading-6 text-slate-500">
-              {isRegister ? '注册后进入用户权限审批，通过后可登录控制台。' : '使用组织账号进入 Agent 管理工作台。'}
+              {isRegister ? t('auth.register_hint') : t('auth.login_hint')}
             </p>
           </div>
 
@@ -119,7 +119,7 @@ export default function AuthPage({ mode = 'login', onAuthenticated }) {
                   onClick={() => setShowPassword((current) => !current)}
                   className="shrink-0 border-l border-slate-200 px-3 text-xs font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
                 >
-                  {showPassword ? '隐藏' : '显示'}
+                  {showPassword ? t('auth.hide_password') : t('auth.show_password')}
                 </button>
               </div>
             </label>
@@ -131,7 +131,7 @@ export default function AuthPage({ mode = 'login', onAuthenticated }) {
                 onChange={(e) => setRemember(e.target.checked)}
                 className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
               />
-              记住登录状态
+              {t('auth.remember_me')}
             </label>
 
             <button
