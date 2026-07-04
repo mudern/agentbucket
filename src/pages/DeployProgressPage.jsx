@@ -182,7 +182,7 @@ export default function DeployProgressPage() {
                 <div className="flex shrink-0 items-center gap-2 text-xs text-slate-400 dark:text-slate-500">
                   {dep.model && <span className="rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5">{dep.model}</span>}
                   {dep.runtime && <span className="rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5">{dep.runtime}</span>}
-                  {dep.sidecarUrl && <span className="text-sky-600">{dep.sidecarUrl}</span>}
+                  
                   <span>{new Date(dep.createdAt).toLocaleString()}</span>
                 </div>
               </div>
