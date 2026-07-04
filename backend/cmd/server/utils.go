@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"os/exec"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -98,23 +96,3 @@ func buildTimeout() time.Duration {
 	return duration
 }
 
-func executeTokenScript(rootDir string, token *AuthToken, param string) (string, error) {
-	if token.Script == "" {
-		return "", fmt.Errorf("no script configured")
-	}
-	scriptPath := filepath.Join(rootDir, token.Script)
-	if _, err := os.Stat(scriptPath); err != nil {
-		return "", fmt.Errorf("script not found: %s", token.Script)
-	}
-	cmd := exec.Command("python3", scriptPath, param)
-	cmd.Dir = rootDir
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return "", fmt.Errorf("script error: %v: %s", err, strings.TrimSpace(string(out)))
-	}
-	result := strings.TrimSpace(string(out))
-	if result == "" {
-		return "", fmt.Errorf("script returned empty output")
-	}
-	return result, nil
-}

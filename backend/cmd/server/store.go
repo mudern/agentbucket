@@ -308,11 +308,9 @@ func seedState(rootDir string) State {
 			},
 		AITokens: []AIToken{},
 		AuthTokens: []AuthToken{
-			{ID: 101, Name: "Test Public API", AccessTarget: "测试外部公开 API，所有已部署 Agent 可访问", Script: "tokens/test_public.py", FunctionName: "get_token", Argument: "scope", Status: "启用", UpdatedAt: "刚刚"},
-			{ID: 102, Name: "Test Admin API", AccessTarget: "测试管理员 API，仅允许显式授权 Agent", Script: "tokens/test_admin.py", FunctionName: "get_token", Argument: "scope", Status: "启用", UpdatedAt: "刚刚"},
-			{ID: 103, Name: "Test Disabled API", AccessTarget: "测试停用 Token 拒绝逻辑", Script: "tokens/test_disabled.py", FunctionName: "get_token", Argument: "scope", Status: "停用", UpdatedAt: "刚刚"},
-			{ID: 104, Name: "GitHub Token", AccessTarget: "访问 GitHub 仓库、Issues、PR", Script: "tokens/github_token.py", FunctionName: "get_token", Argument: "repo", Status: "启用", UpdatedAt: "刚刚"},
-			{ID: 105, Name: "Internal DB", AccessTarget: "内部数据库只读访问", Script: "tokens/db_read.py", FunctionName: "get_token", Argument: "database", Status: "启用", UpdatedAt: "刚刚"},
+			{ID: 101, Name: "GitHub Token", Description: "访问 GitHub 仓库、Issues、PR", Secret: "ghp_demo_placeholder", Status: "启用", UpdatedAt: "刚刚"},
+			{ID: 102, Name: "Notion API Key", Description: "Notion 知识库读写权限", Secret: "ntn_demo_placeholder", Status: "启用", UpdatedAt: "刚刚"},
+			{ID: 103, Name: "Internal DB", Description: "内部数据库只读访问凭据", Secret: "db_demo_placeholder", Status: "启用", UpdatedAt: "刚刚"},
 		},
 		Users: []User{
 			{ID: 1, Name: "Luna", Email: "luna@agentbucket.dev", Role: "super_admin", Active: true, PasswordHash: hashPassword("admin123")},

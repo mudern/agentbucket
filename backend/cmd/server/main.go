@@ -75,15 +75,10 @@ func (app *App) resolveToken(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusForbidden, fmt.Errorf("agent %s is not allowed to access token %d", agentID, req.TokenID))
 		return
 	}
-	resolved, err := executeTokenScript(app.rootDir, token, req.Param)
-	if err != nil {
-		resolved = fmt.Sprintf("test-token-%d-%s-%s (script error: %v)", token.ID, slug(agentID), shortHash(req.Param), err)
-	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"tokenId":      token.ID,
 		"name":         token.Name,
-		"accessTarget": token.AccessTarget,
-		"param":        req.Param,
-		"token":        resolved,
+		"description":  token.Description,
+		"token":        token.Secret,
 	})
 }

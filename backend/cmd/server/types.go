@@ -108,14 +108,12 @@ type AIToken struct {
 }
 
 type AuthToken struct {
-	ID           int    `json:"id"`
-	Name         string `json:"name"`
-	AccessTarget string `json:"accessTarget"`
-	Script       string `json:"script"`
-	FunctionName string `json:"functionName"`
-	Argument     string `json:"argument"`
-	Status       string `json:"status"`
-	UpdatedAt    string `json:"updatedAt"`
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Secret      string `json:"secret,omitempty"` // accepted on create, hidden on list
+	Status      string `json:"status"`
+	UpdatedAt   string `json:"updatedAt"`
 }
 
 type User struct {
@@ -190,8 +188,7 @@ type DeployRequest struct {
 }
 
 type TokenResolveRequest struct {
-	TokenID int    `json:"tokenId"`
-	Param   string `json:"param"`
+	TokenID int `json:"tokenId"`
 }
 
 type ChatSession struct {

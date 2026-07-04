@@ -3,7 +3,6 @@ import { getAuthTokens, deleteAuthToken, patchAuthToken, createAuthToken } from 
 import LoadingPanel from '../components/LoadingPanel'
 import {
   FilterInput,
-  FilterSelect,
   HeaderFilter,
   HoverCard,
   ManagementTable,
@@ -22,39 +21,29 @@ export default function AuthTokensPage() {
   const t = useT()
   const [importOpen, setImportOpen] = useState(false)
   const [query, setQuery] = useState('')
-  const [functionFilter, setFunctionFilter] = useState('all')
-  const [status, setStatus] = useState('all')
   const { data, loading } = useAsyncData(getAuthTokens, [])
   const [authTokens, setAuthTokens] = useState([])
-  const [form, setForm] = useState({ name: '', accessTarget: '', script: '', functionName: 'get_token', argument: '' })
+  const [form, setForm] = useState({ name: '', description: '', secret: '' })
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
+  const [showSecret, setShowSecret] = useState(false)
 
   useEffect(() => {
-    if (data) {
-      setAuthTokens(data)
-    }
+    if (data) setAuthTokens(data)
   }, [data])
 
-  const functions = useMemo(() => [...new Set(authTokens.map((token) => token.functionName))], [authTokens])
-  const statuses = useMemo(() => [...new Set(authTokens.map((token) => token.status))], [authTokens])
   const filteredTokens = useMemo(() => {
     return authTokens.filter((token) => {
-      const text = [token.name, token.accessTarget, token.script, token.functionName, token.argument, token.status, token.updatedAt].join(' ').toLowerCase()
-      const hitQuery = query.trim() === '' || text.includes(query.toLowerCase())
-      const hitFunction = functionFilter === 'all' || token.functionName === functionFilter
-      const hitStatus = status === 'all' || token.status === status
-      return hitQuery && hitFunction && hitStatus
+      const text = [token.name, token.description, token.status, token.updatedAt].join(' ').toLowerCase()
+      return query.trim() === '' || text.includes(query.toLowerCase())
     })
-  }, [authTokens, functionFilter, query, status])
+  }, [authTokens, query])
 
-  if (loading) {
-    return <LoadingPanel label={t('common.loading')} />
-  }
+  if (loading) return <LoadingPanel label={t('common.loading')} />
 
   const updateTokenStatus = async (tokenId, nextStatus) => {
     await patchAuthToken(tokenId, { status: nextStatus })
-    setAuthTokens((current) => current.map((token) => (token.id === tokenId ? { ...token, status: nextStatus } : token)))
+    setAuthTokens((current) => current.map((t) => t.id === tokenId ? { ...t, status: nextStatus } : t))
   }
 
   const handleDelete = async (id) => {
@@ -65,18 +54,18 @@ export default function AuthTokensPage() {
   }
 
   const handleCreate = async () => {
-    if (!form.name || !form.script) {
-      setFormError(t('repositories.no_repos'))
+    if (!form.name || !form.secret) {
+      setFormError(t('authTokens.fill_required'))
       return
     }
     setSaving(true)
     setFormError('')
     try {
-      const status = '启用'
-      const created = await createAuthToken({ ...form, status })
+      const created = await createAuthToken({ ...form, status: '启用' })
       setAuthTokens((c) => [...c, created])
       setImportOpen(false)
-      setForm({ name: '', accessTarget: '', script: '', functionName: 'get_token', argument: '' })
+      setForm({ name: '', description: '', secret: '' })
+      setShowSecret(false)
     } catch (e) {
       setFormError(e.message)
     } finally {
@@ -88,8 +77,8 @@ export default function AuthTokensPage() {
     <div>
       <PageHeader
         title={t('authTokens.title')}
-        description={t('authTokens.import_hint')}
-        action={<button onClick={() => setImportOpen(true)} className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white">{t('authTokens.import_token')}</button>}
+        description={t('authTokens.desc', 'Agent 通过 Sidecar 自动获取已授权的 Token，无需编写脚本。')}
+        action={<button onClick={() => setImportOpen(true)} className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white">{t('authTokens.create_token')}</button>}
       />
       {importOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/30 px-4 py-8" onClick={() => setImportOpen(false)}>
@@ -100,23 +89,26 @@ export default function AuthTokensPage() {
             <div className="grid gap-4 p-5">
               <label className="block text-sm text-slate-700">
                 {t('common.name')}
-                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. GitHub Token" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-500" />
+                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="GitHub Token" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-500" />
               </label>
               <label className="block text-sm text-slate-700">
-                {t('authTokens.access_target')}
-                <input value={form.accessTarget} onChange={(e) => setForm({ ...form, accessTarget: e.target.value })} placeholder="api.github.com" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-500" />
+                {t('common.description')}
+                <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="访问 GitHub 仓库和 Issues" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-500" />
               </label>
               <label className="block text-sm text-slate-700">
-                {t('authTokens.function_name')}
-                <input value={form.functionName} onChange={(e) => setForm({ ...form, functionName: e.target.value })} placeholder="get_token" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-500" />
-              </label>
-              <label className="block text-sm text-slate-700">
-                {t('authTokens.description_label', 'Script path')}
-                <input value={form.script} onChange={(e) => setForm({ ...form, script: e.target.value })} placeholder="tokens/my_script.py" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-500" />
-              </label>
-              <label className="block text-sm text-slate-700">
-                {t('authTokens.description_label', 'Argument')}
-                <input value={form.argument} onChange={(e) => setForm({ ...form, argument: e.target.value })} placeholder="repo" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-500" />
+                {t('authTokens.secret')}
+                <div className="mt-2 flex overflow-hidden rounded-xl border border-slate-200 bg-white focus-within:border-sky-500">
+                  <input
+                    type={showSecret ? 'text' : 'password'}
+                    value={form.secret}
+                    onChange={(e) => setForm({ ...form, secret: e.target.value })}
+                    placeholder="ghp_xxxx"
+                    className="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm outline-none"
+                  />
+                  <button type="button" onClick={() => setShowSecret((s) => !s)} className="shrink-0 border-l border-slate-200 px-3 text-xs text-slate-500 hover:bg-slate-50">
+                    {showSecret ? t('auth.hide_password') : t('auth.show_password')}
+                  </button>
+                </div>
               </label>
               {formError && <div className="text-sm text-rose-600">{formError}</div>}
             </div>
@@ -130,10 +122,10 @@ export default function AuthTokensPage() {
 
       <ManagementTable>
           <colgroup>
-            <col className="w-[30%]" />
-            <col className="w-[34%]" />
+            <col className="w-[32%]" />
+            <col className="w-[38%]" />
             <col className="w-[14%]" />
-            <col className="w-[22%]" />
+            <col className="w-[16%]" />
           </colgroup>
           <thead className={tableHeadClass}>
             <tr>
@@ -142,16 +134,8 @@ export default function AuthTokensPage() {
                   <FilterInput value={query} onChange={setQuery} placeholder={t('authTokens.search_placeholder')} />
                 </HeaderFilter>
               </th>
-              <th className={tableHeaderCellClass}>
-                <HeaderFilter label={t('authTokens.access_target')} active={functionFilter !== 'all'}>
-                  <FilterSelect value={functionFilter} onChange={setFunctionFilter} options={functions} />
-                </HeaderFilter>
-              </th>
-              <th className={tableHeaderCellClass}>
-                <HeaderFilter label={t('common.status')} active={status !== 'all'}>
-                  <FilterSelect value={status} onChange={setStatus} options={statuses} />
-                </HeaderFilter>
-              </th>
+              <th className={tableHeaderCellClass}>{t('common.description')}</th>
+              <th className={tableHeaderCellClass}>{t('common.status')}</th>
               <th className={`${tableHeaderCellClass} text-right`}>{t('common.actions')}</th>
             </tr>
           </thead>
@@ -164,28 +148,17 @@ export default function AuthTokensPage() {
                       <div className="space-y-3">
                         <div>
                           <div className="font-semibold text-slate-950">{token.name}</div>
-                          <div className="mt-1 leading-5 text-slate-500">{token.accessTarget}</div>
+                          <div className="mt-1 leading-5 text-slate-500">{token.description}</div>
                         </div>
-                        <div className="grid grid-cols-[72px_1fr] gap-y-2">
-                          <span className="text-slate-400">脚本</span>
-                          <span className="font-mono">{token.script}</span>
-                          <span className="text-slate-400">函数</span>
-                          <span className="font-mono">{token.functionName}({token.argument})</span>
-                        </div>
+                        <div className="text-xs text-slate-400">Secret 不会在前端展示，Agent 通过 Sidecar 获取。</div>
                       </div>
                     }
                   >
-                    <span className="cursor-default underline decoration-slate-300 decoration-dotted underline-offset-4">
-                      {token.name}
-                    </span>
+                    <span className="cursor-default underline decoration-slate-300 decoration-dotted underline-offset-4">{token.name}</span>
                   </HoverCard>
                 </td>
                 <td className={tableCellClass}>
-                  <div className="max-w-sm truncate text-slate-700">{token.accessTarget}</div>
-                  <div className="font-mono text-xs text-slate-900">{token.script}</div>
-                  <div className="mt-1 font-mono text-xs text-slate-500">
-                    {token.functionName}({token.argument})
-                  </div>
+                  <div className="max-w-sm truncate text-slate-700">{token.description || '-'}</div>
                 </td>
                 <td className={tableCellClass}>
                   <StatusBadge status={token.status} />

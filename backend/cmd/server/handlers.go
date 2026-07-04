@@ -164,19 +164,22 @@ func (app *App) aiTokens(w http.ResponseWriter, r *http.Request) {
 func (app *App) authTokens(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		writeJSON(w, http.StatusOK, app.store.snapshot().AuthTokens)
+		tokens := app.store.snapshot().AuthTokens
+		safe := make([]AuthToken, len(tokens))
+		for i, t := range tokens {
+			safe[i] = t
+			safe[i].Secret = ""
+		}
+		writeJSON(w, http.StatusOK, safe)
 	case http.MethodPost:
 		var token AuthToken
 		if err := json.NewDecoder(r.Body).Decode(&token); err != nil {
 			writeError(w, http.StatusBadRequest, err)
 			return
 		}
-		if token.Name == "" || token.AccessTarget == "" {
-			writeError(w, http.StatusBadRequest, fmt.Errorf("name and accessTarget are required"))
+		if token.Name == "" || token.Secret == "" {
+			writeError(w, http.StatusBadRequest, fmt.Errorf("name and secret are required"))
 			return
-		}
-		if token.FunctionName == "" {
-			token.FunctionName = "get_token"
 		}
 		if token.Status == "" {
 			token.Status = "启用"

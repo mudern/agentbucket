@@ -256,8 +256,8 @@ export default function DeployPage() {
       auth: data.authTokens.map((token) => ({
         id: token.id,
         label: token.name,
-        description: token.accessTarget,
-        meta: [token.functionName, token.status].filter(Boolean).join(' ·'),
+        description: token.description || '',
+        meta: token.status,
       })),
     }
   }, [data, selectedAgent, selectedMcps, selectedSkills])
