@@ -217,33 +217,38 @@ func (app *App) agents(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			seen[agent.ID] = true
-			agent.Status = "离线"
-			for _, d := range state.Deployments {
-				if d.AgentID == agent.ID && d.Status == "running" {
-					agent.Status = "已部署"
-					// Override agent definition with deployment-time choices
-					if d.Model != "" {
-						agent.Model = d.Model
-					}
-					if d.Runtime != "" {
-						agent.Runtime = d.Runtime
-					}
-					if len(d.Skills) > 0 {
-						agent.Skills = d.Skills
-					}
-					if len(d.MCPs) > 0 {
-						agent.MCPs = d.MCPs
-					}
-					// Resolve API token name from deployment's apiTokenId
-					if d.APITokenID > 0 {
-						for _, t := range state.AITokens {
-							if t.ID == d.APITokenID {
-								agent.APIToken = t.Name
-								break
-							}
-						}
-					}
+			// Only show agents that have a running deployment
+			var deployment *Deployment
+			for i := range state.Deployments {
+				if state.Deployments[i].AgentID == agent.ID && state.Deployments[i].Status == "running" {
+					deployment = &state.Deployments[i]
 					break
+				}
+			}
+			if deployment == nil {
+				continue // skip agents without a running deployment
+			}
+			agent.Status = "已部署"
+			// Override agent definition with deployment-time choices
+			if deployment.Model != "" {
+				agent.Model = deployment.Model
+			}
+			if deployment.Runtime != "" {
+				agent.Runtime = deployment.Runtime
+			}
+			if len(deployment.Skills) > 0 {
+				agent.Skills = deployment.Skills
+			}
+			if len(deployment.MCPs) > 0 {
+				agent.MCPs = deployment.MCPs
+			}
+			// Resolve API token name from deployment's apiTokenId
+			if deployment.APITokenID > 0 {
+				for _, t := range state.AITokens {
+					if t.ID == deployment.APITokenID {
+						agent.APIToken = t.Name
+						break
+					}
 				}
 			}
 			agent.Tags = []string{agent.Runtime, agent.Model}
