@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { createDeployment, getDeployOptions, getDeployments, stopDeployment, startDeployment, deleteDeployment } from '../api'
+import { createDeployment, getDeployOptions, getDeployments, getAgents, stopDeployment, startDeployment, deleteDeployment } from '../api'
 import LoadingPanel from '../components/LoadingPanel'
 import PageHeader from '../components/PageHeader'
 import useAsyncData from '../hooks/useAsyncData'
@@ -147,6 +147,13 @@ export default function DeployPage() {
   const [picker, setPicker] = useState(null)
   const [capabilityTouched, setCapabilityTouched] = useState({ skills: false, mcps: false })
   const { data, loading } = useAsyncData(getDeployOptions, [])
+  const { data: agentList = [] } = useAsyncData(getAgents, [])
+
+  const agentNameMap = useMemo(() => {
+    const map = {}
+    for (const a of agentList) map[a.id] = a.name
+    return map
+  }, [agentList])
 
   useEffect(() => {
     getDeployments().then(setDeployments).catch(() => {})
@@ -657,7 +664,7 @@ export default function DeployPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" title="Running" />
-                    <span className="text-sm font-medium text-slate-900">{d.agentId}</span>
+                    <span className="text-sm font-medium text-slate-900">{agentNameMap[d.agentId] || d.agentId}</span>
                   </div>
                   <div className="mt-0.5 text-xs text-slate-400">{d.runtime} \u00b7 {d.sidecarUrl}</div>
                 </div>
