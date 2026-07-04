@@ -4,9 +4,9 @@ const supportedLangs = ['zh', 'en', 'fr', 'ja', 'de', 'ko', 'es', 'ar', 'pt', 'i
 const defaultLang = 'zh'
 
 const langNames = {
-  zh: '中文', en: 'EN', fr: 'FR', ja: '日本語',
-  de: 'DE', ko: '한국어', es: 'ES', ar: 'العربية',
-  pt: 'PT', it: 'IT',
+  zh: '中文', en: 'English', fr: 'Français', ja: '日本語',
+  de: 'Deutsch', ko: '한국어', es: 'Español', ar: 'العربية',
+  pt: 'Português', it: 'Italiano',
 }
 
 const LanguageContext = createContext()
