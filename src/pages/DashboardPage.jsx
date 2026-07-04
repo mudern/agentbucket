@@ -45,23 +45,23 @@ export default function DashboardPage() {
 
       {/* Row 1: Core stats */}
       <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <StatCard label={t('agents.title')} value={deployments?.running || 0} sub={`${deployments?.total || 0} total`} icon="🟢" color="emerald" to="/agents" />
-        <StatCard label={t('common.running')} value={deployments?.running || 0} icon="🚀" color="sky" to="/deploy/progress" />
-        <StatCard label={t('common.failed', '失败')} value={deployments?.failed || 0} icon="⚠️" color={(deployments?.failed || 0) > 0 ? 'rose' : 'slate'} to="/deploy/progress" />
+        <StatCard label={t('agents.title')} value={(deployments?.running || 0) || 0} sub={`${(deployments?.total || 0) || 0} total`} icon="🟢" color="emerald" to="/agents" />
+        <StatCard label={t('common.running')} value={(deployments?.running || 0) || 0} icon="🚀" color="sky" to="/deploy/progress" />
+        <StatCard label={t('common.failed', '失败')} value={(deployments?.failed || 0) || 0} icon="⚠️" color={((deployments?.failed || 0) || 0) > 0 ? 'rose' : 'slate'} to="/deploy/progress" />
         <StatCard label={t('repositories.title')} value={repositories?.length || 0} icon="📦" color="slate" to="/repositories" />
-        <StatCard label={t('users.title')} value={users?.active || 0} sub={`${users?.superAdmin || 0} admin`} icon="👥" color="slate" to="/users" />
+        <StatCard label={t('users.title')} value={(users?.active || 0) || 0} sub={`${(users?.superAdmin || 0) || 0} admin`} icon="👥" color="slate" to="/users" />
       </div>
 
       {/* Row 2: Tokens + Chat + Bus */}
       <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label={t('aITokens.title')} value={tokens?.ai?.enabled || 0} sub={`${tokens?.ai?.disabled || 0} disabled`} icon="🔑" color="sky" to="/ai-tokens" />
-        <StatCard label={t('authTokens.title')} value={tokens?.auth?.enabled || 0} icon="🔐" color="slate" to="/auth-tokens" />
-        <StatCard label={t('chat.sessions')} value={chat?.totalSessions || 0} sub={`${chat?.todayMessages || 0} today`} icon="💬" color="sky" to="/agents" />
-        <StatCard label={t('progress.title')} value={deployments?.today || 0} sub={`${Math.round((deployments?.recentSuccessRate || 0) / Math.max((deployments?.total || 1), 1) * 100)}% success`} icon="📊" color="slate" to="/deploy/progress" />
+        <StatCard label={t('aITokens.title')} value={(tokens?.ai?.enabled || 0) || 0} sub={`${(tokens?.ai?.disabled || 0) || 0} disabled`} icon="🔑" color="sky" to="/ai-tokens" />
+        <StatCard label={t('authTokens.title')} value={(tokens?.auth?.enabled || 0) || 0} icon="🔐" color="slate" to="/auth-tokens" />
+        <StatCard label={t('chat.sessions')} value={(chat?.totalSessions || 0) || 0} sub={`${(chat?.todayMessages || 0) || 0} today`} icon="💬" color="sky" to="/agents" />
+        <StatCard label={t('progress.title')} value={(deployments?.today || 0) || 0} sub={`${Math.round(((deployments?.recentSuccessRate || 0) || 0) / Math.max(((deployments?.total || 0) || 1), 1) * 100)}% success`} icon="📊" color="slate" to="/deploy/progress" />
       </div>
 
       {/* Row 3: Alerts + Details */}
-      {deployments?.failed > 0 && (
+      {(deployments?.failed || 0) > 0 && (
         <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-800 dark:bg-rose-900/30 dark:text-rose-300">
           {deployments.failed} {t('progress.step_failed')} — <Link to="/deploy/progress" className="font-medium underline">{t('common.view_all', '查看')}</Link>
         </div>

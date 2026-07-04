@@ -328,7 +328,7 @@ func (app *App) authTokens(w http.ResponseWriter, r *http.Request) {
 func (app *App) agents(w http.ResponseWriter, r *http.Request) {
 	state := app.store.snapshot()
 	seen := map[string]bool{}
-	var agents []Agent
+	agents := make([]Agent, 0)
 	for _, repo := range app.scanRepositories(state.Repositories) {
 		if len(repo.Commits) == 0 {
 			continue

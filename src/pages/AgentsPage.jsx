@@ -13,7 +13,7 @@ export default function AgentsPage() {
   const { data: agents = [], loading } = useAsyncData(getAgents, [])
   const t = useT()
 
-  const tags = useMemo(() => [...new Set(agents.flatMap((agent) => agent.tags))], [agents])
+  const tags = useMemo(() => [...new Set((agents || []).flatMap((agent) => agent.tags))], [agents])
 
   const toggleTag = (tag) => {
     setSelectedTags((current) => (current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag]))
