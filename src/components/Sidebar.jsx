@@ -42,9 +42,9 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
       </button>
 
       {/* Logo */}
-      <div className={`mb-7 flex items-center ${collapsed ? 'justify-center' : 'justify-start'}`}>
+      <NavLink to="/" className={`mb-7 flex items-center ${collapsed ? 'justify-center' : 'justify-start'}`}>
         <LogoMark compact={collapsed} />
-      </div>
+      </NavLink>
 
       {/* Navigation — always render the flex-1 container for consistent layout */}
       {!collapsed && (
