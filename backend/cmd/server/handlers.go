@@ -234,6 +234,15 @@ func (app *App) agents(w http.ResponseWriter, r *http.Request) {
 					if len(d.MCPs) > 0 {
 						agent.MCPs = d.MCPs
 					}
+					// Resolve API token name from deployment's apiTokenId
+					if d.APITokenID > 0 {
+						for _, t := range state.AITokens {
+							if t.ID == d.APITokenID {
+								agent.APIToken = t.Name
+								break
+							}
+						}
+					}
 					break
 				}
 			}
