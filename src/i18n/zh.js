@@ -7,6 +7,7 @@ const zh = {
     recent_deployments: '最近部署',
     view_all: '查看全部',
     no_deployments_yet: '暂无部署，去部署一个',
+    system: '系统信息',
     confirm_delete_title: '确认删除',
     confirm_delete_msg: '此操作不可撤销，确定要继续吗？',
     back: '← 返回',

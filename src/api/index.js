@@ -172,6 +172,10 @@ export async function redeployDeployment(id) {
   return request(`/api/deployments/${id}/redeploy`, { method: 'POST' })
 }
 
+export async function getStats() {
+  return request('/api/stats')
+}
+
 export async function createAiToken(data) {
   return request('/api/ai-tokens', { method: 'POST', body: JSON.stringify(data) })
 }

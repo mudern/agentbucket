@@ -12,6 +12,124 @@ import (
 	"time"
 )
 
+func (app *App) stats(w http.ResponseWriter, r *http.Request) {
+	state := app.store.snapshot()
+	now := time.Now()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	// Token counts
+	aiEnabled, aiDisabled := 0, 0
+	for _, t := range state.AITokens {
+		if t.Status == "启用" { aiEnabled++ } else { aiDisabled++ }
+	}
+	authEnabled, authDisabled := 0, 0
+	for _, t := range state.AuthTokens {
+		if t.Status == "启用" { authEnabled++ } else { authDisabled++ }
+	}
+
+	// User counts
+	superAdmin, admin, user, activeUsers := 0, 0, 0, 0
+	for _, u := range state.Users {
+		if u.Active { activeUsers++ }
+		switch u.Role {
+		case "super_admin": superAdmin++
+		case "admin": admin++
+		case "user": user++
+		}
+	}
+
+	// Deployment stats
+	var deploys []map[string]any
+	running, failed, stopped, total := 0, 0, 0, 0
+	todayDeploys := 0
+	for _, d := range state.Deployments {
+		total++
+		switch d.Status {
+		case "running": running++
+		case "stopped": stopped++
+		case "build_failed", "run_failed", "crashed": failed++
+		}
+		if d.CreatedAt.After(today) { todayDeploys++ }
+		deploys = append(deploys, map[string]any{
+			"agentId": d.AgentID, "status": d.Status, "model": d.Model,
+			"runtime": d.Runtime, "createdAt": d.CreatedAt,
+		})
+	}
+	// Recent 10 for success rate
+	recent := deploys
+	if len(recent) > 10 {
+		recent = recent[len(recent)-10:]
+	}
+	recentSuccess := 0
+	for _, d := range recent {
+		if d["status"] == "running" { recentSuccess++ }
+	}
+
+	// Chat stats
+	totalSessions, totalMessages, todayMessages := 0, 0, 0
+	for _, sessions := range state.ChatSessions {
+		totalSessions += len(sessions)
+	}
+	for _, msgs := range state.ChatMessages {
+		for _, m := range msgs {
+			totalMessages++
+			if m.CreatedAt.After(today) { todayMessages++ }
+		}
+	}
+
+	// Repo sync status
+	var repoStatus []map[string]any
+	for _, r := range app.scanRepositories(state.Repositories) {
+		commitCount := len(r.Commits)
+		agentCount := 0
+		if commitCount > 0 && len(r.Commits[0].Agents) > 0 {
+			agentCount = len(r.Commits[0].Agents)
+		}
+		repoStatus = append(repoStatus, map[string]any{
+			"id": r.ID, "provider": r.Provider, "status": r.Status,
+			"lastSync": r.LastSync, "commits": commitCount, "agents": agentCount,
+		})
+	}
+
+	// Bus status
+	busAgents := app.bus.list()
+	busOnline := 0
+	for _, a := range busAgents {
+		if a.Status == "online" { busOnline++ }
+	}
+
+	// System info
+	dockerAvailable := true
+	if _, err := exec.LookPath("docker"); err != nil { dockerAvailable = false }
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"tokens": map[string]any{
+			"ai":   map[string]any{"enabled": aiEnabled, "disabled": aiDisabled},
+			"auth": map[string]any{"enabled": authEnabled, "disabled": authDisabled},
+		},
+		"users": map[string]any{
+			"total": len(state.Users), "active": activeUsers,
+			"superAdmin": superAdmin, "admin": admin, "user": user,
+		},
+		"deployments": map[string]any{
+			"total": total, "running": running, "failed": failed, "stopped": stopped,
+			"today": todayDeploys, "recentSuccessRate": recentSuccess,
+		},
+		"chat": map[string]any{
+			"totalSessions": totalSessions, "totalMessages": totalMessages,
+			"todayMessages": todayMessages,
+		},
+		"repositories": repoStatus,
+		"bus": map[string]any{
+			"total": len(busAgents), "online": busOnline,
+		},
+		"system": map[string]any{
+			"version": "1.0.0", "dockerAvailable": dockerAvailable,
+			"goVersion": "1.22+",
+		},
+	})
+}
+
 func (app *App) health(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 }

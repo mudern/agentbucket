@@ -90,6 +90,7 @@ func (app *App) routes() http.Handler {
 	// Serve frontend static files when dist/ directory exists (Docker / single-binary mode)
 	distDir := filepath.Join(app.rootDir, "dist")
 	hasDist := dirExists(distDir)
+	mux.HandleFunc("GET /api/stats", app.stats)
 	mux.HandleFunc("/health", app.health)
 	mux.HandleFunc("POST /api/login", app.login)
 	mux.HandleFunc("/api/current-user", app.currentUser)
