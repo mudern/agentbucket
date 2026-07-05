@@ -119,7 +119,6 @@ function CapabilityPickerModal({ open, title, mode, items, selected, onClose, on
           )}
         </div>
       </div>
-      <ConfirmDialog open={!!confirm} title={confirm?.title || ''} message={confirm?.message || ''} onConfirm={confirm?.action} onCancel={() => setConfirm(null)} />
     </div>
   )
 }

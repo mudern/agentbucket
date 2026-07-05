@@ -16,6 +16,8 @@ const en = {
     error: 'Something went wrong',
     success: 'Success',
     confirm_delete: 'Are you sure you want to delete this?',
+    confirm_delete_title: 'Confirm Delete',
+    confirm_delete_msg: 'This action cannot be undone. Continue?',
     no_match: 'No matching items',
     selected_count: '{count} selected',
     total_items: '{count} total',
