@@ -26,7 +26,7 @@ AgentBucket 会从 Git/GitHub/本地仓库扫描 `agent.toml`，把选中的 Age
 - 打包 `mcp/*.json` MCP 配置。
 - 部署时自动生成 Docker build context 并注入 Go sidecar。
 - 支持 `claudecode`、`codex`、`opencode`、`gemini` 和 `reasonix` runtime。
-- 从 CCS provider env 文件导入 AI Token。
+- 通过数据库持久化的 API/UI 显式管理 AI Token。
 - 使用 SQLite 保存用户、仓库、部署、会话、消息和状态。
 - 支持 SSE 流式聊天、sidecar chat 转发和 Anthropic-compatible API fallback。
 - 支持 Agent Bus 发现和消息通信。
@@ -62,7 +62,6 @@ flowchart TD
 - Node.js 20+
 - pnpm 11+
 - Docker，用于部署 Agent 容器
-- 可选：`~/.config/ccs/providers/*.env` 下的 CCS provider env 文件
 
 如果本机代理变量影响 localhost，请给服务加 `NO_PROXY=127.0.0.1,localhost`，curl 检查时使用 `curl --noproxy '*'`。
 
@@ -113,7 +112,6 @@ docker-compose up -d
 Compose 会挂载：
 
 - `/var/run/docker.sock`，用于管理宿主机 Docker 容器。
-- `${HOME}/.config/ccs/providers` 到 `/providers`，用于导入 AI Token。
 - 命名 volume 保存 SQLite 和运行状态。
 
 这是 Docker-out-of-Docker，不是 Docker-in-Docker。

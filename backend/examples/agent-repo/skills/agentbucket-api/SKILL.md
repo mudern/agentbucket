@@ -69,7 +69,7 @@ curl --noproxy '*' -sS -X POST "$AGENTBUCKET_API/api/repositories" \
 
 ## AI Tokens
 
-AI tokens are auto-imported from CCS providers (`~/.config/ccs/providers/*.env`) on startup. Secrets are stored server-side.
+AI tokens are created through the AgentBucket API/UI and stored server-side in the database. Secrets are redacted on list responses.
 
 List AI tokens (secrets are redacted):
 
@@ -277,7 +277,7 @@ mcps = ["notion-mcp", "filesystem-mcp"]
 
 Available runtimes: `codex`, `claudecode`, `opencode`, `gemini`, `reasonix`
 
-Available providers: auto-imported from `~/.config/ccs/providers/` (deepseek, glm, kimi, minimax)
+AI token provider names are user-defined and come from the tokens stored in AgentBucket.
 
 Skills must be standard skill directories: `skills/<skill-id>/SKILL.md`
 

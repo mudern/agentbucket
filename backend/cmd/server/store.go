@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -33,7 +32,7 @@ func NewStore(path string, rootDir string) (*Store, error) {
 	if len(raw) == 0 {
 		store.state = seedState(rootDir)
 		store.state.Users = ensureUserPasswordHashes(store.state.Users)
-		store.importCCSAITokens()
+		printFirstStartCredentials(store.state.Users)
 		return store.saveLocked()
 	}
 	if err := json.Unmarshal(raw, &store.state); err != nil {
@@ -47,7 +46,6 @@ func NewStore(path string, rootDir string) (*Store, error) {
 	if err := store.loadChat(); err != nil {
 		return nil, err
 	}
-	store.importCCSAITokens()
 	if _, err := store.saveLocked(); err != nil {
 		return nil, err
 	}
@@ -138,6 +136,17 @@ func (s *Store) loadUsers() ([]User, error) {
 	return users, rows.Err()
 }
 
+func printFirstStartCredentials(users []User) {
+	for _, u := range users {
+		if u.Role == "super_admin" {
+			log.Println("")
+			log.Println("First start complete. Admin credentials saved to DB.")
+			log.Println("Username: admin")
+			break
+		}
+	}
+}
+
 func ensureUserPasswordHashes(users []User) []User {
 	upgraded := 0
 	for i := range users {
@@ -198,83 +207,6 @@ func (s *Store) loadChat() error {
 	return nil
 }
 
-func (s *Store) importCCSAITokens() {
-	providersDir := os.Getenv("AGENTBUCKET_PROVIDERS_DIR")
-	if providersDir == "" {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return
-		}
-		providersDir = filepath.Join(home, ".config", "ccs", "providers")
-	}
-	entries, err := os.ReadDir(providersDir)
-	if err != nil {
-		return
-	}
-	existing := map[string]int{}
-	maxID := 0
-	for _, token := range s.state.AITokens {
-		existing[token.Name] = token.ID
-		if token.ID > maxID {
-			maxID = token.ID
-		}
-	}
-	for _, entry := range entries {
-		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".env") {
-			continue
-		}
-		provider := strings.TrimSuffix(entry.Name(), ".env")
-		values, err := readEnvFile(filepath.Join(providersDir, entry.Name()))
-		if err != nil {
-			continue
-		}
-		name := provider
-		token := AIToken{
-			Name:     name,
-			Provider: strings.ToUpper(provider),
-			Scope:    "imported provider env",
-			Usage:    "local env",
-			Status:   "启用",
-			BaseURL:  values["ANTHROPIC_BASE_URL"],
-			Model:    values["ANTHROPIC_MODEL"],
-			Secret:   values["ANTHROPIC_AUTH_TOKEN"],
-		}
-		if id, ok := existing[name]; ok {
-			for i := range s.state.AITokens {
-				if s.state.AITokens[i].ID == id {
-					token.ID = id
-					s.state.AITokens[i] = token
-					break
-				}
-			}
-			continue
-		}
-		maxID++
-		token.ID = maxID
-		s.state.AITokens = append(s.state.AITokens, token)
-	}
-}
-
-func readEnvFile(path string) (map[string]string, error) {
-	raw, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	values := map[string]string{}
-	for _, line := range strings.Split(string(raw), "\n") {
-		line = strings.TrimSpace(line)
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-		parts := strings.SplitN(line, "=", 2)
-		if len(parts) != 2 {
-			continue
-		}
-		values[strings.TrimSpace(parts[0])] = strings.Trim(strings.TrimSpace(parts[1]), `"'`)
-	}
-	return values, nil
-}
-
 func seedState(rootDir string) State {
 	adminPass := randomPassword(16)
 	userPass := randomPassword(12)
@@ -299,7 +231,7 @@ func seedState(rootDir string) State {
 				LocalPath:  filepath.Join(rootDir, "examples", "agent-repo"),
 				Status:     "启用",
 			},
-			},
+		},
 		AITokens: []AIToken{},
 		AuthTokens: []AuthToken{
 			{ID: 101, Name: "GitHub Token", Description: "访问 GitHub 仓库、Issues、PR", Secret: "ghp_demo_placeholder", Status: "启用", UpdatedAt: "刚刚"},

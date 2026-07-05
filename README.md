@@ -39,7 +39,7 @@ AgentBucket scans agent definitions from Git/GitHub/local repositories, packages
 - Packages MCP config files from `mcp/*.json`.
 - Builds Docker images per deployment and injects the Go sidecar.
 - Supports `claudecode`, `codex`, `opencode`, `gemini`, and `reasonix` runtimes.
-- Imports AI provider tokens from CCS env files.
+- Stores AI tokens explicitly through the database-backed token API/UI.
 - Stores users, sessions, messages, deployments, repositories, and state in SQLite.
 - Provides real chat sessions with SSE streaming through sidecar or Anthropic-compatible APIs.
 - Provides a bus for agent discovery and message passing.
@@ -75,7 +75,6 @@ flowchart TD
 - Node.js 20+
 - pnpm 11+
 - Docker, if you want to deploy agents into containers
-- Optional CCS provider env files under `~/.config/ccs/providers/*.env`
 
 The local environment may have proxy variables that break localhost requests. Use `NO_PROXY=127.0.0.1,localhost` for servers and `curl --noproxy '*'` for checks.
 
@@ -126,7 +125,6 @@ docker-compose up -d
 The compose setup mounts:
 
 - `/var/run/docker.sock` so the backend can manage host Docker containers.
-- `${HOME}/.config/ccs/providers` into `/providers` for AI token import.
 - A named volume for SQLite and runtime state.
 
 This is Docker-out-of-Docker, not Docker-in-Docker.
@@ -139,7 +137,6 @@ This is Docker-out-of-Docker, not Docker-in-Docker.
 | `AGENTBUCKET_DATA_DIR` | `backend/.data` | SQLite DB and generated state |
 | `AGENTBUCKET_BUILD_TIMEOUT` | `300s` | Docker build timeout |
 | `AGENTBUCKET_SIDECAR_HOST` | `127.0.0.1` | Host used in sidecar URLs |
-| `AGENTBUCKET_PROVIDERS_DIR` | `~/.config/ccs/providers` | CCS provider env directory |
 | `VITE_API_BASE` | `http://127.0.0.1:8080` | Frontend API base |
 
 ## Repository Standard
