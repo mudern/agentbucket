@@ -58,62 +58,7 @@ func NewStore(path string, rootDir string) (*Store, error) {
 	if _, err := store.saveLocked(); err != nil {
 		return nil, err
 	}
-	// Import CCS provider tokens on startup
-	store.importCCSAITokens()
 	return store, nil
-}
-
-func (s *Store) importCCSAITokens() {
-	providersDir := os.Getenv("AGENTBUCKET_PROVIDERS_DIR")
-	if providersDir == "" {
-		home, err := os.UserHomeDir()
-		if err != nil { return }
-		providersDir = filepath.Join(home, ".config", "ccs", "providers")
-	}
-	entries, err := os.ReadDir(providersDir)
-	if err != nil { return }
-	for _, entry := range entries {
-		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".env") { continue }
-		provider := strings.TrimSuffix(entry.Name(), ".env")
-		values, err := readEnvFile(filepath.Join(providersDir, entry.Name()))
-		if err != nil { continue }
-		name := provider
-		s.state.AITokens = append(s.state.AITokens, AIToken{
-			Name: name, Provider: strings.ToUpper(provider),
-			Scope: "imported", Usage: "local", Status: "启用",
-			BaseURL: values["ANTHROPIC_BASE_URL"],
-			Model: values["ANTHROPIC_MODEL"],
-			Secret: values["ANTHROPIC_AUTH_TOKEN"],
-		})
-		s.mu.Lock()
-		for i := range s.state.AITokens {
-			// ensure unique IDs
-			if s.state.AITokens[i].ID == 0 {
-				s.state.AITokens[i].ID = maxID(s.state.AITokens) + i + 1
-			}
-		}
-		s.mu.Unlock()
-	}
-}
-
-func readEnvFile(path string) (map[string]string, error) {
-	raw, err := os.ReadFile(path)
-	if err != nil { return nil, err }
-	values := map[string]string{}
-	for _, line := range strings.Split(string(raw), "\n") {
-		line = strings.TrimSpace(line)
-		if line == "" || strings.HasPrefix(line, "#") { continue }
-		parts := strings.SplitN(line, "=", 2)
-		if len(parts) != 2 { continue }
-		values[strings.TrimSpace(parts[0])] = strings.Trim(strings.TrimSpace(parts[1]), `"'`)
-	}
-	return values, nil
-}
-
-func maxID(tokens []AIToken) int {
-	m := 0
-	for _, t := range tokens { if t.ID > m { m = t.ID } }
-	return m
 }
 
 func (s *Store) initSchema() error {
