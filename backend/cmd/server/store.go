@@ -29,10 +29,17 @@ func NewStore(path string, rootDir string) (*Store, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(raw) == 0 {
+	// Check if users already exist in SQL table before seeding
+	existingUsers, _ := store.loadUsers()
+	if len(raw) == 0 && len(existingUsers) == 0 {
 		store.state = seedState(rootDir)
 		store.state.Users = ensureUserPasswordHashes(store.state.Users)
 		printFirstStartCredentials(store.state.Users)
+		return store.saveLocked()
+	} else if len(raw) == 0 {
+		// DB has users but no state JSON — rebuild state from SQL tables
+		store.state = seedState(rootDir)
+		store.state.Users = existingUsers
 		return store.saveLocked()
 	}
 	if err := json.Unmarshal(raw, &store.state); err != nil {
