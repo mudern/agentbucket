@@ -156,6 +156,19 @@ func (app *App) stats(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (app *App) requireAdmin(r *http.Request) bool {
+	token := r.Header.Get("Authorization")
+	token = strings.TrimPrefix(token, "Bearer ")
+	if token == getMasterToken() { return true }
+	state := app.store.snapshot()
+	for _, u := range state.Users {
+		if u.Name == state.CurrentUser.Name && u.Active && (u.Role == "super_admin" || u.Role == "admin") {
+			return true
+		}
+	}
+	return false
+}
+
 func (app *App) health(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 }
