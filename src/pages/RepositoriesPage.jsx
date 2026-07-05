@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { deleteRepository, getRepositories, createRepository, listBranches, patchRepository, API_BASE } from '../api'
 import LoadingPanel from '../components/LoadingPanel'
 import { useT } from '../i18n'
+import ConfirmDialog from '../components/ConfirmDialog'
 import {
   FilterInput,
   FilterSelect,
@@ -40,6 +41,7 @@ export default function RepositoriesPage() {
   const [remoteBranches, setRemoteBranches] = useState([])
   const [fetchingBranches, setFetchingBranches] = useState(false)
   const [branchError, setBranchError] = useState('')
+  const [confirm, setConfirm] = useState(null)
   const t = useT()
 
   const handleFetchBranches = async () => {
@@ -278,12 +280,14 @@ export default function RepositoriesPage() {
                 <td className={tableCellClass}><div className="flex max-w-full flex-wrap gap-1.5">{domain && <SoftTag>{domain}</SoftTag>}{scheme && <SoftTag>{scheme}</SoftTag>}<SoftTag>{repo.provider}</SoftTag><SoftTag>{repo.branch}</SoftTag><SoftTag>{repo.agentsPath}</SoftTag></div></td>
                 <td className={tableCellClass}><div className="font-mono text-xs text-slate-900 dark:text-slate-100">{(c?.hash || '').slice(0, 8)}</div><div className="mt-1 text-xs text-slate-400 dark:text-slate-500">{c?.message}</div></td>
                 <td className={tableCellClass}><StatusBadge status={repo.status} /></td>
-                <td className={tableCellClass}><RowActions status={repo.status} onEnable={async () => { await patchRepository(repo.id, { status: '启用' }); setRepositories((c) => c.map((r) => r.id === repo.id ? { ...r, status: '启用' } : r)) }} onDisable={async () => { await patchRepository(repo.id, { status: '停用' }); setRepositories((c) => c.map((r) => r.id === repo.id ? { ...r, status: '停用' } : r)) }} onDelete={() => handleDelete(repo.id)} /></td>
+                <td className={tableCellClass}><RowActions status={repo.status} onEnable={async () => { await patchRepository(repo.id, { status: '启用' }); setRepositories((c) => c.map((r) => r.id === repo.id ? { ...r, status: '启用' } : r)) }} onDisable={async () => { await patchRepository(repo.id, { status: '停用' }); setRepositories((c) => c.map((r) => r.id === repo.id ? { ...r, status: '停用' } : r)) }} onDelete={() => setConfirm({ title: t('common.confirm_delete_title'), message: t('common.confirm_delete_msg'), action: async () => { await handleDelete(repo.id); setConfirm(null) } })} /></td>
               </tr>
             )
           })}
         </tbody>
       </ManagementTable>
     </div>
+
+      <ConfirmDialog open={!!confirm} title={confirm?.title || ''} message={confirm?.message || ''} onConfirm={confirm?.action} onCancel={() => setConfirm(null)} />
   )
 }

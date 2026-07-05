@@ -5,6 +5,7 @@ import LoadingPanel from '../components/LoadingPanel'
 import PageHeader from '../components/PageHeader'
 import useAsyncData from '../hooks/useAsyncData'
 import { useT } from '../i18n'
+import ConfirmDialog from '../components/ConfirmDialog'
 
 function summarizeItems(items, t) {
   if (!items.length) return t('common.not_selected')
@@ -119,6 +120,7 @@ function CapabilityPickerModal({ open, title, mode, items, selected, onClose, on
         </div>
       </div>
     </div>
+      <ConfirmDialog open={!!confirm} title={confirm?.title || ''} message={confirm?.message || ''} onConfirm={confirm?.action} onCancel={() => setConfirm(null)} />
   )
 }
 
@@ -146,6 +148,7 @@ export default function DeployPage() {
   const [deployments, setDeployments] = useState([])
   const [picker, setPicker] = useState(null)
   const [capabilityTouched, setCapabilityTouched] = useState({ skills: false, mcps: false })
+  const [confirm, setConfirm] = useState(null) // { id, title, message, action }
   const [healthStatus, setHealthStatus] = useState({}) // deploymentId -> { ok, error }
   const { data, loading } = useAsyncData(getDeployOptions, [])
   const { data: agentList = [] } = useAsyncData(getAgents, [])
@@ -717,7 +720,7 @@ export default function DeployPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={async () => { await stopDeployment(d.id); setDeployments((c) => c.map((x) => x.id === d.id ? { ...x, status: 'stopped' } : x)) }} className="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:hover:bg-slate-700 dark:bg-slate-900">{t('deploy.stop')}</button>
-                  <button onClick={async () => { await deleteDeployment(d.id); setDeployments((c) => c.filter((x) => x.id !== d.id)) }} className="rounded-lg px-3 py-1 text-xs text-rose-600 hover:bg-rose-50">{t('deploy.delete_deployment')}</button>
+                  <button onClick={() => setConfirm({ id: d.id, title: t('common.confirm_delete_title'), message: t('common.confirm_delete_msg'), action: async () => { await deleteDeployment(d.id); setDeployments((c) => c.filter((x) => x.id !== d.id)); setConfirm(null) } })} className="rounded-lg px-3 py-1 text-xs text-rose-600 hover:bg-rose-50">{t('deploy.delete_deployment')}</button>
                 </div>
               </div>
             ))}
@@ -725,5 +728,6 @@ export default function DeployPage() {
         </div>
       )}
     </div>
+      <ConfirmDialog open={!!confirm} title={confirm?.title || ''} message={confirm?.message || ''} onConfirm={confirm?.action} onCancel={() => setConfirm(null)} />
   )
 }
