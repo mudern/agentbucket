@@ -2,6 +2,8 @@ const zh = {
   common: {
     dashboard: '首页',
     dashboard_desc: 'AgentBucket 控制平面概览',
+    welcome: '欢迎使用 AgentBucket',
+    welcome_desc: '开始管理你的 AI Agent：绑定仓库、创建 Token、部署 Agent。',
     failed: '失败',
     quick_actions: '快捷操作',
     recent_deployments: '最近部署',

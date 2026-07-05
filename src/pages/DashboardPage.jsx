@@ -26,6 +26,12 @@ function StatCard({ label, value, sub, icon, color, to }) {
   return to ? <Link to={to}>{inner}</Link> : inner
 }
 
+const DOTS = 'running:bg-emerald-400 stopped:bg-slate-300 build_failed:bg-red-400 run_failed:bg-red-400 crashed:bg-red-400 building_context:bg-sky-400 animate-pulse building_image:bg-indigo-400 animate-pulse starting_container:bg-amber-400 animate-pulse'
+function dot(status) {
+  const m = DOTS.match(new RegExp(status + ':(\\S+)'))
+  return m ? m[1] : 'bg-slate-300'
+}
+
 export default function DashboardPage() {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -38,36 +44,53 @@ export default function DashboardPage() {
   if (loading || !stats) return <LoadingPanel label={t('common.loading')} />
 
   const { tokens, users, deployments, chat, repositories, bus, system } = stats
+  const running = deployments?.running || 0
+  const failed = deployments?.failed || 0
+  const total = deployments?.total || 0
+  const hasActivity = total > 0
 
   return (
     <div>
       <PageHeader title={t('common.dashboard', '首页')} description={t('common.dashboard_desc', '控制平面概览')} />
 
-      {/* Row 1: Core stats */}
-      <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5 items-stretch">
-        <StatCard label={t('agents.title')} value={(deployments?.running || 0) || 0} sub={`${(deployments?.total || 0) || 0} total`} icon="🟢" color="emerald" to="/agents" />
-        <StatCard label={t('common.running')} value={(deployments?.running || 0) || 0} icon="🚀" color="sky" to="/deploy/progress" />
-        <StatCard label={t('common.failed', '失败')} value={(deployments?.failed || 0) || 0} icon="⚠️" color={((deployments?.failed || 0) || 0) > 0 ? 'rose' : 'slate'} to="/deploy/progress" />
-        <StatCard label={t('repositories.title')} value={repositories?.length || 0} icon="📦" color="slate" to="/repositories" />
-        <StatCard label={t('users.title')} value={(users?.active || 0) || 0} sub={`${(users?.superAdmin || 0) || 0} admin`} icon="👥" color="slate" to="/users" />
-      </div>
-
-      {/* Row 2: Tokens + Chat + Bus */}
-      <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 items-stretch">
-        <StatCard label={t('aITokens.title')} value={(tokens?.ai?.enabled || 0) || 0} sub={`${(tokens?.ai?.disabled || 0) || 0} disabled`} icon="🔑" color="sky" to="/ai-tokens" />
-        <StatCard label={t('authTokens.title')} value={(tokens?.auth?.enabled || 0) || 0} icon="🔐" color="slate" to="/auth-tokens" />
-        <StatCard label={t('chat.sessions')} value={(chat?.totalSessions || 0) || 0} sub={`${(chat?.todayMessages || 0) || 0} today`} icon="💬" color="sky" to="/agents" />
-        <StatCard label={t('progress.title')} value={(deployments?.today || 0) || 0} sub={`${Math.round(((deployments?.recentSuccessRate || 0) || 0) / Math.max(((deployments?.total || 0) || 1), 1) * 100)}% success`} icon="📊" color="slate" to="/deploy/progress" />
-      </div>
-
-      {/* Row 3: Alerts + Details */}
-      {(deployments?.failed || 0) > 0 && (
-        <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-800 dark:bg-rose-900/30 dark:text-rose-300">
-          {deployments.failed} {t('progress.step_failed')} — <Link to="/deploy/progress" className="font-medium underline">{t('common.view_all', '查看')}</Link>
+      {/* Welcome / Getting Started */}
+      {!hasActivity && (
+        <div className="mb-6 rounded-2xl border border-sky-200 bg-sky-50 p-6 dark:border-sky-800 dark:bg-sky-900/30">
+          <h2 className="mb-2 text-lg font-semibold text-sky-900 dark:text-sky-100">{t('common.welcome', '欢迎使用 AgentBucket')}</h2>
+          <p className="mb-4 text-sm text-sky-700 dark:text-sky-300">{t('common.welcome_desc', '开始使用 AgentBucket 管理你的 AI Agent：绑定仓库、创建 Token、部署 Agent。')}</p>
+          <div className="flex flex-wrap gap-3">
+            <Link to="/repositories" className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700">{t('repositories.bind_repo')}</Link>
+            <Link to="/ai-tokens" className="rounded-xl border border-sky-300 px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-100 dark:border-sky-600 dark:text-sky-300 dark:hover:bg-sky-800">{t('aITokens.create_token')}</Link>
+            <Link to="/deploy" className="rounded-xl border border-sky-300 px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-100 dark:border-sky-600 dark:text-sky-300 dark:hover:bg-sky-800">{t('deploy.deploy_button')}</Link>
+          </div>
         </div>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      {/* Row 1: Agents + Deployments */}
+      <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5 items-stretch">
+        <StatCard label={t('agents.title')} value={running} sub={total > 0 ? `${total} total` : ''} icon="🤖" color="emerald" to="/agents" />
+        <StatCard label={t('common.running')} value={running} icon="🚀" color="sky" to="/deploy/progress" />
+        <StatCard label={t('common.failed', '失败')} value={failed} icon="⚠️" color={failed > 0 ? 'rose' : 'slate'} to="/deploy/progress" />
+        <StatCard label={t('repositories.title')} value={repositories?.length || 0} icon="📦" color="slate" to="/repositories" />
+        <StatCard label={t('users.title')} value={users?.active || 0} sub={`${users?.superAdmin || 0} admin`} icon="👥" color="slate" to="/users" />
+      </div>
+
+      {/* Row 2: Tokens + Chat */}
+      <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 items-stretch">
+        <StatCard label={t('aITokens.title')} value={tokens?.ai?.enabled || 0} sub={`${tokens?.ai?.disabled || 0} disabled`} icon="🔑" color="sky" to="/ai-tokens" />
+        <StatCard label={t('authTokens.title')} value={tokens?.auth?.enabled || 0} icon="🔐" color="slate" to="/auth-tokens" />
+        <StatCard label={t('chat.sessions')} value={chat?.totalSessions || 0} sub={`${chat?.todayMessages || 0} today`} icon="💬" color="sky" to="/agents" />
+        <StatCard label={t('progress.title')} value={deployments?.today || 0} sub={`${total > 0 ? Math.round(running / Math.max(total, 1) * 100) : 0}% running`} icon="📊" color="slate" to="/deploy/progress" />
+      </div>
+
+      {/* Alerts */}
+      {failed > 0 && (
+        <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-800 dark:bg-rose-900/30 dark:text-rose-300">
+          {failed} {t('progress.step_failed')} — <Link to="/deploy/progress" className="font-medium underline">{t('common.view_all', '查看')}</Link>
+        </div>
+      )}
+
+      <div className="grid gap-4 lg:grid-cols-3">
         {/* Repositories */}
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-600 dark:bg-slate-800">
           <div className="mb-3 flex items-center justify-between">
@@ -78,23 +101,41 @@ export default function DashboardPage() {
             <p className="py-6 text-center text-sm text-slate-400">{t('repositories.no_repos')}</p>
           ) : (
             <div className="space-y-2">
-              {repositories.slice(0, 5).map((r) => (
+              {repositories.slice(0, 6).map((r) => (
                 <div key={r.id} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-900/50">
                   <div className="min-w-0 flex-1">
-                    <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{r.id}</span>
-                    <span className="ml-2 text-[11px] text-slate-400">{r.provider} · {r.agents || 0} agents</span>
+                    <span className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate block max-w-[180px]">{r.id}</span>
+                    <span className="text-[11px] text-slate-400">{r.provider} · {r.agents || 0} agents · {r.commits || 0} commits</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`h-1.5 w-1.5 rounded-full ${r.status === '启用' ? 'bg-emerald-400' : 'bg-slate-300'}`} />
-                    <span className="text-[11px] text-slate-400">{r.lastSync || '-'}</span>
-                  </div>
+                  <span className={`h-1.5 w-1.5 rounded-full ${r.status === '启用' ? 'bg-emerald-400' : 'bg-slate-300'}`} />
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* System Info */}
+        {/* Recent Deployments */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-600 dark:bg-slate-800">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t('common.recent_deployments', '最近部署')}</h3>
+            <Link to="/deploy/progress" className="text-xs text-sky-600 hover:underline dark:text-sky-400">{t('common.view_all', '查看')}</Link>
+          </div>
+          {total === 0 ? (
+            <p className="py-6 text-center text-sm text-slate-400"><Link to="/deploy" className="text-sky-600 underline">{t('deploy.deploy_button')}</Link></p>
+          ) : (
+            <div className="space-y-2">
+              {(deployments?.recent || []).slice(0, 6).map((d, i) => (
+                <div key={i} className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-900/50">
+                  <span className={`h-2 w-2 shrink-0 rounded-full ${dot(d.status)}`} />
+                  <span className="min-w-0 flex-1 truncate text-sm text-slate-900 dark:text-slate-100">{d.agentId}</span>
+                  <span className="text-[11px] text-slate-400">{d.status}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* System */}
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-600 dark:bg-slate-800">
           <h3 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">{t('common.system', '系统')}</h3>
           <div className="grid grid-cols-2 gap-3 text-sm">
@@ -108,12 +149,16 @@ export default function DashboardPage() {
             </div>
             <div className="rounded-lg bg-slate-50 p-3 dark:bg-slate-900/50">
               <div className="text-xs text-slate-400">Docker</div>
-              <div className="font-mono text-slate-900 dark:text-slate-100">{system?.dockerAvailable ? 'Available' : 'Not found'}</div>
+              <div className="font-mono text-slate-900 dark:text-slate-100">{system?.dockerAvailable ? 'Ready' : 'Not found'}</div>
             </div>
             <div className="rounded-lg bg-slate-50 p-3 dark:bg-slate-900/50">
               <div className="text-xs text-slate-400">Agent Bus</div>
               <div className="font-mono text-slate-900 dark:text-slate-100">{bus?.online || 0}/{bus?.total || 0} online</div>
             </div>
+          </div>
+          <div className="mt-4 space-y-2">
+            <Link to="/deploy" className="block rounded-xl bg-sky-600 px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-sky-700">{t('deploy.deploy_button')}</Link>
+            <Link to="/repositories" className="block rounded-xl border border-slate-200 px-4 py-2.5 text-center text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700">{t('repositories.bind_repo')}</Link>
           </div>
         </div>
       </div>

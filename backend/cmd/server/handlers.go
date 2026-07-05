@@ -140,6 +140,7 @@ func (app *App) stats(w http.ResponseWriter, r *http.Request) {
 		"deployments": map[string]any{
 			"total": total, "running": running, "failed": failed, "stopped": stopped,
 			"today": todayDeploys, "recentSuccessRate": recentSuccess,
+			"recent": deploys,
 		},
 		"chat": map[string]any{
 			"totalSessions": totalSessions, "totalMessages": totalMessages,
