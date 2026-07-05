@@ -23,6 +23,10 @@ func TestDeployOptionsIncludesSupportedRuntimes(t *testing.T) {
 	defer store.db.Close()
 
 	app := &App{rootDir: dir, dataDir: dir, store: store, bus: newAgentBus()}
+	_ = store.update(func(state *State) error {
+		state.AITokens = []AIToken{{ID: 1, Name: "secret-token", Provider: "TEST", Status: "启用", Model: "model-a", Secret: "hidden-secret"}}
+		return nil
+	})
 	recorder := httptest.NewRecorder()
 	app.deployOptions(recorder, httptest.NewRequest(http.MethodGet, "/api/deploy-options", nil))
 
@@ -37,6 +41,9 @@ func TestDeployOptionsIncludesSupportedRuntimes(t *testing.T) {
 		if !containsString(body.Runtimes, want) {
 			t.Fatalf("runtimes = %#v, missing %q", body.Runtimes, want)
 		}
+	}
+	if len(body.AITokens) != 1 || body.AITokens[0].Secret != "" {
+		t.Fatalf("deploy options leaked AI token secret: %#v", body.AITokens)
 	}
 }
 
@@ -193,8 +200,20 @@ func TestAITokenCreatePatchDelete(t *testing.T) {
 	if created.Status != "启用" || created.Scope != "manual" || created.Usage != "unused" {
 		t.Fatalf("created token missing defaults: %#v", created)
 	}
+	if created.Secret != "" {
+		t.Fatalf("created token leaked secret")
+	}
 
 	tokenID := created.ID
+	if token, ok := findAIToken(store.snapshot().AITokens, tokenID); !ok || token.Secret != "sk-test" {
+		t.Fatalf("stored token missing secret: %#v", token)
+	}
+	recorder = httptest.NewRecorder()
+	app.aiTokens(recorder, httptest.NewRequest(http.MethodGet, "/api/ai-tokens", nil))
+	if strings.Contains(recorder.Body.String(), "sk-test") {
+		t.Fatalf("list response leaked secret: %s", recorder.Body.String())
+	}
+
 	req := httptest.NewRequest(http.MethodPatch, "/api/ai-tokens/id", strings.NewReader(`{"status":"停用"}`))
 	req.SetPathValue("id", fmt.Sprint(tokenID))
 	recorder = httptest.NewRecorder()

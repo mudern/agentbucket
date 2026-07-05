@@ -159,7 +159,9 @@ func (app *App) stats(w http.ResponseWriter, r *http.Request) {
 func (app *App) requireAdmin(r *http.Request) bool {
 	token := r.Header.Get("Authorization")
 	token = strings.TrimPrefix(token, "Bearer ")
-	if token == getMasterToken() { return true }
+	if token == getMasterToken() {
+		return true
+	}
 	state := app.store.snapshot()
 	for _, u := range state.Users {
 		if u.Name == state.CurrentUser.Name && u.Active && (u.Role == "super_admin" || u.Role == "admin") {
@@ -278,12 +280,19 @@ func (app *App) patchUser(w http.ResponseWriter, r *http.Request) {
 func (app *App) aiTokens(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		writeJSON(w, http.StatusOK, app.store.snapshot().AITokens)
+		writeJSON(w, http.StatusOK, redactAITokens(app.store.snapshot().AITokens))
 	case http.MethodPost:
-		var token AIToken
-		if err := json.NewDecoder(r.Body).Decode(&token); err != nil {
+		var payload struct {
+			AIToken
+			APIKey string `json:"apiKey"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 			writeError(w, http.StatusBadRequest, err)
 			return
+		}
+		token := payload.AIToken
+		if token.Secret == "" {
+			token.Secret = payload.APIKey
 		}
 		if token.Name == "" || token.Provider == "" {
 			writeError(w, http.StatusBadRequest, fmt.Errorf("name and provider are required"))
@@ -312,10 +321,20 @@ func (app *App) aiTokens(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusInternalServerError, err)
 			return
 		}
+		token.Secret = ""
 		writeJSON(w, http.StatusCreated, token)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
+}
+
+func redactAITokens(tokens []AIToken) []AIToken {
+	safe := make([]AIToken, len(tokens))
+	for i, token := range tokens {
+		safe[i] = token
+		safe[i].Secret = ""
+	}
+	return safe
 }
 
 func (app *App) authTokens(w http.ResponseWriter, r *http.Request) {
@@ -593,7 +612,7 @@ func (app *App) deployOptions(w http.ResponseWriter, r *http.Request) {
 		Runtimes:     supportedRuntimes(),
 		RuntimeTags:  []string{"latest", "stable", "nightly"},
 		MCPServers:   scanMCPServers(state.Repositories),
-		AITokens:     state.AITokens,
+		AITokens:     redactAITokens(state.AITokens),
 		AuthTokens:   state.AuthTokens,
 	})
 }

@@ -104,17 +104,17 @@ type AIToken struct {
 	Status   string `json:"status"`
 	BaseURL  string `json:"baseUrl,omitempty"`
 	Model    string `json:"model,omitempty"`
-	Secret   string `json:"-"`
+	Secret   string `json:"secret,omitempty"` // accepted on create, hidden on list
 }
 
 type AuthToken struct {
-	ID          int    `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	ID          int      `json:"id"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
 	Secret      string   `json:"secret,omitempty"` // accepted on create, hidden on list
 	EnvVars     []string `json:"envVars,omitempty"`
-	Status      string `json:"status"`
-	UpdatedAt   string `json:"updatedAt"`
+	Status      string   `json:"status"`
+	UpdatedAt   string   `json:"updatedAt"`
 }
 
 type User struct {
