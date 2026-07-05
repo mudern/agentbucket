@@ -286,8 +286,8 @@ export default function RepositoriesPage() {
           })}
         </tbody>
       </ManagementTable>
+      <ConfirmDialog open={!!confirm} title={confirm?.title || ''} message={confirm?.message || ''} onConfirm={confirm?.action} onCancel={() => setConfirm(null)} />
     </div>
 
-      <ConfirmDialog open={!!confirm} title={confirm?.title || ''} message={confirm?.message || ''} onConfirm={confirm?.action} onCancel={() => setConfirm(null)} />
   )
 }
