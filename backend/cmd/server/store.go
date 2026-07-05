@@ -53,6 +53,24 @@ func NewStore(path string, rootDir string) (*Store, error) {
 	if err == nil && len(users) > 0 {
 		store.state.Users = users
 	}
+	// Safety net: ensure at least one super_admin exists
+	hasAdmin := false
+	for _, u := range store.state.Users {
+		if u.Role == "super_admin" { hasAdmin = true; break }
+	}
+	if !hasAdmin {
+		pw := randomPassword(16)
+		store.state.Users = append(store.state.Users, User{
+			ID: 1, Name: "admin", Role: "super_admin", Active: true,
+			PasswordHash: hashPassword(pw),
+		})
+		log.Printf("")
+		log.Printf("╔══════════════════════════════════════════╗")
+		log.Printf("║  Admin user missing — created new one     ║")
+		log.Printf("║  admin:    %-30s║", pw)
+		log.Printf("╚══════════════════════════════════════════╝")
+		log.Printf("")
+	}
 	if err := store.loadChat(); err != nil {
 		return nil, err
 	}
