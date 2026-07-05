@@ -232,6 +232,32 @@ func (app *App) startHealthChecker(interval time.Duration) {
 					for i := range s.Deployments {
 						if s.Deployments[i].ID == d.ID {
 							s.Deployments[i].Status = "crashed"
+								// Trigger auto-restart in background
+								go func(dep Deployment) {
+									exec.Command("docker", "rm", "-f", dep.ContainerName).Run()
+									restart := exec.Command(
+										"docker", "run", "-d", "--rm",
+										"--name", dep.ContainerName,
+										"-l", "agentbucket=true",
+										"-p", fmt.Sprintf("127.0.0.1:%d:8088", dep.HostPort),
+										"--add-host", "host.docker.internal:host-gateway",
+										"-e", fmt.Sprintf("AGENTBUCKET_URL=http://host.docker.internal:%d", mustPort()),
+										dep.ImageTag,
+									)
+									if rOut, rErr := restart.CombinedOutput(); rErr == nil {
+										app.store.update(func(s *State) error {
+											for i := range s.Deployments {
+												if s.Deployments[i].ID == dep.ID {
+													s.Deployments[i].Status = "running"
+													s.Deployments[i].Message = "auto-restarted"
+												}
+											}
+											return nil
+										})
+									} else {
+										_ = rOut
+									}
+								}(d)
 							s.Deployments[i].Message = "container exited unexpectedly"
 						}
 					}

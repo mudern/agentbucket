@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { getDeployments, getAgents } from '../api'
 import { Link } from 'react-router-dom'
 import LoadingPanel from '../components/LoadingPanel'
 import PageHeader from '../components/PageHeader'
 import { useT } from '../i18n'
+import { useToast } from '../components/Toast'
 import useAsyncData from '../hooks/useAsyncData'
 
 const STATUS_TABS = [
@@ -48,6 +49,8 @@ export default function DeployProgressPage() {
   const [logSearch, setLogSearch] = useState('')
   const [expandedLogs, setExpandedLogs] = useState({})
   const { data: agents = [] } = useAsyncData(getAgents, [])
+  const prevStatus = useRef({})
+  const toast = useToast()
   const t = useT()
 
   useEffect(() => {
@@ -72,7 +75,21 @@ export default function DeployProgressPage() {
           buffer = lines.pop() || ''
           for (const line of lines) {
             if (line.startsWith('data: ')) {
-              try { setDeployments(JSON.parse(line.slice(6))) } catch (_) {}
+              try {
+                    const data = JSON.parse(line.slice(6))
+                    // Toast on new deployments or status changes
+                    for (const dep of data) {
+                      const prev = prevStatus.current[dep.id]
+                      if (!prev) { prevStatus.current[dep.id] = dep.status; continue }
+                      if (prev !== dep.status) {
+                        prevStatus.current[dep.id] = dep.status
+                        if (dep.status === 'running') toast(dep.agentId + ' deployed successfully', 'success')
+                        else if (dep.status === 'build_failed' || dep.status === 'run_failed') toast(dep.agentId + ' failed: ' + dep.status, 'error')
+                        else if (dep.status === 'crashed') toast(dep.agentId + ' crashed and is restarting', 'error')
+                      }
+                    }
+                    setDeployments(data)
+                  } catch (_) {}
             }
           }
         }
