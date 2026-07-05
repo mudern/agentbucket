@@ -49,7 +49,7 @@ curl --noproxy '*' -sS "$AGENTBUCKET_API/api/deploy-options"
 
 Use this to discover repositories, commits, agents, runtimes, models, AI tokens, auth tokens, and MCP servers.
 
-Current runtimes are `codex`, `claudecode`, and `opencode`.
+Current runtimes are `codex`, `claudecode`, `opencode`, `gemini`, and `reasonix`.
 
 ## Add Repository
 
@@ -108,10 +108,8 @@ curl --noproxy '*' -sS -X POST "$AGENTBUCKET_API/api/auth-tokens" \
   -H 'Content-Type: application/json' \
   -d '{
     "name": "Test Public API",
-    "accessTarget": "测试外部公开 API",
-    "script": "tokens/test_public.py",
-    "functionName": "get_token",
-    "argument": "scope",
+    "description": "测试外部公开 API",
+    "secret": "test_public_secret",
     "status": "启用"
   }'
 ```
@@ -277,7 +275,7 @@ skills = ["knowledge-base", "document-parser"]
 mcps = ["notion-mcp", "filesystem-mcp"]
 ```
 
-Available runtimes: `codex`, `claudecode`, `opencode`
+Available runtimes: `codex`, `claudecode`, `opencode`, `gemini`, `reasonix`
 
 Available providers: auto-imported from `~/.config/ccs/providers/` (deepseek, glm, kimi, minimax)
 

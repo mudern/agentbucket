@@ -20,21 +20,34 @@ func (app *App) stats(w http.ResponseWriter, r *http.Request) {
 	// Token counts
 	aiEnabled, aiDisabled := 0, 0
 	for _, t := range state.AITokens {
-		if t.Status == "启用" { aiEnabled++ } else { aiDisabled++ }
+		if t.Status == "启用" {
+			aiEnabled++
+		} else {
+			aiDisabled++
+		}
 	}
 	authEnabled, authDisabled := 0, 0
 	for _, t := range state.AuthTokens {
-		if t.Status == "启用" { authEnabled++ } else { authDisabled++ }
+		if t.Status == "启用" {
+			authEnabled++
+		} else {
+			authDisabled++
+		}
 	}
 
 	// User counts
 	superAdmin, admin, user, activeUsers := 0, 0, 0, 0
 	for _, u := range state.Users {
-		if u.Active { activeUsers++ }
+		if u.Active {
+			activeUsers++
+		}
 		switch u.Role {
-		case "super_admin": superAdmin++
-		case "admin": admin++
-		case "user": user++
+		case "super_admin":
+			superAdmin++
+		case "admin":
+			admin++
+		case "user":
+			user++
 		}
 	}
 
@@ -45,11 +58,16 @@ func (app *App) stats(w http.ResponseWriter, r *http.Request) {
 	for _, d := range state.Deployments {
 		total++
 		switch d.Status {
-		case "running": running++
-		case "stopped": stopped++
-		case "build_failed", "run_failed", "crashed": failed++
+		case "running":
+			running++
+		case "stopped":
+			stopped++
+		case "build_failed", "run_failed", "crashed":
+			failed++
 		}
-		if d.CreatedAt.After(today) { todayDeploys++ }
+		if d.CreatedAt.After(today) {
+			todayDeploys++
+		}
 		deploys = append(deploys, map[string]any{
 			"agentId": d.AgentID, "status": d.Status, "model": d.Model,
 			"runtime": d.Runtime, "createdAt": d.CreatedAt,
@@ -62,7 +80,9 @@ func (app *App) stats(w http.ResponseWriter, r *http.Request) {
 	}
 	recentSuccess := 0
 	for _, d := range recent {
-		if d["status"] == "running" { recentSuccess++ }
+		if d["status"] == "running" {
+			recentSuccess++
+		}
 	}
 
 	// Chat stats
@@ -73,7 +93,9 @@ func (app *App) stats(w http.ResponseWriter, r *http.Request) {
 	for _, msgs := range state.ChatMessages {
 		for _, m := range msgs {
 			totalMessages++
-			if m.CreatedAt.After(today) { todayMessages++ }
+			if m.CreatedAt.After(today) {
+				todayMessages++
+			}
 		}
 	}
 
@@ -95,12 +117,16 @@ func (app *App) stats(w http.ResponseWriter, r *http.Request) {
 	busAgents := app.bus.list()
 	busOnline := 0
 	for _, a := range busAgents {
-		if a.Status == "online" { busOnline++ }
+		if a.Status == "online" {
+			busOnline++
+		}
 	}
 
 	// System info
 	dockerAvailable := true
-	if _, err := exec.LookPath("docker"); err != nil { dockerAvailable = false }
+	if _, err := exec.LookPath("docker"); err != nil {
+		dockerAvailable = false
+	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"tokens": map[string]any{
@@ -884,16 +910,7 @@ func (app *App) deploymentStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_ = exec.Command("docker", "rm", "-f", target.ContainerName).Run()
-	run := exec.Command(
-		"docker", "run", "-d", "--rm",
-		"--name", target.ContainerName,
-			"-l", "agentbucket=true",
-			"-l", fmt.Sprintf("agentbucket.agent-id=%s", target.AgentID),
-		"-p", fmt.Sprintf("127.0.0.1:%d:8088", target.HostPort),
-		"--add-host", "host.docker.internal:host-gateway",
-		"-e", fmt.Sprintf("AGENTBUCKET_URL=http://host.docker.internal:%d", mustPort()),
-		target.ImageTag,
-	)
+	run := exec.Command("docker", app.dockerRunArgs(*target)...)
 	out, err := run.CombinedOutput()
 	if err != nil {
 		if err2 := app.store.update(func(state *State) error {
@@ -959,7 +976,9 @@ func (app *App) deploymentStop(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) renameSession(w http.ResponseWriter, r *http.Request, agentID string, sessionID string) {
-	var req struct{ Title string `json:"title"` }
+	var req struct {
+		Title string `json:"title"`
+	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Title == "" {
 		writeError(w, http.StatusBadRequest, fmt.Errorf("title is required"))
 		return

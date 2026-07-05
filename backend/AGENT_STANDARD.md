@@ -18,7 +18,7 @@ Required fields:
 
 - `id`: stable agent id, used for deployment and container naming.
 - `name`: display name.
-- `runtime`: currently `codex`, `claudecode`, or `opencode`.
+- `runtime`: currently `codex`, `claudecode`, `opencode`, `gemini`, or `reasonix`.
 - `skills`: list of standard skill directory ids.
 - `mcps`: list of MCP config ids.
 

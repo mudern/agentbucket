@@ -175,6 +175,10 @@ func callRuntimeCLI(agent Agent, userContent string, tokens []AIToken) (string, 
 		exe = "codex"
 	case "opencode":
 		exe = "opencode"
+	case "gemini":
+		exe = "gemini"
+	case "reasonix":
+		exe = "reasonix"
 	default:
 		return "", false
 	}
@@ -191,11 +195,22 @@ func callRuntimeCLI(agent Agent, userContent string, tokens []AIToken) (string, 
 		cmd = exec.Command("codex", "exec", "--model", model, userContent)
 	case "opencode":
 		cmd = exec.Command("opencode", "run", "--model", model, userContent)
+	case "gemini":
+		cmd = exec.Command("gemini", "-m", model, "-p", userContent)
+	case "reasonix":
+		cmd = exec.Command("reasonix", "run", "--model", model, userContent)
 	}
 	cmd.Env = append(os.Environ(),
+		"AGENTBUCKET_AI_TOKEN="+authToken,
+		"AGENTBUCKET_AI_BASE_URL="+baseURL,
+		"AGENTBUCKET_AI_MODEL="+model,
 		"ANTHROPIC_AUTH_TOKEN="+authToken,
 		"ANTHROPIC_BASE_URL="+baseURL,
 		"ANTHROPIC_MODEL="+model,
+		"OPENAI_API_KEY="+authToken,
+		"OPENAI_BASE_URL="+baseURL,
+		"GEMINI_API_KEY="+authToken,
+		"GOOGLE_API_KEY="+authToken,
 		"CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
 	)
 

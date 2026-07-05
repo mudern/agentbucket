@@ -38,7 +38,7 @@ AgentBucket scans agent definitions from Git/GitHub/local repositories, packages
 - Validates and packages standard skills from `skills/<skill-id>/SKILL.md`.
 - Packages MCP config files from `mcp/*.json`.
 - Builds Docker images per deployment and injects the Go sidecar.
-- Supports `claudecode`, `codex`, and `opencode` runtimes.
+- Supports `claudecode`, `codex`, `opencode`, `gemini`, and `reasonix` runtimes.
 - Imports AI provider tokens from CCS env files.
 - Stores users, sessions, messages, deployments, repositories, and state in SQLite.
 - Provides real chat sessions with SSE streaming through sidecar or Anthropic-compatible APIs.
@@ -63,7 +63,7 @@ flowchart TD
   Container --> Skills["Selected Skills"]
   Container --> MCP["Selected MCP Configs"]
   Container --> Sidecar["Go Sidecar"]
-  Sidecar --> Runtime["codex / claudecode / opencode Runtime"]
+  Sidecar --> Runtime["codex / claudecode / opencode / gemini / reasonix Runtime"]
   Sidecar --> API
 ```
 
@@ -183,7 +183,7 @@ Required fields:
 | --- | --- |
 | `id` | Stable agent ID used by API, deployment, bus, and container naming |
 | `name` | UI display name |
-| `runtime` | `claudecode`, `codex`, or `opencode` |
+| `runtime` | `claudecode`, `codex`, `opencode`, `gemini`, or `reasonix` |
 | `model` | Model passed to the runtime/API layer |
 | `api_token` | Name of an AI token known to AgentBucket |
 | `skills` | Skill directory IDs under `skills/` |
@@ -313,7 +313,6 @@ backend/
   cmd/server/          Go backend: HTTP API, SQLite, Docker orchestration
   cmd/sidecar/         Sidecar source copied into each deployment image
   examples/agent-repo/ Example agents, skills, and MCP configs
-  tokens/              Example token scripts
 src/
   api/                 Frontend API client
   components/          Shared React components
@@ -345,7 +344,7 @@ The frontend build currently passes with Vite's large chunk warning.
 ## Current Limitations
 
 - `handlers.go` is still large and can be split by resource later.
-- Runtime CLI integration is real but still basic: sidecar chat shells out to `codex`, `claude`, or `opencode` per request instead of maintaining a long-lived interactive runtime session.
+- Runtime CLI integration is real but still basic: sidecar chat shells out to the selected runtime CLI per request instead of maintaining a long-lived interactive runtime session.
 - Docker builds can be slow when runtime CLIs are installed from npm.
 - The frontend is still evolving; some management flows are intentionally optimized for demo/local control-plane usage before hardening permissions and audit trails.
 

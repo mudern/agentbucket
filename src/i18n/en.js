@@ -165,6 +165,8 @@ const en = {
     runtime_hint_codex: 'Codex runtime is suited for OpenAI Codex CLI workflows. The deployment image installs and invokes codex exec.',
     runtime_hint_claudecode: 'Claude Code runtime is suited for Claude Code CLI workflows. The deployment image installs and invokes claude -p.',
     runtime_hint_opencode: 'OpenCode runtime is suited for opencode CLI agent workflows. The deployment image installs and invokes opencode run.',
+    runtime_hint_gemini: 'Gemini runtime installs Google Gemini CLI and invokes gemini with the selected model.',
+    runtime_hint_reasonix: 'Reasonix runtime installs the reasonix CLI and invokes reasonix run with the selected model.',
     runtime_hint_default: 'AgentBucket installs the matching runtime CLI in the deployment image and invokes it through the sidecar.',
     repo_label: 'Repository',
     commit_label: 'Commit',

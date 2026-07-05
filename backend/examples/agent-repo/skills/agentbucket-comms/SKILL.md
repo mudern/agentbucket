@@ -60,6 +60,14 @@ curl --noproxy '*' -sS -X POST "$SIDECAR_URL/tokens/get" \
   -d '{"tokenId":101,"param":"your-param"}'
 ```
 
+For tokens assigned during deployment, AgentBucket also injects environment variables into the container so agents can avoid a network round trip:
+
+```bash
+echo "$AGENTBUCKET_AUTH_TOKEN_101"
+echo "$AGENTBUCKET_AUTH_TOKEN_GITHUB_TOKEN"
+echo "$AGENTBUCKET_AUTH_TOKENS_JSON"
+```
+
 Token IDs:
 - `101` - Test Public API (available to all deployed agents)
 - `102` - Test Admin API (only available to agents with explicit authorization)

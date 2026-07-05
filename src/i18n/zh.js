@@ -176,6 +176,8 @@ const zh = {
     runtime_hint_codex: 'Codex runtime 适合走 OpenAI Codex CLI 的代码任务，会在容器中安装并调用 codex exec。',
     runtime_hint_claudecode: 'Claude Code runtime 适合 Claude Code CLI 工作流，会在容器中安装并调用 claude -p。',
     runtime_hint_opencode: 'OpenCode runtime 适合接入 opencode CLI 的开放代码代理工作流，会在容器中安装并调用 opencode run。',
+    runtime_hint_gemini: 'Gemini runtime 会在容器中安装 Google Gemini CLI，并使用所选模型调用 gemini。',
+    runtime_hint_reasonix: 'Reasonix runtime 会在容器中安装 reasonix CLI，并使用所选模型调用 reasonix run。',
     runtime_hint_default: '选择 runtime 后，AgentBucket 会在部署镜像中安装对应 CLI 并由 sidecar 调用。',
     repo_label: '仓库',
     commit_label: 'Commit',

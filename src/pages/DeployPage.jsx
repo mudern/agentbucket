@@ -230,6 +230,8 @@ export default function DeployPage() {
     codex: t('deploy.runtime_hint_codex'),
     claudecode: t('deploy.runtime_hint_claudecode'),
     opencode: t('deploy.runtime_hint_opencode'),
+    gemini: t('deploy.runtime_hint_gemini'),
+    reasonix: t('deploy.runtime_hint_reasonix'),
   }
   const selectedMcpNames = useMemo(() => {
     if (!data) return []

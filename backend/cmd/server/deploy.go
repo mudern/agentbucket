@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -181,16 +182,7 @@ func (app *App) runDeployment(d Deployment) {
 	})
 
 	_ = exec.Command("docker", "rm", "-f", d.ContainerName).Run()
-	run := exec.Command(
-		"docker", "run", "-d", "--rm",
-		"--name", d.ContainerName,
-			"-l", "agentbucket=true",
-			"-l", fmt.Sprintf("agentbucket.agent-id=%s", d.AgentID),
-		"-p", fmt.Sprintf("127.0.0.1:%d:8088", d.HostPort),
-		"--add-host", "host.docker.internal:host-gateway",
-		"-e", fmt.Sprintf("AGENTBUCKET_URL=http://host.docker.internal:%d", mustPort()),
-		d.ImageTag,
-	)
+	run := exec.Command("docker", app.dockerRunArgs(d)...)
 	runOut, err := run.CombinedOutput()
 	if err != nil {
 		msg := buildLogStr + "\n---\ncontainer run failed: " + string(runOut)
@@ -352,7 +344,114 @@ func runtimeInstallLine(runtime string, version string) string {
 		return fmt.Sprintf("RUN npm install -g @anthropic-ai/claude-code@%s", version)
 	case "opencode":
 		return fmt.Sprintf("RUN npm install -g opencode-ai@%s", version)
+	case "gemini":
+		return fmt.Sprintf("RUN npm install -g @google/gemini-cli@%s", version)
+	case "reasonix":
+		return fmt.Sprintf("RUN npm install -g reasonix@%s", version)
 	default:
 		return "RUN true"
 	}
+}
+
+func (app *App) dockerRunArgs(d Deployment) []string {
+	args := []string{
+		"run", "-d", "--rm",
+		"--name", d.ContainerName,
+		"-l", "agentbucket=true",
+		"-l", fmt.Sprintf("agentbucket.agent-id=%s", d.AgentID),
+		"-p", fmt.Sprintf("127.0.0.1:%d:8088", d.HostPort),
+		"--add-host", "host.docker.internal:host-gateway",
+	}
+	for _, item := range app.deploymentEnv(d) {
+		args = append(args, "-e", item)
+	}
+	args = append(args, d.ImageTag)
+	return args
+}
+
+func (app *App) deploymentEnv(d Deployment) []string {
+	state := app.store.snapshot()
+	env := []string{
+		fmt.Sprintf("AGENTBUCKET_URL=http://host.docker.internal:%d", mustPort()),
+		"AGENTBUCKET_AGENT_ID=" + d.AgentID,
+		"AGENTBUCKET_MODEL=" + d.Model,
+		"AGENTBUCKET_RUNTIME=" + d.Runtime,
+		"AGENTBUCKET_RUNTIME_VERSION=" + d.RuntimeVersion,
+	}
+	env = append(env, aiTokenEnv(d, state.AITokens)...)
+	env = append(env, authTokenEnv(d, state.AuthTokens)...)
+	return env
+}
+
+func aiTokenEnv(d Deployment, tokens []AIToken) []string {
+	for _, token := range tokens {
+		if token.ID != d.APITokenID || token.Status != "启用" || token.Secret == "" {
+			continue
+		}
+		env := []string{
+			"AGENTBUCKET_AI_TOKEN_ID=" + fmt.Sprint(token.ID),
+			"AGENTBUCKET_AI_TOKEN_NAME=" + token.Name,
+			"AGENTBUCKET_AI_TOKEN=" + token.Secret,
+			"AGENTBUCKET_AI_BASE_URL=" + token.BaseURL,
+			"AGENTBUCKET_AI_MODEL=" + firstNonEmpty(token.Model, d.Model),
+			"ANTHROPIC_AUTH_TOKEN=" + token.Secret,
+			"ANTHROPIC_BASE_URL=" + token.BaseURL,
+			"ANTHROPIC_MODEL=" + firstNonEmpty(token.Model, d.Model),
+			"OPENAI_API_KEY=" + token.Secret,
+			"OPENAI_BASE_URL=" + token.BaseURL,
+			"GEMINI_API_KEY=" + token.Secret,
+			"GOOGLE_API_KEY=" + token.Secret,
+			"CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
+		}
+		return env
+	}
+	return nil
+}
+
+func authTokenEnv(d Deployment, tokens []AuthToken) []string {
+	allowed := map[int]bool{}
+	for _, id := range d.AuthTokens {
+		allowed[id] = true
+	}
+	if len(allowed) == 0 {
+		return nil
+	}
+	env := []string{}
+	values := map[string]string{}
+	for _, token := range tokens {
+		if !allowed[token.ID] || token.Status != "启用" || token.Secret == "" {
+			continue
+		}
+		idKey := fmt.Sprintf("AGENTBUCKET_AUTH_TOKEN_%d", token.ID)
+		env = append(env, idKey+"="+token.Secret)
+		values[fmt.Sprint(token.ID)] = token.Secret
+		if nameKey := envName(token.Name); nameKey != "" {
+			env = append(env, "AGENTBUCKET_AUTH_TOKEN_"+nameKey+"="+token.Secret)
+			values[token.Name] = token.Secret
+		}
+	}
+	if len(values) > 0 {
+		if raw, err := json.Marshal(values); err == nil {
+			env = append(env, "AGENTBUCKET_AUTH_TOKENS_JSON="+string(raw))
+		}
+	}
+	return env
+}
+
+var envNamePattern = regexp.MustCompile(`[^A-Z0-9]+`)
+
+func envName(name string) string {
+	key := strings.ToUpper(strings.TrimSpace(name))
+	key = envNamePattern.ReplaceAllString(key, "_")
+	key = strings.Trim(key, "_")
+	return key
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if value != "" {
+			return value
+		}
+	}
+	return ""
 }

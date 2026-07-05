@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -42,6 +43,22 @@ func TestRunnerFor(t *testing.T) {
 			wantVersion: "latest",
 			wantCommand: []string{"opencode", "run", "--model", "qwen-test"},
 			wantChat:    []string{"opencode", "run", "--model", "qwen-test", "hello runtime"},
+		},
+		{
+			name:        "gemini explicit version",
+			config:      Config{Runtime: "gemini", RuntimeVersion: "latest", Model: "gemini-test"},
+			wantName:    "gemini",
+			wantVersion: "latest",
+			wantCommand: []string{"gemini", "-m", "gemini-test", "-p"},
+			wantChat:    []string{"gemini", "-m", "gemini-test", "-p", "hello runtime"},
+		},
+		{
+			name:        "reasonix explicit version",
+			config:      Config{Runtime: "reasonix", RuntimeVersion: "latest", Model: "reasonix-test"},
+			wantName:    "reasonix",
+			wantVersion: "latest",
+			wantCommand: []string{"reasonix", "run", "--model", "reasonix-test"},
+			wantChat:    []string{"reasonix", "run", "--model", "reasonix-test", "hello runtime"},
 		},
 		{
 			name:        "unknown runtime falls back to codex",
@@ -117,5 +134,136 @@ func TestStatusHandler(t *testing.T) {
 	}
 	if body["online"] != false {
 		t.Fatalf("online = %v, want false", body["online"])
+	}
+}
+
+func TestHealthAndRegisterHandlers(t *testing.T) {
+	previous := config
+	t.Cleanup(func() { config = previous })
+	config = Config{
+		AgentID:        "support-bot",
+		Runtime:        "gemini",
+		RuntimeVersion: "latest",
+		Model:          "gemini-test",
+		Skills:         []string{"agentbucket-comms"},
+		MCPs:           []string{"filesystem"},
+	}
+
+	for _, tt := range []struct {
+		name    string
+		handler http.HandlerFunc
+		path    string
+	}{
+		{name: "health", handler: health, path: "/health"},
+		{name: "register", handler: registerAgent, path: "/bus/register"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			tt.handler(recorder, httptest.NewRequest(http.MethodGet, tt.path, nil))
+			if recorder.Code != http.StatusOK {
+				t.Fatalf("status = %d", recorder.Code)
+			}
+			var body map[string]any
+			if err := json.Unmarshal(recorder.Body.Bytes(), &body); err != nil {
+				t.Fatal(err)
+			}
+			if body["agent"] != "support-bot" || body["runtime"] != "gemini" {
+				t.Fatalf("unexpected body: %#v", body)
+			}
+		})
+	}
+}
+
+func TestWithCORSHandlesPreflight(t *testing.T) {
+	handler := withCORS(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusTeapot)
+	}))
+	recorder := httptest.NewRecorder()
+	handler.ServeHTTP(recorder, httptest.NewRequest(http.MethodOptions, "/health", nil))
+	if recorder.Code != http.StatusNoContent {
+		t.Fatalf("status = %d, want 204", recorder.Code)
+	}
+	if recorder.Header().Get("Access-Control-Allow-Origin") != "*" {
+		t.Fatalf("missing CORS header: %#v", recorder.Header())
+	}
+}
+
+func TestGetTokenProxiesAgentIdentity(t *testing.T) {
+	previous := config
+	t.Cleanup(func() { config = previous })
+	config = Config{AgentID: "agent-a"}
+
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/tokens/resolve" {
+			t.Fatalf("path = %q", r.URL.Path)
+		}
+		if got := r.Header.Get("X-Agent-ID"); got != "agent-a" {
+			t.Fatalf("X-Agent-ID = %q", got)
+		}
+		var payload map[string]any
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			t.Fatal(err)
+		}
+		if payload["tokenId"].(float64) != 101 {
+			t.Fatalf("payload = %#v", payload)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusAccepted)
+		_, _ = w.Write([]byte(`{"token":"proxied"}`))
+	}))
+	defer upstream.Close()
+	t.Setenv("AGENTBUCKET_URL", upstream.URL)
+
+	recorder := httptest.NewRecorder()
+	getToken(recorder, httptest.NewRequest(http.MethodPost, "/tokens/get", bytes.NewBufferString(`{"tokenId":101}`)))
+	if recorder.Code != http.StatusAccepted {
+		t.Fatalf("status = %d, body = %s", recorder.Code, recorder.Body.String())
+	}
+	if !strings.Contains(recorder.Body.String(), "proxied") {
+		t.Fatalf("unexpected body: %s", recorder.Body.String())
+	}
+}
+
+func TestGetTokenRejectsBadJSON(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	getToken(recorder, httptest.NewRequest(http.MethodPost, "/tokens/get", strings.NewReader("{")))
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want 400", recorder.Code)
+	}
+}
+
+func TestHandleChatRejectsInvalidRequests(t *testing.T) {
+	for _, tt := range []struct {
+		name       string
+		method     string
+		body       string
+		wantStatus int
+	}{
+		{name: "method", method: http.MethodGet, wantStatus: http.StatusMethodNotAllowed},
+		{name: "empty message", method: http.MethodPost, body: `{"message":""}`, wantStatus: http.StatusBadRequest},
+		{name: "bad json", method: http.MethodPost, body: `{`, wantStatus: http.StatusBadRequest},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			handleChat(recorder, httptest.NewRequest(tt.method, "/agent/chat", strings.NewReader(tt.body)))
+			if recorder.Code != tt.wantStatus {
+				t.Fatalf("status = %d, want %d", recorder.Code, tt.wantStatus)
+			}
+		})
+	}
+}
+
+func TestStopAgentWithoutProcess(t *testing.T) {
+	agentMu.Lock()
+	agentCmd = nil
+	agentMu.Unlock()
+
+	recorder := httptest.NewRecorder()
+	stopAgent(recorder, httptest.NewRequest(http.MethodPost, "/agent/stop", nil))
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("status = %d", recorder.Code)
+	}
+	if !strings.Contains(recorder.Body.String(), `"ok":true`) {
+		t.Fatalf("unexpected body: %s", recorder.Body.String())
 	}
 }

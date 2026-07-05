@@ -25,7 +25,7 @@ AgentBucket 会从 Git/GitHub/本地仓库扫描 `agent.toml`，把选中的 Age
 - 校验并打包 `skills/<skill-id>/SKILL.md` 标准 Skill。
 - 打包 `mcp/*.json` MCP 配置。
 - 部署时自动生成 Docker build context 并注入 Go sidecar。
-- 支持 `claudecode`、`codex` 和 `opencode` runtime。
+- 支持 `claudecode`、`codex`、`opencode`、`gemini` 和 `reasonix` runtime。
 - 从 CCS provider env 文件导入 AI Token。
 - 使用 SQLite 保存用户、仓库、部署、会话、消息和状态。
 - 支持 SSE 流式聊天、sidecar chat 转发和 Anthropic-compatible API fallback。
@@ -50,7 +50,7 @@ flowchart TD
   Container --> Skills["选中的 Skills"]
   Container --> MCP["选中的 MCP 配置"]
   Container --> Sidecar["Go Sidecar"]
-  Sidecar --> Runtime["codex / claudecode / opencode Runtime"]
+  Sidecar --> Runtime["codex / claudecode / opencode / gemini / reasonix Runtime"]
   Sidecar --> API
 ```
 
@@ -148,7 +148,7 @@ mcps = ["notion-mcp", "filesystem-mcp"]
 extra_install = ["apk add --no-cache github-cli"]
 ```
 
-`runtime` 当前支持：`claudecode`、`codex`、`opencode`。
+`runtime` 当前支持：`claudecode`、`codex`、`opencode`、`gemini`、`reasonix`。
 
 更完整的标准见 [backend/AGENT_STANDARD.md](backend/AGENT_STANDARD.md)。
 
@@ -214,7 +214,7 @@ pnpm build
 ## 当前限制
 
 - `handlers.go` 仍然偏大，后续可以按资源继续拆分。
-- runtime CLI 已经真实接入，但 sidecar chat 仍是按请求 shell out 到 `codex`、`claude` 或 `opencode`，还不是长生命周期交互式 runtime session。
+- runtime CLI 已经真实接入，但 sidecar chat 仍是按请求 shell out 到所选 runtime CLI，还不是长生命周期交互式 runtime session。
 - Docker build 依赖 npm 安装 runtime CLI，网络慢时构建会慢。
 - 权限、审计和多租户隔离仍处于本地控制平面阶段，后续需要继续加固。
 

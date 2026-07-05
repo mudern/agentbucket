@@ -87,6 +87,42 @@ func (r OpenCodeRunner) ChatCommand(config Config, message string) *exec.Cmd {
 	return cmd
 }
 
+type GeminiRunner struct{ version string }
+
+func (r GeminiRunner) Name() string { return "gemini" }
+
+func (r GeminiRunner) Version() string { return r.version }
+
+func (r GeminiRunner) Command(config Config) *exec.Cmd {
+	cmd := exec.Command("gemini", "-m", config.Model, "-p", "AgentBucket sidecar online")
+	cmd.Dir = "/app/agent"
+	return cmd
+}
+
+func (r GeminiRunner) ChatCommand(config Config, message string) *exec.Cmd {
+	cmd := exec.Command("gemini", "-m", config.Model, "-p", message)
+	cmd.Dir = "/app/agent"
+	return cmd
+}
+
+type ReasonixRunner struct{ version string }
+
+func (r ReasonixRunner) Name() string { return "reasonix" }
+
+func (r ReasonixRunner) Version() string { return r.version }
+
+func (r ReasonixRunner) Command(config Config) *exec.Cmd {
+	cmd := exec.Command("reasonix", "run", "--model", config.Model, "AgentBucket sidecar online")
+	cmd.Dir = "/app/agent"
+	return cmd
+}
+
+func (r ReasonixRunner) ChatCommand(config Config, message string) *exec.Cmd {
+	cmd := exec.Command("reasonix", "run", "--model", config.Model, message)
+	cmd.Dir = "/app/agent"
+	return cmd
+}
+
 var (
 	config         Config
 	agentMu        sync.Mutex
@@ -157,6 +193,10 @@ func runnerFor(config Config) RuntimeRunner {
 		return ClaudeCodeRunner{version: version}
 	case "opencode":
 		return OpenCodeRunner{version: version}
+	case "gemini":
+		return GeminiRunner{version: version}
+	case "reasonix":
+		return ReasonixRunner{version: version}
 	default:
 		return CodexRunner{version: version}
 	}
@@ -300,6 +340,8 @@ func handleChat(w http.ResponseWriter, r *http.Request) {
 	cmd.Env = append(os.Environ(),
 		"AGENTBUCKET_AGENT_ID="+config.AgentID,
 		"AGENTBUCKET_MODEL="+config.Model,
+		"AGENTBUCKET_RUNTIME="+runner.Name(),
+		"AGENTBUCKET_RUNTIME_VERSION="+runner.Version(),
 	)
 
 	if req.Stream {
