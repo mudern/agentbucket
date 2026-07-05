@@ -23,7 +23,7 @@ export default function AuthTokensPage() {
   const [query, setQuery] = useState('')
   const { data, loading } = useAsyncData(getAuthTokens, [])
   const [authTokens, setAuthTokens] = useState([])
-  const [form, setForm] = useState({ name: '', description: '', secret: '' })
+  const [form, setForm] = useState({ name: '', description: '', secret: '', envVars: [] })
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
   const [showSecret, setShowSecret] = useState(false)
@@ -64,7 +64,7 @@ export default function AuthTokensPage() {
       const created = await createAuthToken({ ...form, status: '启用' })
       setAuthTokens((c) => [...c, created])
       setImportOpen(false)
-      setForm({ name: '', description: '', secret: '' })
+      setForm({ name: '', description: '', secret: '', envVars: [] })
       setShowSecret(false)
     } catch (e) {
       setFormError(e.message)
@@ -110,6 +110,22 @@ export default function AuthTokensPage() {
                   </button>
                 </div>
               </label>
+              <label className="block text-sm text-slate-700 dark:text-slate-300">
+                {t('authTokens.env_vars', '环境变量名')}
+                <div className="mt-2 flex flex-wrap items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1.5">
+                  {(form.envVars || []).map((v) => (
+                    <span key={v} className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700 dark:bg-sky-900/50 dark:text-sky-300">
+                      {v}
+                      <button type="button" onClick={() => setForm({ ...form, envVars: form.envVars.filter((x) => x !== v) })} className="text-sky-400 hover:text-sky-600">&times;</button>
+                    </span>
+                  ))}
+                  <input
+                    placeholder="输入环境变量名, 按 Enter 添加..."
+                    onKeyDown={(e) => { if (e.key === 'Enter' && e.target.value.trim()) { e.preventDefault(); setForm({ ...form, envVars: [...(form.envVars || []), e.target.value.trim().toUpperCase()] }); e.target.value = '' } }}
+                    className="min-w-[120px] flex-1 border-none bg-transparent px-1 py-1.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500"
+                  />
+                </div>
+              </label>
               {formError && <div className="text-sm text-rose-600">{formError}</div>}
             </div>
             <div className="flex justify-end gap-3 border-t border-slate-200 dark:border-slate-700 px-5 py-4">
@@ -150,7 +166,8 @@ export default function AuthTokensPage() {
                           <div className="font-semibold text-slate-950 dark:text-slate-50">{token.name}</div>
                           <div className="mt-1 leading-5 text-slate-500 dark:text-slate-400">{token.description}</div>
                         </div>
-                        <div className="text-xs text-slate-400 dark:text-slate-500">Secret 不会在前端展示，Agent 通过 Sidecar 获取。</div>
+                        {(token.envVars || []).length > 0 && <div className="text-xs text-slate-400 dark:text-slate-500">Env: {token.envVars.join(', ')}</div>}
+                        <div className="text-xs text-slate-400 dark:text-slate-500">Secret 存入环境变量供 Agent 使用。</div>
                       </div>
                     }
                   >
