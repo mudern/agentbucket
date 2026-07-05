@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 )
@@ -128,6 +129,67 @@ func (app *App) stats(w http.ResponseWriter, r *http.Request) {
 		dockerAvailable = false
 	}
 
+	// Agent activity ranking (messages per agent)
+	agentActivity := map[string]int{}
+	for _, msgs := range state.ChatMessages {
+		for _, m := range msgs {
+			if m.Role == "user" { agentActivity[m.AgentID]++ }
+		}
+	}
+
+	// Token usage from deployments
+	tokenUsage := map[string]int{}
+	for _, d := range state.Deployments {
+		for _, t := range state.AITokens {
+			if t.ID == d.APITokenID { tokenUsage[t.Name]++; break }
+		}
+	}
+
+	// Deployment timeline
+	var timeline []map[string]any
+	for _, d := range state.Deployments {
+		timeline = append(timeline, map[string]any{
+			"agentId": d.AgentID, "status": d.Status,
+			"model": d.Model, "runtime": d.Runtime,
+			"createdAt": d.CreatedAt,
+		})
+	}
+	// Sort by time descending
+	sort.Slice(timeline, func(i, j int) bool {
+		return timeline[i]["createdAt"].(time.Time).After(timeline[j]["createdAt"].(time.Time))
+	})
+
+	// Hourly trends (last 24h)
+	hourlyLabels := make([]string, 24)
+	hourlyMsgs := make([]int, 24)
+	hourlyDeploys := make([]int, 24)
+	for i := 0; i < 24; i++ {
+		h := time.Now().Add(-time.Duration(23-i) * time.Hour)
+		hourlyLabels[i] = h.Format("15:00")
+		for _, msgs := range state.ChatMessages {
+			for _, m := range msgs {
+				if m.CreatedAt.After(h) && m.CreatedAt.Before(h.Add(time.Hour)) && m.Role == "user" {
+					hourlyMsgs[i]++
+				}
+			}
+		}
+		for _, d := range state.Deployments {
+			if d.CreatedAt.After(h) && d.CreatedAt.Before(h.Add(time.Hour)) {
+				hourlyDeploys[i]++
+			}
+		}
+	}
+
+	// Repo sync health
+	var repoHealth []map[string]any
+	for _, r := range repoStatus {
+		repoHealth = append(repoHealth, map[string]any{
+			"id": r["id"], "provider": r["provider"],
+			"agents": r["agents"], "commits": r["commits"],
+			"lastSync": r["lastSync"], "status": r["status"],
+		})
+	}
+
 	writeJSON(w, http.StatusOK, map[string]any{
 		"tokens": map[string]any{
 			"ai":   map[string]any{"enabled": aiEnabled, "disabled": aiDisabled},
@@ -154,6 +216,11 @@ func (app *App) stats(w http.ResponseWriter, r *http.Request) {
 			"version": "1.0.0", "dockerAvailable": dockerAvailable,
 			"goVersion": "1.22+",
 		},
+		"agentActivity": agentActivity,
+		"tokenUsage":    tokenUsage,
+		"timeline":      timeline,
+		"hourly":        map[string]any{"labels": hourlyLabels, "msgs": hourlyMsgs, "deploys": hourlyDeploys},
+		"repoHealth":    repoHealth,
 	})
 }
 
