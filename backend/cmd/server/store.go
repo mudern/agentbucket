@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -35,6 +36,7 @@ func NewStore(path string, rootDir string) (*Store, error) {
 		store.state = seedState(rootDir)
 		store.state.Users = ensureUserPasswordHashes(store.state.Users)
 		printFirstStartCredentials(store.state.Users)
+		store.importProviderTokens()
 		return store.saveLocked()
 	}
 	if len(raw) == 0 {
@@ -57,7 +59,52 @@ func NewStore(path string, rootDir string) (*Store, error) {
 	if _, err := store.saveLocked(); err != nil {
 		return nil, err
 	}
+	store.importProviderTokens()
 	return store, nil
+}
+
+func (s *Store) importProviderTokens() {
+	dir := os.Getenv("AGENTBUCKET_PROVIDERS_DIR")
+	if dir == "" {
+		home, err := os.UserHomeDir()
+		if err != nil { return }
+		dir = filepath.Join(home, ".config", "ccs", "providers")
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil { return }
+	existing := map[string]bool{}
+	for _, t := range s.state.AITokens { existing[t.Name] = true }
+	nextID := 1
+	for _, t := range s.state.AITokens { if t.ID >= nextID { nextID = t.ID + 1 } }
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".env") { continue }
+		name := strings.TrimSuffix(entry.Name(), ".env")
+		if existing[name] { continue }
+		vals := readEnvFile(filepath.Join(dir, entry.Name()))
+		if len(vals) == 0 { continue }
+		s.state.AITokens = append(s.state.AITokens, AIToken{
+			ID: nextID, Name: name, Provider: strings.ToUpper(name),
+			Status: "启用", Scope: "imported", Usage: "local",
+			BaseURL: vals["ANTHROPIC_BASE_URL"],
+			Model:   vals["ANTHROPIC_MODEL"],
+			Secret:  vals["ANTHROPIC_AUTH_TOKEN"],
+		})
+		nextID++
+	}
+}
+
+func readEnvFile(path string) map[string]string {
+	raw, err := os.ReadFile(path)
+	if err != nil { return nil }
+	vals := map[string]string{}
+	for _, line := range strings.Split(string(raw), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") { continue }
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) != 2 { continue }
+		vals[strings.TrimSpace(parts[0])] = strings.Trim(strings.TrimSpace(parts[1]), `"'`)
+	}
+	return vals
 }
 
 func (s *Store) initSchema() error {
