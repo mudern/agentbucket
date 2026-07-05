@@ -43,7 +43,7 @@ export default function DashboardPage() {
 
   if (loading || !stats) return <LoadingPanel label={t('common.loading')} />
 
-  const { tokens, users, deployments, chat, repositories, bus, system } = stats
+  const { tokens, users, deployments, chat, repositories, bus, system, agentActivity, tokenUsage, timeline, hourly, repoHealth } = stats
   const running = deployments?.running || 0
   const failed = deployments?.failed || 0
   const total = deployments?.total || 0
@@ -162,6 +162,81 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Agent Activity Ranking */}
+      {Object.keys(agentActivity || {}).length > 0 && (
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-600 dark:bg-slate-800">
+          <h3 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">{t('common.agent_activity', 'Agent 调用热度')}</h3>
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(agentActivity || {}).sort((a,b) => b[1]-a[1]).slice(0, 8).map(([id, count]) => (
+              <span key={id} className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs dark:bg-slate-700">
+                <span className="max-w-[120px] truncate font-medium text-slate-700 dark:text-slate-300">{id}</span>
+                <span className="text-slate-400">{count}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Token Usage + Hourly Trends */}
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        {Object.keys(tokenUsage || {}).length > 0 && (
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-600 dark:bg-slate-800">
+            <h3 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">{t('common.token_usage', 'Token 使用分布')}</h3>
+            <div className="space-y-2">
+              {Object.entries(tokenUsage || {}).sort((a,b) => b[1]-a[1]).map(([name, count]) => {
+                const max = Math.max(...Object.values(tokenUsage), 1)
+                const pct = Math.round(count / max * 100)
+                return (
+                  <div key={name} className="flex items-center gap-2 text-xs">
+                    <span className="w-16 shrink-0 text-slate-600 dark:text-slate-400">{name}</span>
+                    <div className="h-2 flex-1 rounded-full bg-slate-100 dark:bg-slate-700">
+                      <div className="h-2 rounded-full bg-sky-500" style={{width: pct + '%'}} />
+                    </div>
+                    <span className="w-8 text-right text-slate-400">{count}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {hourly?.labels?.length > 0 && (
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-600 dark:bg-slate-800">
+            <h3 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">{t('common.hourly_trends', '24h 趋势')}</h3>
+            <div className="flex items-end gap-[2px] h-20">
+              {(hourly?.msgs || []).map((v, i) => {
+                const max = Math.max(...(hourly.msgs || [1]), 1)
+                return <div key={i} title={hourly.labels[i] + ': ' + v + ' msgs'} className="flex-1 rounded-t bg-sky-200 dark:bg-sky-800" style={{height: Math.max(v / max * 100, 2) + '%'}} />
+              })}
+            </div>
+            <div className="mt-1 flex justify-between text-[9px] text-slate-400">
+              <span>{hourly?.labels?.[0]}</span>
+              <span>{hourly?.labels?.[12]}</span>
+              <span>{hourly?.labels?.[23]}</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Repo Sync Health */}
+      {repoHealth?.length > 0 && (
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-600 dark:bg-slate-800">
+          <h3 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">{t('common.repo_health', '仓库同步状态')}</h3>
+          <div className="flex flex-wrap gap-2">
+            {repoHealth.map((r) => {
+              const stale = r.lastSync && r.lastSync.includes('failed')
+              return (
+                <span key={r.id} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs ${stale ? 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'}`}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${stale ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                  <span className="max-w-[150px] truncate">{r.id}</span>
+                  <span className="opacity-60">{r.lastSync || '-'}</span>
+                </span>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
