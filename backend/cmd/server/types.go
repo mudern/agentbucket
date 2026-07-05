@@ -111,7 +111,8 @@ type AuthToken struct {
 	ID          int    `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	Secret      string `json:"secret,omitempty"` // accepted on create, hidden on list
+	Secret      string   `json:"secret,omitempty"` // accepted on create, hidden on list
+	EnvVars     []string `json:"envVars,omitempty"`
 	Status      string `json:"status"`
 	UpdatedAt   string `json:"updatedAt"`
 }
